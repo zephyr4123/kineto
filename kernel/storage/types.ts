@@ -8,11 +8,19 @@ export interface StoredObject {
   written: boolean;
 }
 
+export interface PutOptions {
+  sha256?: string;
+  force?: boolean;
+  trustRecord?: { bytes: number };
+}
+
 export interface StorageBackend {
   readonly name: string;
   // key 是内容寻址的（含哈希），同 key 必同内容：已存在且完好就跳过，被改坏了就修复。
-  // 传入 sha256 时按哈希判断「完好」，否则只能按大小判断；force 时不管目标是否完好都重新写入（修复用）
-  put(localFile: string, key: string, options?: { sha256?: string; force?: boolean }): Promise<StoredObject>;
+  // sha256：已知的内容哈希，用来验源文件、判断目标是否完好（不传时只能按大小判断）。
+  // force：不管目标是否完好都重新写入（修复用）。
+  // trustRecord（storage push 用）：远端后端上目标与登记的大小、哈希都对得上就直接判完好，不读源文件、不碰缓存
+  put(localFile: string, key: string, options?: PutOptions): Promise<StoredObject>;
   has(key: string): Promise<boolean>;
   // 对象字节数；不存在为 null（check 用它发现被改坏的对象）
   size(key: string): Promise<number | null>;

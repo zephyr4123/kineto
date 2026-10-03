@@ -21,6 +21,7 @@ export const assetAddCommand = defineCommand({
     description: { type: "string", value: "text", description: "What the asset is" },
     to: { type: "string", value: "video", description: "Link the asset to this video (use with --as)" },
     as: { type: "string", value: "alias", description: "camelCase alias, becomes assets.<alias> in code" },
+    reupload: { type: "boolean", description: "Upload again even if the shared storage looks intact (repairs STORAGE_OBJECT_CORRUPT)" },
   },
   // 不整体持锁：下载可能很久，入库（下载、哈希、存储）是幂等的，只有写记录和挂接需要互斥
   async run(ctx, { args, flags }) {
@@ -38,6 +39,7 @@ export const assetAddCommand = defineCommand({
       author: str(flags, "author"),
       sourceUrl: str(flags, "source-url"),
       description: str(flags, "description"),
+      reupload: flags.reupload === true,
     });
     if (!to || !alias) return { asset, linked: null };
     await withRepoLock(ctx.paths, async () => {

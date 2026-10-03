@@ -28,7 +28,8 @@ storage:
 # tools:
 #   transcribe:                       # 字幕转写：本机 whisper.cpp，免费离线；首次使用会下载编译（需要 git / make / C 编译器）
 #     model: small                    # 可选：tiny / base / small / medium / large-v3…，带 .en 的是纯英文模型
-#     language: auto                  # 可选：zh / en / ja…
+#     language: auto                  # 可选：zh / en / ja…；中日韩按短语出字幕，其余逐词
+#     hint: kineto, Claude Code       # 可选：提示专有名词怎么拼
 #   tts:                              # 配音：腾讯云语音合成，按字数计费；先在控制台开通「语音合成」
 #     secretId: ${TENCENTCLOUD_SECRET_ID}
 #     secretKey: ${TENCENTCLOUD_SECRET_KEY}

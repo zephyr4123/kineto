@@ -10,7 +10,7 @@ import type { Caption } from "@remotion/captions";
 import { z } from "zod";
 import { KinetoError } from "../../kernel/errors.ts";
 import { defineTool } from "../../kernel/tools/define.ts";
-import { hasSplitCharacters, phraseCaptions, wantsPhrases } from "./captions.ts";
+import { needsPhrases, phraseCaptions, wantsPhrases } from "./captions.ts";
 
 const MODELS = [
   "tiny",
@@ -144,11 +144,11 @@ export default defineTool({
       captions = toCaptions({ whisperCppOutput: words }).captions;
       detected = words.result.language;
     }
-    // 中日韩，或自动识别后发现逐词结果把字劈坏了：按短语重转。
+    // 中日韩（请求的或自动识别出的），或逐词结果把字劈坏了：按短语重转，语言直接用识别结果、不再重新识别。
     // tokensPerItem 传 0 才能去掉每段 1 个 token 的限制（传 null 会被包内改回 1）
-    if (wantsPhrases(language) || hasSplitCharacters(captions)) {
+    if (needsPhrases(language, detected, captions)) {
       granularity = "phrase";
-      const phrases = await transcribe({ ...common, tokenLevelTimestamps: false, tokensPerItem: 0 }).catch((err: unknown) => {
+      const phrases = await transcribe({ ...common, language: detected as never, tokenLevelTimestamps: false, tokensPerItem: 0 }).catch((err: unknown) => {
         throw failed(err);
       });
       captions = phraseCaptions(phrases.transcription);

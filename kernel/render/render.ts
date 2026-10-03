@@ -16,7 +16,7 @@ import { sha256File } from "../hash.ts";
 import type { StorageBackend } from "../storage/types.ts";
 import { withRepoLock } from "../lock.ts";
 import { removeOrphanedWorkDirs } from "../workdirs.ts";
-import { syncVideo } from "../sync/sync.ts";
+import { syncVideo, type MissingAsset } from "../sync/sync.ts";
 import { gitState } from "./git.ts";
 import { appendRender, type RenderRecord } from "./records.ts";
 import { remotionSettings } from "./settings.ts";
@@ -60,6 +60,19 @@ export interface RenderResult {
   file: string;
 }
 
+// 缺失与损坏分开报：损坏的重新 asset add 不会重传（远端看起来完好），要给出能真正修好的命令
+export function assetsUnavailable(videoId: string, missing: MissingAsset[]): KinetoError {
+  const corrupt = missing.filter((m) => m.reason === "corrupt");
+  if (corrupt.length > 0) {
+    return new KinetoError("STORAGE_OBJECT_CORRUPT", `Assets of "${videoId}" are damaged in storage: ${corrupt.map((m) => `"${m.alias}"`).join(", ")}`, {
+      hint: "Re-upload it with the original file: `./kineto asset add <file> --license <license> --reupload`, or `./kineto storage push --reupload` from a machine whose local store has it.",
+    });
+  }
+  return new KinetoError("ASSET_UNAVAILABLE", `Assets of "${videoId}" are not in storage: ${missing.map((m) => m.alias).join(", ")}`, {
+    hint: "Configure the storage backend that holds them, or re-add the files with `./kineto asset add`.",
+  });
+}
+
 export async function renderVideo(
   paths: KinetoPaths,
   storage: StorageBackend,
@@ -96,13 +109,7 @@ export async function renderVideo(
   let serveUrl: string | undefined;
   try {
     const { missing } = await withRepoLock(paths, () => syncVideo(paths, storage, video, publicDir));
-    if (missing.length > 0) {
-      throw new KinetoError(
-        "ASSET_UNAVAILABLE",
-        `Assets of "${video.id}" are not in storage: ${missing.map((m) => m.alias).join(", ")}`,
-        { hint: "Configure the storage backend that holds them, or re-add the files with `./kineto asset add`." },
-      );
-    }
+    if (missing.length > 0) throw assetsUnavailable(video.id, missing);
     const entryPoint = await writeVideoEntry(paths, video.id, path.join(workDir, "entry.tsx"));
     serveUrl = await bundle({
       entryPoint,

@@ -84,3 +84,10 @@ test("probe 分只读与可写：只读探测不建目录、目录不存在不�
     await assert.rejects(bad.probe({ write: true }), { code: "STORAGE_UNAVAILABLE" });
   });
 });
+
+test("只读 probe：存储根是个普通文件时报 STORAGE_UNAVAILABLE", async () => {
+  await withStore(async (_store, dir) => {
+    await writeFile(path.join(dir, "file-not-dir"), "x");
+    await assert.rejects(new LocalStorage(path.join(dir, "file-not-dir")).probe(), { code: "STORAGE_UNAVAILABLE" });
+  });
+});

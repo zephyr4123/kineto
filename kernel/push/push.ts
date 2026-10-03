@@ -30,7 +30,7 @@ export async function pushObjects(
   }
   const wanted = await referencedObjects(paths);
   const objects: PushedObject[] = [];
-  for (const [i, { key, kind, sha256 }] of wanted.entries()) {
+  for (const [i, { key, kind, sha256, bytes }] of wanted.entries()) {
     onProgress(i, wanted.length);
     const localSize = await from.size(key);
     if (localSize === null) {
@@ -39,7 +39,7 @@ export async function pushObjects(
     }
     try {
       // reupload：远端内容坏了、元数据却对得上（旧版本留下的）时，只能强制重传修复
-      const stored = await to.put(await from.fetch(key), key, { sha256, force: reupload });
+      const stored = await to.put(await from.fetch(key), key, { sha256, force: reupload, trustRecord: { bytes } });
       objects.push({ key, kind, status: stored.written ? "uploaded" : "present", url: stored.url });
     } catch (err) {
       // 一份坏副本不中止整次 push：记下来，其余照推
@@ -52,17 +52,17 @@ export async function pushObjects(
 
 async function referencedObjects(paths: KinetoPaths) {
   const seen = new Set<string>();
-  const out: { key: string; kind: PushedObject["kind"]; sha256: string }[] = [];
-  const add = (key: string, kind: PushedObject["kind"], sha256: string) => {
+  const out: { key: string; kind: PushedObject["kind"]; sha256: string; bytes: number }[] = [];
+  const add = (key: string, kind: PushedObject["kind"], sha256: string, bytes: number) => {
     if (seen.has(key)) return;
     seen.add(key);
-    out.push({ key, kind, sha256 });
+    out.push({ key, kind, sha256, bytes });
   };
   for (const record of (await readManifest(paths)).values()) {
-    add(assetStorageKey(record), "asset", record.id.slice("sha256:".length));
+    add(assetStorageKey(record), "asset", record.id.slice("sha256:".length), record.bytes);
   }
   for (const id of await listVideoIds(paths)) {
-    for (const r of await readRenders(paths, id)) add(r.storage.key, "render", r.sha256);
+    for (const r of await readRenders(paths, id)) add(r.storage.key, "render", r.sha256, r.bytes);
   }
   return out;
 }

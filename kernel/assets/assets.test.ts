@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { appendFile, writeFile } from "node:fs/promises";
+import { appendFile, readFile, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
 import path from "node:path";
@@ -194,6 +194,31 @@ test("updateAsset 显式修正许可证等元数据：追加一行，后写者�
     assert.equal(fixed.author, "Al");
     assert.equal((await readManifest(fx.paths)).get(rec.id)?.license, "CC-BY-4.0");
     await assert.rejects(updateAsset(fx.paths, "sha256:" + "e".repeat(64), { license: "MIT" }), { code: "ASSET_NOT_FOUND" });
+  } finally {
+    await fx.cleanup();
+  }
+});
+
+test("asset add 的 reupload：远端内容坏了、元数据却对得上时，用原文件强制重传修好", async () => {
+  const fx = await makeRepo();
+  try {
+    const { S3Storage } = await import("../storage/s3.ts");
+    const { FakeTransport } = await import("../testing/fake-s3.ts");
+    const fake = new FakeTransport();
+    const settings = { endpoint: "https://s3.example.com", region: "r", bucket: "b", prefix: "", publicUrl: undefined };
+    const s3 = new S3Storage(settings, path.join(fx.root, "cache"), fake);
+    const src = path.join(fx.root, "a.wav");
+    await writeFile(src, "hello");
+    const asset = await ingestAsset(fx.paths, s3, { source: src, license: "CC0-1.0" });
+    const key = assetStorageKey(asset);
+    fake.objects.get(key)!.body = Buffer.from("HELLO");
+    // 换一台没有缓存的机器：下载时验出坏对象
+    const other = new S3Storage(settings, path.join(fx.root, "cache2"), fake);
+    await assert.rejects(other.fetch(key), { code: "STORAGE_OBJECT_CORRUPT" });
+    await ingestAsset(fx.paths, s3, { source: src, license: "CC0-1.0" });
+    await assert.rejects(other.fetch(key), { code: "STORAGE_OBJECT_CORRUPT" });
+    await ingestAsset(fx.paths, s3, { source: src, license: "CC0-1.0", reupload: true });
+    assert.equal(await readFile(await other.fetch(key), "utf8"), "hello");
   } finally {
     await fx.cleanup();
   }

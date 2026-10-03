@@ -108,3 +108,26 @@ test("本机副本被改坏的对象记为 corrupt、不中止整次 push；reup
     await fx.cleanup();
   }
 });
+
+test("远端已有完好副本时，本机副本坏了（大小也变了）仍判 present：比的是登记值，不是本机文件", async () => {
+  const fx = await makeRepo();
+  try {
+    const { chmod } = await import("node:fs/promises");
+    const { S3Storage } = await import("../storage/s3.ts");
+    const { FakeTransport } = await import("../testing/fake-s3.ts");
+    const local = new LocalStorage(path.join(fx.root, ".kineto/store"));
+    const fake = new FakeTransport();
+    const s3 = new S3Storage({ endpoint: "https://s3.example.com", region: "r", bucket: "b", prefix: "", publicUrl: undefined }, path.join(fx.root, "cache"), fake);
+    const src = path.join(fx.root, "one.wav");
+    await writeFile(src, "one");
+    const asset = await ingestAsset(fx.paths, local, { source: src, license: "CC0-1.0", now: FIXED_NOW });
+    assert.deepEqual((await pushObjects(fx.paths, local, s3)).objects.map((o) => o.status), ["uploaded"]);
+    const copy = await local.fetch(`assets/${asset.id.slice(7, 9)}/${asset.id.slice(7)}.wav`);
+    await chmod(copy, 0o644);
+    await writeFile(copy, "ONE, but longer");
+    assert.deepEqual((await pushObjects(fx.paths, local, s3)).objects.map((o) => o.status), ["present"]);
+    assert.equal(fake.uploads.length, 1);
+  } finally {
+    await fx.cleanup();
+  }
+});

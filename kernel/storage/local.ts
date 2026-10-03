@@ -4,7 +4,7 @@ import path from "node:path";
 import { isNodeError, KinetoError } from "../errors.ts";
 import { sha256File } from "../hash.ts";
 import { assertSafeKey } from "./keys.ts";
-import type { StorageBackend, StoredObject } from "./types.ts";
+import type { PutOptions, StorageBackend, StoredObject } from "./types.ts";
 
 // 本地目录当存储：零配置的默认后端，clone 下来不配任何东西也能跑通全链路。
 export class LocalStorage implements StorageBackend {
@@ -20,7 +20,8 @@ export class LocalStorage implements StorageBackend {
     return path.join(this.root, ...key.split("/"));
   }
 
-  async put(localFile: string, key: string, options: { sha256?: string; force?: boolean } = {}): Promise<StoredObject> {
+  // trustRecord 是远端后端的优化，本地复核目标只是读一次本机文件，不需要它
+  async put(localFile: string, key: string, options: PutOptions = {}): Promise<StoredObject> {
     const dest = this.resolve(key);
     const [src, existing] = await Promise.all([stat(localFile), stat(dest).catch(() => null)]);
     // 已存在的对象要复核：暂存区是硬链接，改暂存文件就是改这里。给了哈希按哈希比，否则按大小比
@@ -76,10 +77,13 @@ export class LocalStorage implements StorageBackend {
         await mkdir(this.root, { recursive: true });
         await access(this.root, constants.W_OK);
       } else {
-        // 只读：目录还不存在只说明本机没存过东西，不算错；存在就得读得了
-        await access(this.root, constants.R_OK).catch((err: unknown) => {
-          if (!isNodeError(err, "ENOENT")) throw err;
+        // 只读：目录还不存在只说明本机没存过东西，不算错；存在就得是个读得了的目录
+        const info = await stat(this.root).catch((err: unknown) => {
+          if (isNodeError(err, "ENOENT")) return null;
+          throw err;
         });
+        if (info && !info.isDirectory()) throw new Error(`${this.root} is not a directory`);
+        if (info) await access(this.root, constants.R_OK);
       }
     } catch (err) {
       throw new KinetoError("STORAGE_UNAVAILABLE", `Local storage ${this.root} is not usable: ${(err as Error).message}`, {

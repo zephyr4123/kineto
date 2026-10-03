@@ -9,8 +9,21 @@ export const wantsPhrases = (language: string): boolean => PHRASE_LANGUAGES.has(
 
 export const hasSplitCharacters = (captions: { text: string }[]): boolean => captions.some((c) => c.text.includes("�"));
 
+// 请求的语言（可能是 auto）或识别出的语言是中日韩，或逐词结果已经劈坏了字：按短语重转
+export const needsPhrases = (requested: string, detected: string, wordCaptions: { text: string }[]): boolean =>
+  wantsPhrases(requested) || wantsPhrases(detected) || hasSplitCharacters(wordCaptions);
+
+// Caption 对空白敏感（createTikTokStyleCaptions 靠前导空格分词）：与官方 toCaptions 一样只去掉第一条开头的空白；
+// 每条标 pageBreakAfter，一个短语一页。中文短语没有前导空格，不标的话整段会挤成一页
 export function phraseCaptions(segments: { text: string; offsets: { from: number; to: number } }[]): Caption[] {
   return segments
-    .map((s) => ({ text: s.text.trim(), startMs: s.offsets.from, endMs: s.offsets.to, timestampMs: null, confidence: null }))
-    .filter((c) => c.text !== "");
+    .filter((s) => s.text.trim() !== "")
+    .map((s, i) => ({
+      text: i === 0 ? s.text.trimStart() : s.text,
+      startMs: s.offsets.from,
+      endMs: s.offsets.to,
+      timestampMs: null,
+      confidence: null,
+      pageBreakAfter: true,
+    }));
 }

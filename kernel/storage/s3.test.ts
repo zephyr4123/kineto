@@ -4,30 +4,8 @@ import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { S3Storage, type ObjectHead, type S3Transport } from "./s3.ts";
-
-// 内存里的假对象存储：记下每次上传 / 下载，断言缓存与幂等行为
-class FakeTransport implements S3Transport {
-  objects = new Map<string, { body: Buffer; contentType: string; sha256: string }>();
-  uploads: string[] = [];
-  downloads: string[] = [];
-  async head(key: string): Promise<ObjectHead | null> {
-    const o = this.objects.get(key);
-    return o ? { size: o.body.length, sha256: o.sha256 } : null;
-  }
-  async download(key: string, dest: string): Promise<{ sha256: string | undefined } | null> {
-    const o = this.objects.get(key);
-    if (!o) return null;
-    this.downloads.push(key);
-    await writeFile(dest, o.body);
-    return { sha256: o.sha256 };
-  }
-  async upload(file: string, key: string, meta: { contentType: string; sha256: string }): Promise<void> {
-    this.uploads.push(key);
-    this.objects.set(key, { body: await readFile(file), ...meta });
-  }
-  async probe(): Promise<void> {}
-}
+import { FakeTransport } from "../testing/fake-s3.ts";
+import { S3Storage } from "./s3.ts";
 
 const SETTINGS = {
   endpoint: "https://cos.ap-shanghai.myqcloud.com",
@@ -156,7 +134,7 @@ test("下载内容与远端记录的 sha256 对不上时报 STORAGE_OBJECT_CORRU
   });
 });
 
-test("put 返回这次是否真的写入；本机缓存被改坏时强制重传（storage push --reupload）能修好它", async () => {
+test("put 返回这次是否真的写入；本机缓存被改坏时 put 一份完好的文件（asset add 原文件）能修好它", async () => {
   await withS3(async (store, fake, dir) => {
     const src = path.join(dir, "a.wav");
     await writeFile(src, "hello");
@@ -170,7 +148,7 @@ test("put 返回这次是否真的写入；本机缓存被改坏时强制重传�
     const { chmod } = await import("node:fs/promises");
     await chmod(cached, 0o644);
     await writeFile(cached, "HELLO");
-    await store.put(src, "assets/2c/x.wav", { sha256: HELLO_SHA, force: true });
+    await store.put(src, "assets/2c/x.wav", { sha256: HELLO_SHA });
     assert.equal(await readFile(await store.fetch("assets/2c/x.wav"), "utf8"), "hello");
   });
 });
@@ -205,18 +183,30 @@ test("桶不存在时 GET 报 STORAGE_UNAVAILABLE，而不是当成对象不存�
   }
 });
 
-test("给了登记哈希且远端完好时，put 不读源文件（push 不必把整库读一遍）；--reupload 式的 force 则一定重新上传", async () => {
+test("trustRecord（storage push 用）：远端与登记的大小、哈希都对得上就不读源文件、不碰缓存；本机副本坏了也不影响判断", async () => {
   await withS3(async (store, fake, dir) => {
     const src = path.join(dir, "a.wav");
     await writeFile(src, "hello");
     await store.put(src, "assets/2c/x.wav", { sha256: HELLO_SHA });
-    // 本地副本已被改坏但大小没变：远端完好就直接判 present，不去读它
-    await writeFile(src, "HELLO");
-    assert.equal((await store.put(src, "assets/2c/x.wav", { sha256: HELLO_SHA })).written, false);
-    // 强制重传时照样验源文件：坏的不许传
+    // 本机副本已坏、连大小都变了：比较的是远端与登记值，不是本机文件
+    await writeFile(src, "HELLO, broken");
+    assert.equal((await store.put(src, "assets/2c/x.wav", { sha256: HELLO_SHA, trustRecord: { bytes: 5 } })).written, false);
+    assert.equal(fake.uploads.length, 1);
+    // force 时照样验源文件：坏的不许传
     await assert.rejects(store.put(src, "assets/2c/x.wav", { sha256: HELLO_SHA, force: true }), { code: "STORAGE_SOURCE_CORRUPT" });
     await writeFile(src, "hello");
     assert.equal((await store.put(src, "assets/2c/x.wav", { sha256: HELLO_SHA, force: true })).written, true);
     assert.equal(fake.uploads.length, 2);
+  });
+});
+
+test("远端对象没有 sha256 元数据（别处上传的）：大小相同也不算完好，重传一次补上元数据", async () => {
+  await withS3(async (store, fake, dir) => {
+    fake.objects.set("team/assets/2c/x.wav", { body: Buffer.from("HELLO"), contentType: "audio/wav", sha256: undefined });
+    const src = path.join(dir, "a.wav");
+    await writeFile(src, "hello");
+    assert.equal((await store.put(src, "assets/2c/x.wav", { sha256: HELLO_SHA })).written, true);
+    assert.equal(fake.objects.get("team/assets/2c/x.wav")?.sha256, HELLO_SHA);
+    assert.equal(fake.objects.get("team/assets/2c/x.wav")?.body.toString(), "hello");
   });
 });

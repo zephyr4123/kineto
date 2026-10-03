@@ -71,6 +71,8 @@ export interface IngestInput {
   sourceUrl?: string;
   description?: string;
   now?: Date;
+  // 共享存储里这份内容坏了（元数据却对得上）时，用原文件强制重传修复
+  reupload?: boolean;
 }
 
 export async function ingestAsset(
@@ -103,7 +105,7 @@ export async function ingestAsset(
     const [hex, { size }] = await Promise.all([sha256File(local), stat(local)]);
     const id = `sha256:${hex}`;
     assertCompatible((await readManifest(paths)).get(id), license, ext);
-    await storage.put(local, assetStorageKey({ id, ext }), { sha256: hex });
+    await storage.put(local, assetStorageKey({ id, ext }), { sha256: hex, force: input.reupload === true });
 
     return await withRepoLock(paths, async () => {
       const existing = (await readManifest(paths)).get(id);

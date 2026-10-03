@@ -155,7 +155,9 @@ export async function runTool(
     }).catch((err: unknown) => {
       // 产物已经入库：告诉对方去挂接它，别为了挂接重跑一次（可能付费的）工具
       const hint = `The result is already registered as ${asset.id}; link it with \`./kineto asset link ${asset.id} --to ${video.id} --as ${alias}\` instead of running the tool again.`;
-      if (err instanceof KinetoError) throw new KinetoError(err.code, `${err.message} (result registered as ${asset.id})`, { hint, cause: err });
+      if (err instanceof KinetoError) {
+        throw new KinetoError(err.code, `${err.message} (result registered as ${asset.id})`, { hint: err.hint ? `${err.hint} ${hint}` : hint, cause: err });
+      }
       throw new KinetoError("TOOL_RESULT_UNLINKED", `${(err as Error).message} (result registered as ${asset.id})`, { hint, cause: err });
     });
     return { tool: spec.name, asset, linked: { video: video.id, alias, staticFile: `${video.id}/${alias}${asset.ext}` } };
