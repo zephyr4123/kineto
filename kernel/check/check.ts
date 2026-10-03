@@ -3,7 +3,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { listVideoIds, readVideo } from "../catalog/catalog.ts";
-import { COMPOSITIONS_FILE, scanCompositionIds } from "../catalog/compositions.ts";
+import { compositionOwner, COMPOSITIONS_FILE, scanCompositionIds } from "../catalog/compositions.ts";
 import type { VideoManifest } from "../catalog/schema.ts";
 import { isNodeError, KinetoError } from "../errors.ts";
 import { videoDir, type KinetoPaths } from "../paths.ts";
@@ -54,7 +54,7 @@ export async function checkRepo(paths: KinetoPaths, storage: StorageBackend): Pr
       recordsReadable = false;
       continue;
     }
-    for (const p of await checkCompositions(paths, id, seenIds)) problems.push(p);
+    for (const p of await checkCompositions(paths, id, ids, seenIds)) problems.push(p);
     try {
       await readRenders(paths, id);
     } catch (err) {
@@ -72,17 +72,29 @@ export async function checkRepo(paths: KinetoPaths, storage: StorageBackend): Pr
           message: `videos/${video.id} references unknown asset ${assetId} as "${alias}"`,
           hint: "Register the file with `kineto asset add`.",
         });
-      } else if (!(await storage.has(assetStorageKey(record)))) {
-        // 别人 clone 下来、没接共享存储时属于正常情况，所以只是警告
-        problems.push({
-          level: "warn",
-          code: "ASSET_NOT_LOCAL",
-          message: `videos/${video.id} asset "${alias}" is not available in storage backend "${storage.name}"`,
-          hint: "Configure the shared storage backend in kineto.config.yaml, or re-add the asset.",
-        });
+      } else {
+        const size = await storage.size(assetStorageKey(record));
+        if (size === null) {
+          // 别人 clone 下来、没接共享存储时属于正常情况，所以只是警告
+          problems.push({
+            level: "warn",
+            code: "ASSET_NOT_LOCAL",
+            message: `videos/${video.id} asset "${alias}" is not available in storage backend "${storage.name}"`,
+            hint: "Configure the shared storage backend in kineto.config.yaml, or re-add the asset.",
+          });
+        } else if (size !== record.bytes) {
+          problems.push({
+            level: "error",
+            code: "ASSET_CORRUPT",
+            message: `videos/${video.id} asset "${alias}" is ${size} bytes in storage but ${record.bytes} in the manifest`,
+            hint: "The stored copy was modified. Re-run `kineto asset add` with the original file to repair it.",
+          });
+        }
       }
     }
   }
+
+  for (const p of await checkEngine(paths)) problems.push(p);
 
   if (recordsReadable) {
     const { drift } = await syncAll(paths, storage, { check: true });
@@ -106,7 +118,12 @@ export async function checkRepo(paths: KinetoPaths, storage: StorageBackend): Pr
 
 // 官方 skill 要求 composition id 写成 JSX 字符串字面量（Studio 写回源码依赖它），
 // 这里再加两条 kineto 约束：必须带视频 id 前缀（几百条视频不撞名）、只能写在 compositions.tsx。
-async function checkCompositions(paths: KinetoPaths, id: string, seen: Map<string, string>): Promise<Problem[]> {
+async function checkCompositions(
+  paths: KinetoPaths,
+  id: string,
+  allIds: string[],
+  seen: Map<string, string>,
+): Promise<Problem[]> {
   const dir = videoDir(paths, id);
   const problems: Problem[] = [];
   let source: string;
@@ -134,35 +151,55 @@ async function checkCompositions(paths: KinetoPaths, id: string, seen: Map<strin
       });
       continue;
     }
-    if (literal !== id && !literal.startsWith(`${id}-`)) {
+    const owner = compositionOwner(literal, allIds);
+    if (owner !== id) {
       problems.push({
         level: "error",
         code: "COMPOSITION_ID_PREFIX",
-        message: `videos/${id}/${COMPOSITIONS_FILE}: composition id "${literal}" must be "${id}" or start with "${id}-"`,
+        message:
+          owner === undefined
+            ? `videos/${id}/${COMPOSITIONS_FILE}: composition id "${literal}" must be "${id}" or start with "${id}-"`
+            : `videos/${id}/${COMPOSITIONS_FILE}: composition id "${literal}" falls in the namespace of video "${owner}"`,
       });
       continue;
     }
-    const owner = seen.get(literal);
-    if (owner) {
+    const firstSeen = seen.get(literal);
+    if (firstSeen) {
       problems.push({
         level: "error",
         code: "COMPOSITION_ID_DUPLICATE",
-        message: `Composition id "${literal}" is registered more than once (videos/${owner}, videos/${id})`,
+        message: `Composition id "${literal}" is registered more than once (videos/${firstSeen}, videos/${id})`,
       });
     }
     seen.set(literal, id);
   }
 
-  const files = await readdir(dir, { recursive: true, withFileTypes: true });
-  for (const f of files) {
-    if (!f.isFile() || !f.name.endsWith(".tsx") || f.name === COMPOSITIONS_FILE) continue;
-    const text = await readFile(path.join(f.parentPath, f.name), "utf8");
-    if (/<(Composition|Still)\b/.test(text)) {
+  problems.push(...(await strayRegistrations(paths, dir, path.join(dir, COMPOSITIONS_FILE), `videos/${id}/${COMPOSITIONS_FILE}`)));
+  return problems;
+}
+
+// engine/ 是跨视频的积木，不属于任何视频的命名空间，不能登记 composition
+async function checkEngine(paths: KinetoPaths): Promise<Problem[]> {
+  const dir = path.join(paths.root, "engine");
+  try {
+    return await strayRegistrations(paths, dir, null, "the compositions.tsx of the video that uses it");
+  } catch (err) {
+    if (isNodeError(err, "ENOENT")) return [];
+    throw err;
+  }
+}
+
+async function strayRegistrations(paths: KinetoPaths, dir: string, allowed: string | null, target: string): Promise<Problem[]> {
+  const problems: Problem[] = [];
+  for (const f of await readdir(dir, { recursive: true, withFileTypes: true })) {
+    const file = path.join(f.parentPath, f.name);
+    if (!f.isFile() || !/\.(tsx|jsx)$/.test(f.name) || file === allowed) continue;
+    if (/<(Composition|Still)\b/.test(await readFile(file, "utf8"))) {
       problems.push({
         level: "error",
         code: "COMPOSITION_OUTSIDE_REGISTRY",
-        message: `${path.relative(paths.root, path.join(f.parentPath, f.name))} registers a composition`,
-        hint: `Move <Composition>/<Still> into videos/${id}/${COMPOSITIONS_FILE}.`,
+        message: `${path.relative(paths.root, file)} registers a composition`,
+        hint: `Move <Composition>/<Still> into ${target}.`,
       });
     }
   }

@@ -74,7 +74,7 @@ export async function syncAll(
     ...resolved.map(
       ({ video, assets }) =>
         [
-          path.join(videoDir(paths, video.id), "assets.gen.ts"),
+          assetsModuleFile(paths, video.id),
           renderAssetsModule(
             video.id,
             assets.map(({ alias, record }) => ({ alias, ext: record.ext })),
@@ -97,25 +97,61 @@ export async function syncAll(
   let staged = 0;
   const missing: MissingAsset[] = [];
   for (const { video, assets } of resolved) {
-    const dir = path.join(paths.publicDir, video.id);
-    await mkdir(dir, { recursive: true });
-    for (const { alias, record } of assets) {
-      const key = assetStorageKey(record);
-      let local: string;
-      try {
-        local = await storage.fetch(key);
-      } catch (err) {
-        if (err instanceof KinetoError && err.code === "STORAGE_OBJECT_MISSING") {
-          missing.push({ video: video.id, alias, key });
-          continue;
-        }
-        throw err;
-      }
-      await hardlinkOrCopy(local, path.join(dir, `${alias}${record.ext}`));
-      staged++;
-    }
+    const result = await stageAssets(storage, video.id, assets, paths.publicDir);
+    staged += result.staged;
+    missing.push(...result.missing);
   }
   return { drift, written: drift, staged, missing };
+}
+
+export const assetsModuleFile = (paths: KinetoPaths, id: string) => path.join(videoDir(paths, id), "assets.gen.ts");
+
+// 只处理一条视频：写它的 assets.gen.ts、把它的素材暂存进 publicDir/<id>/。
+// 渲染用它而不是 syncAll——别的视频坏了或缺素材，不该拖累这一条。
+export async function syncVideo(
+  paths: KinetoPaths,
+  storage: StorageBackend,
+  video: VideoManifest,
+  publicDir: string,
+): Promise<{ written: boolean; staged: number; missing: MissingAsset[] }> {
+  const assets = resolveAssets(video, await readManifest(paths), true);
+  const file = assetsModuleFile(paths, video.id);
+  const content = renderAssetsModule(
+    video.id,
+    assets.map(({ alias, record }) => ({ alias, ext: record.ext })),
+  );
+  const written = (await readOrNull(file)) !== content;
+  if (written) await writeFile(file, content);
+  await rm(path.join(publicDir, video.id), { recursive: true, force: true });
+  return { written, ...(await stageAssets(storage, video.id, assets, publicDir)) };
+}
+
+async function stageAssets(
+  storage: StorageBackend,
+  videoId: string,
+  assets: { alias: string; record: AssetRecord }[],
+  publicDir: string,
+): Promise<{ staged: number; missing: MissingAsset[] }> {
+  const dir = path.join(publicDir, videoId);
+  await mkdir(dir, { recursive: true });
+  let staged = 0;
+  const missing: MissingAsset[] = [];
+  for (const { alias, record } of assets) {
+    const key = assetStorageKey(record);
+    let local: string;
+    try {
+      local = await storage.fetch(key);
+    } catch (err) {
+      if (err instanceof KinetoError && err.code === "STORAGE_OBJECT_MISSING") {
+        missing.push({ video: videoId, alias, key });
+        continue;
+      }
+      throw err;
+    }
+    await hardlinkOrCopy(local, path.join(dir, `${alias}${record.ext}`));
+    staged++;
+  }
+  return { staged, missing };
 }
 
 function resolveAssets(video: VideoManifest, manifest: Map<string, AssetRecord>, strict: boolean) {

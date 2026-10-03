@@ -2,13 +2,14 @@
 // 只追加、同 id 后写者生效——历史可追溯，git diff 永远只有新增行。
 import { createHash } from "node:crypto";
 import { createReadStream, createWriteStream } from "node:fs";
-import { appendFile, mkdir, readFile, rm, stat } from "node:fs/promises";
+import { mkdir, readFile, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { z } from "zod";
 import { ASSET_ID_RE } from "../catalog/schema.ts";
 import { isNodeError, KinetoError } from "../errors.ts";
+import { appendJsonLine } from "../jsonl.ts";
 import type { KinetoPaths } from "../paths.ts";
 import type { StorageBackend } from "../storage/types.ts";
 
@@ -90,27 +91,39 @@ export async function ingestAsset(
     });
   }
 
+  if (!isUrl && !(await stat(input.source).then((s) => s.isFile(), () => false))) {
+    throw new KinetoError("ASSET_SOURCE_NOT_FOUND", `No such file: ${input.source}`, {
+      hint: "Pass a path to an existing file (relative to your current directory) or an http(s) URL.",
+    });
+  }
   const local = isUrl ? await download(paths, input.source, ext) : input.source;
   try {
     const [hex, { size }] = await Promise.all([sha256File(local), stat(local)]);
-    // 剔除 undefined 键：保证返回值与写进 JSONL 再读回来的对象完全一致
-    const fields = {
-      id: `sha256:${hex}`,
+    const id = `sha256:${hex}`;
+    const existing = (await readManifest(paths)).get(id);
+    // 剔除 undefined 键：保证返回值与写进 JSONL 再读回来的对象完全一致。
+    // 同一文件再次登记时，没传的字段沿用旧值——只为挂到另一条视频而重新 add 不会抹掉作者与来源
+    const given = Object.fromEntries(
+      Object.entries({
+        license,
+        author: input.author,
+        sourceUrl: input.sourceUrl ?? (isUrl ? input.source : undefined),
+        description: input.description,
+      }).filter(([, v]) => v !== undefined),
+    );
+    const record = AssetRecord.parse({
+      ...existing,
+      ...given,
+      id,
       ext,
       bytes: size,
-      addedAt: (input.now ?? new Date()).toISOString(),
-      license,
-      author: input.author,
-      sourceUrl: input.sourceUrl ?? (isUrl ? input.source : undefined),
-      description: input.description,
-    };
-    const record = AssetRecord.parse(Object.fromEntries(Object.entries(fields).filter(([, v]) => v !== undefined)));
+      addedAt: existing?.addedAt ?? (input.now ?? new Date()).toISOString(),
+    });
     await storage.put(local, assetStorageKey(record));
 
-    const existing = (await readManifest(paths)).get(record.id);
     if (existing && sameMetadata(existing, record)) return existing;
     await mkdir(path.dirname(paths.assetsManifest), { recursive: true });
-    await appendFile(paths.assetsManifest, JSON.stringify(record) + "\n");
+    await appendJsonLine(paths.assetsManifest, record);
     return record;
   } finally {
     if (isUrl) await rm(local, { force: true });

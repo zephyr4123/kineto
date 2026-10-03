@@ -2,7 +2,7 @@
 // （非 TTY 输出 JSON、错误进 stderr、退出码稳定）。
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -100,4 +100,102 @@ test("仓库外运行报 NOT_IN_KINETO_REPO", () => {
   const r = kineto(path.parse(process.cwd()).root, "list");
   assert.equal(r.status, 1);
   assert.equal(r.err.error.code, "NOT_IN_KINETO_REPO");
+});
+
+function kinetoAsync(cwd: string, ...args: string[]): Promise<{ status: number | null; out: any; err: any }> {
+  return new Promise((resolve) => {
+    const child = spawn(process.execPath, [BIN, ...args], { cwd });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.on("data", (d) => (stdout += d));
+    child.stderr.on("data", (d) => (stderr += d));
+    child.on("close", (status) =>
+      resolve({ status, out: stdout.trim() ? JSON.parse(stdout) : null, err: stderr.trim() ? JSON.parse(stderr) : null }),
+    );
+  });
+}
+
+test("写在命令前面的参数报用法错误，而不是被静默丢弃", async () => {
+  const fx = await makeRepo();
+  try {
+    assert.equal(kineto(fx.root, "--check", "sync").status, 2);
+    assert.equal(kineto(fx.root, "--bogus", "list").status, 2);
+    assert.equal(kineto(fx.root, "--json", "list").status, 0);
+  } finally {
+    await fx.cleanup();
+  }
+});
+
+test("结论不通过时顶层 ok 为 false：check 失败输出 ok:false + 报告，退出码 1", async () => {
+  const fx = await makeRepo();
+  try {
+    kineto(fx.root, "new", "demo", "--title", "Demo");
+    const { mkdir } = await import("node:fs/promises");
+    await mkdir(path.join(fx.root, "videos/stray"));
+    const r = kineto(fx.root, "check");
+    assert.equal(r.status, 1);
+    assert.equal(r.out.ok, false);
+    assert.equal(r.out.data.ok, false);
+  } finally {
+    await fx.cleanup();
+  }
+});
+
+test("asset add 别名非法时什么都不落盘；asset link 把已登记素材挂到另一条视频", async () => {
+  const fx = await makeRepo();
+  try {
+    kineto(fx.root, "new", "a", "--title", "A");
+    kineto(fx.root, "new", "b", "--title", "B");
+    const file = path.join(fx.root, "pic.png");
+    await writeFile(file, "hello");
+    const bad = kineto(fx.root, "asset", "add", file, "--license", "MIT", "--to", "a", "--as", "Bad-Alias");
+    assert.equal(bad.status, 1);
+    assert.equal(bad.err.error.code, "INVALID_ALIAS");
+    assert.deepEqual(kineto(fx.root, "asset", "list").out.data.assets, []);
+
+    const added = kineto(fx.root, "asset", "add", file, "--license", "MIT", "--author", "Jane", "--to", "a", "--as", "pic");
+    const linked = kineto(fx.root, "asset", "link", added.out.data.asset.id, "--to", "b", "--as", "photo");
+    assert.equal(linked.status, 0, JSON.stringify(linked.err));
+    assert.equal(kineto(fx.root, "show", "b").out.data.assets[0].author, "Jane");
+    assert.equal(kineto(fx.root, "check").status, 0);
+  } finally {
+    await fx.cleanup();
+  }
+});
+
+test("并发的 asset add 被仓库锁串行化：每条都成功、都真的挂上了", async () => {
+  const fx = await makeRepo();
+  try {
+    kineto(fx.root, "new", "v", "--title", "V");
+    const runs = await Promise.all(
+      [0, 1, 2, 3, 4, 5].map(async (i) => {
+        const file = path.join(fx.root, `f${i}.png`);
+        await writeFile(file, `content-${i}`);
+        return kinetoAsync(fx.root, "asset", "add", file, "--license", "MIT", "--to", "v", "--as", `a${i}`);
+      }),
+    );
+    assert.deepEqual(runs.map((r) => r.status), [0, 0, 0, 0, 0, 0], JSON.stringify(runs.map((r) => r.err)));
+    const aliases = kineto(fx.root, "show", "v").out.data.assets.map((a: { alias: string }) => a.alias).sort();
+    assert.deepEqual(aliases, ["a0", "a1", "a2", "a3", "a4", "a5"]);
+    assert.equal(kineto(fx.root, "check").status, 0);
+  } finally {
+    await fx.cleanup();
+  }
+});
+
+test("另一条视频坏了时 new 先报错、不留下半成品目录；空标题报 INVALID_ARGUMENT", async () => {
+  const fx = await makeRepo();
+  try {
+    const { mkdir, access } = await import("node:fs/promises");
+    await mkdir(path.join(fx.root, "videos/broken"));
+    const r = kineto(fx.root, "new", "fresh", "--title", "Fresh");
+    assert.equal(r.status, 1);
+    await assert.rejects(access(path.join(fx.root, "videos/fresh")));
+    const { rm } = await import("node:fs/promises");
+    await rm(path.join(fx.root, "videos/broken"), { recursive: true });
+    const empty = kineto(fx.root, "new", "other", "--title", "");
+    assert.equal(empty.err.error.code, "INVALID_ARGUMENT");
+  } finally {
+    await fx.cleanup();
+  }
 });

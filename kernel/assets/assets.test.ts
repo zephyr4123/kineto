@@ -106,3 +106,38 @@ test("ingestAsset 支持 URL：下载后登记，sourceUrl 默认取该 URL", as
     await fx.cleanup();
   }
 });
+
+test("同一文件重新登记时没传的字段沿用旧值：只为链接而重新 add 不会抹掉作者与来源", async () => {
+  const fx = await makeRepo();
+  try {
+    const store = new LocalStorage(path.join(fx.root, ".kineto/store"));
+    const file = path.join(fx.root, "p.png");
+    await writeFile(file, "hello");
+    await ingestAsset(fx.paths, store, {
+      source: file,
+      license: "CC-BY-4.0",
+      author: "Jane Doe",
+      sourceUrl: "https://example.com/p",
+      now: FIXED_NOW,
+    });
+    const again = await ingestAsset(fx.paths, store, { source: file, license: "CC-BY-4.0" });
+    assert.equal(again.author, "Jane Doe");
+    assert.equal(again.sourceUrl, "https://example.com/p");
+    const { readFile } = await import("node:fs/promises");
+    assert.equal((await readFile(fx.paths.assetsManifest, "utf8")).trim().split("\n").length, 1);
+  } finally {
+    await fx.cleanup();
+  }
+});
+
+test("源文件不存在报 ASSET_SOURCE_NOT_FOUND", async () => {
+  const fx = await makeRepo();
+  try {
+    const store = new LocalStorage(path.join(fx.root, ".kineto/store"));
+    await assert.rejects(ingestAsset(fx.paths, store, { source: path.join(fx.root, "nope.png"), license: "MIT" }), {
+      code: "ASSET_SOURCE_NOT_FOUND",
+    });
+  } finally {
+    await fx.cleanup();
+  }
+});

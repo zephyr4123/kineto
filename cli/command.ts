@@ -12,6 +12,7 @@ export interface OptionSpec {
 export interface ArgSpec {
   name: string;
   description: string;
+  optional?: boolean;
 }
 
 export type Flags = Record<string, string | boolean | string[] | undefined>;
@@ -22,6 +23,8 @@ export interface CommandSpec<D = unknown> {
   summary: string;
   args?: ArgSpec[];
   options?: Record<string, OptionSpec>;
+  // 改受控区的命令在仓库锁里执行，并行发出的命令会被串行化
+  mutates?: boolean;
   run(ctx: Context, input: { args: string[]; flags: Flags }): Promise<D>;
   // 人类可读的输出；不提供时打印缩进后的 JSON
   human?(data: D): string;

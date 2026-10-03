@@ -17,12 +17,14 @@ npm install
 ```bash
 ./kineto new <id> --title "<title>"     # scaffolds videos/<id>/ from templates/blank and registers it
 ./kineto asset add <file|url> --license <spdx> --to <id> --as <alias>   # only if you need media
-./kineto studio                         # preview; keep it open while you work
+./kineto studio <id>                    # preview just this video; keep it open while you work
 ./kineto check                          # must pass before you say you are done
 ./kineto render <id>                    # only when the user asks for the file
 ```
 
 `<id>` is kebab-case (`corner-hit`). `./kineto help` lists every command; `./kineto <command> --help` shows options.
+`./kineto studio` without an id opens every video; with an id it is isolated from other videos' errors and missing assets,
+and `./kineto render` always bundles only the video it renders.
 
 ## Where things live
 
@@ -43,7 +45,9 @@ cli/  kernel/                the CLI and its logic (TypeScript run directly by N
 ```
 
 ✍️ = creative zone, write freely. 🔒 = controlled zone, **never edit by hand**: change it through the CLI.
-`./kineto check` catches hand edits, and CI runs it.
+`./kineto check` (run by CI) catches hand edits that break consistency — invalid records, stray or misnamed
+compositions, stale generated files, corrupted stored assets. Commands that change records take a repository lock,
+so running several at once is safe.
 
 ## Rules
 
@@ -53,6 +57,7 @@ cli/  kernel/                the CLI and its logic (TypeScript run directly by N
 3. **Media only via `./kineto asset add`, always with `--license`.** Then use it as `staticFile(assets.<alias>)`
    with `import { assets } from "./assets.gen"`. Do not put files in a `public/` folder or import binaries.
    No license, unknown provenance → it does not go in. Prefer generating media yourself (record how in `--description`).
+   To reuse an asset in another video, `./kineto asset link <asset-id> --to <id> --as <alias>` (ids: `./kineto asset list`).
 4. **Export via `./kineto render`, not `npx remotion render`.** Only `./kineto render` stores the file and records
    the render (git sha, codec, Remotion version) in `renders.jsonl`.
 5. **Remotion packages share one exact version** (see `package.json`). Add new ones with
@@ -74,9 +79,10 @@ Things that bite:
 
 ## CLI contract
 
-- Output is JSON when stdout is not a terminal (or with `--json`): success
-  `{"ok":true,"command":…,"data":…}` on stdout, failure `{"ok":false,"error":{"code","message","hint"}}` on stderr.
-- Exit codes: `0` success · `1` error, or a check that did not pass · `2` usage error.
+- Output is JSON when stdout is not a terminal (or with `--json`): results `{"ok":…,"command":…,"data":…}` on stdout,
+  errors `{"ok":false,"error":{"code","message","hint"}}` on stderr. `ok` is `false` whenever the exit code is not 0
+  — e.g. a failing `check` prints its report in `data` with `ok:false`.
+- Exit codes: `0` success · `1` error, or a check that did not pass · `2` usage error (options go after the command).
 - Errors carry a stable `code` and a `hint` with the next step. Read the hint before trying something else.
 
 ## Before you say "done"

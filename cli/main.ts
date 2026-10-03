@@ -2,9 +2,12 @@
 // - stdout 不是终端或带 --json 时输出 JSON：成功 {"ok":true,"command",...,"data"} 写 stdout，
 //   失败 {"ok":false,"error":{code,message,hint}} 写 stderr
 // - 退出码：0 成功；1 业务错误或结论不通过（check、sync --check）；2 用法错误
-// - 未知参数、缺必填参数一律报错，不猜
+// - 未知参数、缺必填参数、写在命令前面的参数一律报错，不猜
+// - 顶层 ok 与退出码一致：check 不通过时 ok 为 false，报告照样放在 data 里
 import { parseArgs } from "node:util";
+import { z } from "zod";
 import { KinetoError } from "../kernel/errors.ts";
+import { withRepoLock } from "../kernel/lock.ts";
 import type { CommandSpec, Flags } from "./command.ts";
 import { UsageError } from "./command.ts";
 import { COMMANDS } from "./commands/index.ts";
@@ -19,6 +22,13 @@ async function main(argv: string[]): Promise<number> {
   const json = argv.includes("--json") || !process.stdout.isTTY;
   const interactive = !json && process.stderr.isTTY;
   try {
+    // 命令前只允许全局开关；其它参数放在命令前会被静默忽略（例如 `kineto --check sync` 会真的去写），所以直接报错
+    const first = argv.findIndex((a) => !a.startsWith("-"));
+    const leading = first === -1 ? argv : argv.slice(0, first);
+    const misplaced = leading.find((a) => !["--json", "--help", "-h"].includes(a));
+    if (misplaced) {
+      throw new UsageError(`Option ${misplaced} must come after the command`, "Usage: kineto <command> [options]");
+    }
     const words = argv.filter((a) => !a.startsWith("-"));
     if (words.length === 0 || words[0] === "help") {
       const target = words[0] === "help" ? resolve(words.slice(1)) : undefined;
@@ -33,10 +43,12 @@ async function main(argv: string[]): Promise<number> {
 
     const { args, flags } = parse(spec, argv.slice(argv.indexOf(words[resolved.depth - 1]!) + 1));
     const ctx = new Context(process.cwd(), process.env, interactive ? progressLine : () => {});
-    const data = await spec.run(ctx, { args, flags });
+    const run = () => spec.run(ctx, { args, flags });
+    const data = spec.mutates ? await withRepoLock(ctx.paths, run) : await run();
     if (interactive) process.stderr.write("\r\x1b[2K");
-    print(json, spec.name, data, spec.human);
-    return spec.exitCode?.(data) ?? 0;
+    const code = spec.exitCode?.(data) ?? 0;
+    print(json, spec.name, data, spec.human, code === 0);
+    return code;
   } catch (err) {
     if (interactive) process.stderr.write("\r\x1b[2K");
     return fail(json, err);
@@ -66,8 +78,9 @@ function parse(spec: CommandSpec<any>, tokens: string[]): { args: string[]; flag
     throw new UsageError((err as Error).message, `Run \`kineto ${spec.name} --help\`.`);
   }
   const argSpecs = spec.args ?? [];
-  if (parsed.positionals.length !== argSpecs.length) {
-    const expected = argSpecs.map((a) => `<${a.name}>`).join(" ") || "no arguments";
+  const required = argSpecs.filter((a) => !a.optional).length;
+  if (parsed.positionals.length < required || parsed.positionals.length > argSpecs.length) {
+    const expected = argSpecs.map((a) => (a.optional ? `[${a.name}]` : `<${a.name}>`)).join(" ") || "no arguments";
     throw new UsageError(`kineto ${spec.name} expects ${expected}`, `Run \`kineto ${spec.name} --help\`.`);
   }
   for (const [name, o] of Object.entries(spec.options ?? {})) {
@@ -79,7 +92,7 @@ function parse(spec: CommandSpec<any>, tokens: string[]): { args: string[]; flag
 }
 
 function usageLine(spec: CommandSpec<any>): string {
-  const args = (spec.args ?? []).map((a) => `<${a.name}>`);
+  const args = (spec.args ?? []).map((a) => (a.optional ? `[${a.name}]` : `<${a.name}>`));
   const opts = Object.entries(spec.options ?? {}).map(([k, o]) => {
     const flag = o.type === "string" ? `--${k} <${o.value ?? k}>` : `--${k}`;
     return o.required ? flag : `[${flag}]`;
@@ -104,9 +117,9 @@ const globalHelp = () => ({
   commands: COMMANDS.map((c) => ({ name: c.name, summary: c.summary, usage: usageLine(c) })),
 });
 
-function print(json: boolean, command: string, data: unknown, human?: (d: any) => string): number {
+function print(json: boolean, command: string, data: unknown, human?: (d: any) => string, ok = true): number {
   if (json) {
-    process.stdout.write(JSON.stringify({ ok: true, command, data }) + "\n");
+    process.stdout.write(JSON.stringify({ ok, command, data }) + "\n");
   } else if (command === "help") {
     process.stdout.write(formatHelp(data as ReturnType<typeof globalHelp> | ReturnType<typeof commandHelp>));
   } else {
@@ -132,7 +145,8 @@ function formatHelp(help: ReturnType<typeof globalHelp> | ReturnType<typeof comm
   return lines.join("\n") + "\n";
 }
 
-function fail(json: boolean, err: unknown): number {
+function fail(json: boolean, raw: unknown): number {
+  const err = normalize(raw);
   const usage = err instanceof UsageError;
   const known = err instanceof KinetoError;
   const error = {
@@ -148,6 +162,18 @@ function fail(json: boolean, err: unknown): number {
     if (!usage && !known && err instanceof Error && err.stack) process.stderr.write(err.stack + "\n");
   }
   return usage ? 2 : 1;
+}
+
+// 把常见的非 kineto 错误翻译成稳定的错误码，agent 才能按 code 分支，而不是对着 INTERNAL 猜
+function normalize(err: unknown): unknown {
+  if (err instanceof z.ZodError) {
+    return new KinetoError("INVALID_ARGUMENT", z.prettifyError(err), { hint: "Check the values you passed." });
+  }
+  const errno = err as NodeJS.ErrnoException;
+  if (errno?.code === "ENOENT") {
+    return new KinetoError("FILE_NOT_FOUND", errno.message, { hint: "Check the path; relative paths resolve from your current directory." });
+  }
+  return err;
 }
 
 function progressLine(message: string) {

@@ -25,12 +25,13 @@ export const doctorCommand = defineCommand({
     const add = (c: Check) => checks.push(c);
     const root = ctx.paths.root;
 
+    // 与 ./kineto 外壳同一判据：类型剥离默认开启的版本
     const [major, minor] = process.versions.node.split(".").map(Number) as [number, number];
     add({
       name: "node",
-      status: major > 22 || (major === 22 && minor >= 18) ? "ok" : "fail",
+      status: (major === 22 && minor >= 18) || (major === 23 && minor >= 6) || major >= 24 ? "ok" : "fail",
       detail: process.versions.node,
-      hint: "Install Node.js 22.18 or newer.",
+      hint: "Install Node.js 22.18+ or 23.6+.",
     });
 
     const pkg = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
@@ -123,6 +124,7 @@ export const setupCommand = defineCommand({
   options: {
     update: { type: "boolean", description: "Update the installed Remotion skills to the latest version" },
   },
+  mutates: true,
   async run(ctx, { flags }) {
     const root = ctx.paths.root;
     const present = await access(path.join(root, SKILL_ROUTER)).then(

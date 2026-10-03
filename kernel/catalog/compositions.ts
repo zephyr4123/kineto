@@ -7,7 +7,15 @@ import { videoDir, type KinetoPaths } from "../paths.ts";
 export const COMPOSITIONS_FILE = "compositions.tsx";
 
 export function scanCompositionIds(source: string): (string | null)[] {
-  return [...source.matchAll(/\bid=(?:"([^"]*)"|'([^']*)'|\{)/g)].map((m) => m[1] ?? m[2] ?? null);
+  return [...source.matchAll(/\bid\s*=\s*(?:"([^"]*)"|'([^']*)'|\{)/g)].map((m) => m[1] ?? m[2] ?? null);
+}
+
+// composition id 归属哪条视频：取最长的匹配视频 id。
+// 视频 w 与 w-x 同时存在时，w-x-intro 属于 w-x——w 不能注册它，也不能渲染它。
+export function compositionOwner(compositionId: string, videoIds: string[]): string | undefined {
+  return videoIds
+    .filter((v) => compositionId === v || compositionId.startsWith(`${v}-`))
+    .sort((a, b) => b.length - a.length)[0];
 }
 
 export async function readCompositionIds(paths: KinetoPaths, id: string): Promise<(string | null)[]> {

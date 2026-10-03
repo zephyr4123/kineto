@@ -79,6 +79,9 @@ export interface CreateVideoInput {
 
 export async function createVideo(paths: KinetoPaths, input: CreateVideoInput): Promise<VideoManifest> {
   assertVideoId(input.id);
+  if (input.title.trim() === "") {
+    throw new KinetoError("INVALID_ARGUMENT", "Title must not be empty", { hint: 'Pass --title "<text>".' });
+  }
   const templateName = input.template ?? "blank";
   const templateDir = path.join(paths.templatesDir, templateName);
   const templates = await readdir(paths.templatesDir).catch(() => [] as string[]);
@@ -150,17 +153,28 @@ export async function linkAsset(
   assetId: string,
   now: Date = new Date(),
 ): Promise<VideoManifest> {
-  if (!ALIAS_RE.test(alias)) {
-    throw new KinetoError("INVALID_ALIAS", `Invalid asset alias "${alias}"`, {
-      hint: "Use a camelCase identifier such as boop or introMusic; it becomes assets.<alias> in code.",
+  assertAlias(alias);
+  const current = await readVideo(paths, id);
+  // 别名会成为暂存文件名；大小写不敏感的文件系统（macOS 默认）上只差大小写的两个别名会撞成同一个文件
+  const clash = Object.keys(current.assets).find((a) => a !== alias && a.toLowerCase() === alias.toLowerCase());
+  if (clash) {
+    throw new KinetoError("ALIAS_CONFLICT", `Alias "${alias}" differs from existing alias "${clash}" only by case`, {
+      hint: `Reuse "${clash}" or pick a clearly different alias.`,
     });
   }
-  const current = await readVideo(paths, id);
   return writeVideo(paths, {
     ...current,
     assets: { ...current.assets, [alias]: assetId },
     updatedAt: now.toISOString(),
   });
+}
+
+export function assertAlias(alias: string): void {
+  if (!ALIAS_RE.test(alias)) {
+    throw new KinetoError("INVALID_ALIAS", `Invalid asset alias "${alias}"`, {
+      hint: "Use a camelCase identifier such as boop or introMusic; it becomes assets.<alias> in code.",
+    });
+  }
 }
 
 async function writeVideo(paths: KinetoPaths, manifest: VideoManifest): Promise<VideoManifest> {
@@ -179,7 +193,9 @@ async function fillTemplate(dir: string, tokens: Record<string, string>): Promis
     let out = text;
     for (const [token, value] of Object.entries(tokens)) {
       // 带引号的占位符是字符串字面量位置：整体换成 JSON 转义后的字面量，标题含引号、反斜杠也安全
-      out = out.replaceAll(`"${token}"`, JSON.stringify(value)).replaceAll(token, value);
+      // 替换值用函数：字符串形式会把标题里的 $& $$ $` 当成替换模式解释
+      const quoted = JSON.stringify(value);
+      out = out.replaceAll(`"${token}"`, () => quoted).replaceAll(token, () => value);
     }
     if (out !== text) await writeFile(file, out);
   }

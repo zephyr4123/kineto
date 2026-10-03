@@ -1,4 +1,4 @@
-import { readdir } from "node:fs/promises";
+import { readdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { createVideo, listVideos, readVideo, updateVideo } from "../../kernel/catalog/catalog.ts";
 import { readCompositionIds } from "../../kernel/catalog/compositions.ts";
@@ -19,15 +19,25 @@ export const newCommand = defineCommand({
     description: { type: "string", value: "text", description: "What the video is about" },
     template: { type: "string", value: "name", description: "Template under templates/ (default: blank)" },
   },
+  mutates: true,
   async run(ctx, { args, flags }) {
+    const storage = await ctx.storage();
+    // 先确认现有记录都读得通：否则新视频建好了却注册不进去，留下半成品
+    await listVideos(ctx.paths);
     const video = await createVideo(ctx.paths, {
       id: args[0]!,
       title: str(flags, "title")!,
       description: str(flags, "description"),
       template: str(flags, "template"),
     });
-    await syncAll(ctx.paths, await ctx.storage());
     const dir = videoDir(ctx.paths, video.id);
+    try {
+      await syncAll(ctx.paths, storage);
+    } catch (err) {
+      await rm(dir, { recursive: true, force: true });
+      await syncAll(ctx.paths, storage).catch(() => {});
+      throw err;
+    }
     const files = (await readdir(dir, { recursive: true, withFileTypes: true }))
       .filter((f) => f.isFile())
       .map((f) => path.relative(ctx.paths.root, path.join(f.parentPath, f.name)))
@@ -123,6 +133,7 @@ export const updateCommand = defineCommand({
     status: { type: "string", value: VideoStatus.options.join("|"), description: "New status" },
     tag: { type: "string", multiple: true, value: "tag", description: "Replace tags (repeatable)" },
   },
+  mutates: true,
   async run(ctx, { args, flags }) {
     const tags = flags.tag as string[] | undefined;
     const video = await updateVideo(ctx.paths, args[0]!, {

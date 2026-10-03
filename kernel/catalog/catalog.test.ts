@@ -93,3 +93,39 @@ test("linkAsset 写入别名引用；别名必须是合法标识符", async () =
     await fx.cleanup();
   }
 });
+
+test("标题里的 $ 替换模式（$& $$ $`）原样保留，不会被 replaceAll 解释", async () => {
+  const fx = await makeRepo();
+  try {
+    await writeFile(path.join(fx.root, "templates/blank/Title.tsx"), 'export const TITLE = "__KINETO_TITLE__";\n');
+    const title = "Make $$$ fast: $& and $` end";
+    await createVideo(fx.paths, { id: "d", title });
+    const src = await readFile(path.join(fx.root, "videos/d/Title.tsx"), "utf8");
+    assert.equal(src, `export const TITLE = ${JSON.stringify(title)};\n`);
+  } finally {
+    await fx.cleanup();
+  }
+});
+
+test("空标题报 INVALID_ARGUMENT，且不留下视频目录", async () => {
+  const fx = await makeRepo();
+  try {
+    await assert.rejects(createVideo(fx.paths, { id: "e", title: "  " }), { code: "INVALID_ARGUMENT" });
+    await assert.rejects(readVideo(fx.paths, "e"), { code: "VIDEO_NOT_FOUND" });
+  } finally {
+    await fx.cleanup();
+  }
+});
+
+test("同一视频里只差大小写的别名报 ALIAS_CONFLICT（大小写不敏感的文件系统上会撞文件名）", async () => {
+  const fx = await makeRepo();
+  try {
+    await createVideo(fx.paths, { id: "a", title: "x" });
+    await linkAsset(fx.paths, "a", "introMusic", SHA);
+    await assert.rejects(linkAsset(fx.paths, "a", "intromusic", SHA), { code: "ALIAS_CONFLICT" });
+    // 同一个别名重新指向别的素材是显式更新，允许
+    await linkAsset(fx.paths, "a", "introMusic", "sha256:" + "f".repeat(64));
+  } finally {
+    await fx.cleanup();
+  }
+});

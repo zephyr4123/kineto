@@ -1,9 +1,10 @@
 // 渲染历史：videos/<id>/renders.jsonl，只追加。一行 = 一次成功渲染，
 // 记下复现它所需的一切（composition、编码、git 版本、Remotion 版本）和产物在哪。
-import { appendFile, readFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import { isNodeError, KinetoError } from "../errors.ts";
+import { appendJsonLine } from "../jsonl.ts";
 import { videoDir, type KinetoPaths } from "../paths.ts";
 
 export const RenderRecord = z
@@ -58,5 +59,5 @@ const rendersError = (id: string, line: number, why: string) =>
   });
 
 export async function appendRender(paths: KinetoPaths, id: string, record: RenderRecord): Promise<void> {
-  await appendFile(rendersFile(paths, id), JSON.stringify(RenderRecord.parse(record)) + "\n");
+  await appendJsonLine(rendersFile(paths, id), RenderRecord.parse(record));
 }

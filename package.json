@@ -6,7 +6,7 @@
   "license": "UNLICENSED",
   "type": "module",
   "engines": {
-    "node": ">=22.18"
+    "node": "^22.18 || >=23.6"
   },
   "bin": {
     "kineto": "./kineto"

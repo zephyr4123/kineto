@@ -1,8 +1,10 @@
 import { spawn } from "node:child_process";
 import path from "node:path";
+import { readVideo } from "../../kernel/catalog/catalog.ts";
 import { checkRepo } from "../../kernel/check/check.ts";
-import { renderVideo } from "../../kernel/render/render.ts";
-import { syncAll } from "../../kernel/sync/sync.ts";
+import { withRepoLock } from "../../kernel/lock.ts";
+import { renderVideo, writeVideoEntry } from "../../kernel/render/render.ts";
+import { syncAll, syncVideo } from "../../kernel/sync/sync.ts";
 import { defineCommand, str } from "../command.ts";
 
 export const syncCommand = defineCommand({
@@ -11,6 +13,7 @@ export const syncCommand = defineCommand({
   options: {
     check: { type: "boolean", description: "Only report generated files that are out of date (exit 1 if any)" },
   },
+  mutates: true,
   async run(ctx, { flags }) {
     const check = flags.check === true;
     return { check, ...(await syncAll(ctx.paths, await ctx.storage(), { check })) };
@@ -66,18 +69,29 @@ export const renderCommand = defineCommand({
 
 export const studioCommand = defineCommand({
   name: "studio",
-  summary: "Sync, then open Remotion Studio with every video (long-running)",
+  summary: "Sync, then open Remotion Studio with every video, or only one (long-running)",
+  args: [{ name: "id", optional: true, description: "Only this video: isolated from other videos' errors and missing assets" }],
   options: {
     port: { type: "string", value: "port", description: "Port for the Studio server" },
   },
-  async run(ctx, { flags }) {
+  async run(ctx, { args, flags }) {
     const { paths } = ctx;
-    await syncAll(paths, await ctx.storage());
+    const storage = await ctx.storage();
+    const id = args[0];
+    const entry = await withRepoLock(paths, async () => {
+      if (!id) {
+        await syncAll(paths, storage);
+        return paths.entryPoint;
+      }
+      await syncVideo(paths, storage, await readVideo(paths, id), paths.publicDir);
+      return writeVideoEntry(paths, id);
+    });
     const bin = path.join(paths.root, "node_modules", ".bin", "remotion");
     const port = str(flags, "port");
-    const args = ["studio", paths.entryPoint, "--public-dir", paths.publicDir, ...(port ? ["--port", port] : [])];
+    const studioArgs = ["studio", entry, "--public-dir", paths.publicDir, ...(port ? ["--port", port] : [])];
     const code = await new Promise<number>((resolve, reject) => {
-      const child = spawn(bin, args, { cwd: paths.root, stdio: "inherit" });
+      // Studio 的日志走 stderr：JSON 模式下 stdout 只留最终那一行结果
+      const child = spawn(bin, studioArgs, { cwd: paths.root, stdio: ["inherit", 2, 2] });
       child.on("error", reject);
       child.on("exit", (c) => resolve(c ?? 1));
     });

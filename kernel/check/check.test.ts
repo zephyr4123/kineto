@@ -90,3 +90,52 @@ test("缺 video.json 或 compositions.tsx 的视频目录被报出", async () =>
     await fx.cleanup();
   }
 });
+
+test("id 等号两边带空格也会被扫描到；engine/ 里登记 composition 被报出", async () => {
+  const { fx, store } = await cleanRepo();
+  try {
+    const file = path.join(fx.root, "videos/demo/compositions.tsx");
+    await writeFile(file, (await readFile(file, "utf8")).replace('id="demo"', 'id = "other"'));
+    assert.deepEqual(codes(await checkRepo(fx.paths, store)), ["COMPOSITION_ID_PREFIX"]);
+    await writeFile(file, (await readFile(file, "utf8")).replace('id = "other"', 'id="demo"'));
+    const { mkdir } = await import("node:fs/promises");
+    await mkdir(path.join(fx.root, "engine"), { recursive: true });
+    await writeFile(path.join(fx.root, "engine/Shared.tsx"), "export const X = () => <Composition id=\"x\" />;\n");
+    assert.deepEqual(codes(await checkRepo(fx.paths, store)), ["COMPOSITION_OUTSIDE_REGISTRY"]);
+  } finally {
+    await fx.cleanup();
+  }
+});
+
+test("composition id 落进另一条视频的命名空间（w 注册 w-x-intro，而 w-x 是另一条视频）被报出", async () => {
+  const { fx, store } = await cleanRepo();
+  try {
+    await createVideo(fx.paths, { id: "w", title: "W" });
+    await createVideo(fx.paths, { id: "w-x", title: "WX" });
+    await syncAll(fx.paths, store);
+    const file = path.join(fx.root, "videos/w/compositions.tsx");
+    await writeFile(file, (await readFile(file, "utf8")).replace('id="w"', 'id="w-x-intro"'));
+    assert.deepEqual(codes(await checkRepo(fx.paths, store)), ["COMPOSITION_ID_PREFIX"]);
+  } finally {
+    await fx.cleanup();
+  }
+});
+
+test("存储里的素材大小与 manifest 不符（被改坏）报 ASSET_CORRUPT", async () => {
+  const { fx, store } = await cleanRepo();
+  try {
+    const { ingestAsset, assetStorageKey } = await import("../assets/assets.ts");
+    const { chmod } = await import("node:fs/promises");
+    const src = path.join(fx.root, "a.png");
+    await writeFile(src, "hello");
+    const rec = await ingestAsset(fx.paths, store, { source: src, license: "MIT" });
+    await linkAsset(fx.paths, "demo", "pic", rec.id);
+    await syncAll(fx.paths, store);
+    const stored = await store.fetch(assetStorageKey(rec));
+    await chmod(stored, 0o644);
+    await writeFile(stored, "EDITED-BY-AGENT");
+    assert.deepEqual(codes(await checkRepo(fx.paths, store)), ["ASSET_CORRUPT"]);
+  } finally {
+    await fx.cleanup();
+  }
+});
