@@ -25,3 +25,6 @@ skills-lock.json
 .idea/
 .vscode/
 *.swp
+
+# 浏览器自动化（playwright MCP）的截图与日志
+.playwright-mcp/
