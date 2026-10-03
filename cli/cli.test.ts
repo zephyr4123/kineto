@@ -246,3 +246,51 @@ test("storage push 的判定：缺素材才算不通过（退出码 1），历�
   assert.equal(storagePushCommand.exitCode!({ ...base, missingAssets: ["assets/aa/x.wav"], missingRenders: [] }), 1);
   assert.match(storagePushCommand.human!({ ...base, missingAssets: [], missingRenders: ["renders/a/a-1.mp4"] }), /no longer stored/);
 });
+
+test("tool list / tool <name>：插件按需加载，参数走同一套解析与 help，产物入库并挂到视频上", async () => {
+  const fx = await makeRepo();
+  try {
+    const { mkdir, symlink } = await import("node:fs/promises");
+    await symlink(path.resolve(path.dirname(BIN), "node_modules"), path.join(fx.root, "node_modules"));
+    await mkdir(path.join(fx.root, "tools/echo"), { recursive: true });
+    await writeFile(
+      path.join(fx.root, "tools/echo/index.ts"),
+      `import { z } from "zod";
+import { writeFile } from "node:fs/promises";
+import path from "node:path";
+export default {
+  name: "echo",
+  summary: "Write text into a .txt asset",
+  config: z.object({}).strict(),
+  args: [{ name: "text", description: "What to write" }],
+  options: { shout: { type: "boolean", description: "Uppercase" } },
+  async run(ctx) {
+    const file = path.join(ctx.workDir, "out.txt");
+    await writeFile(file, ctx.flags.shout ? ctx.args[0].toUpperCase() : ctx.args[0]);
+    return { file, license: "CC0-1.0", author: "echo", description: "echo" };
+  },
+};
+`,
+    );
+    await writeFile(path.join(fx.root, "kineto.config.yaml"), "tools:\n  echo:\n");
+    kineto(fx.root, "new", "demo", "--title", "Demo");
+
+    const list = kineto(fx.root, "tool", "list");
+    assert.deepEqual(list.out.data.tools, [{ name: "echo", summary: "Write text into a .txt asset", enabled: true }]);
+
+    const help = kineto(fx.root, "tool", "echo", "--help");
+    assert.match(help.out.data.usage, /^kineto tool echo <text> \[--shout\] \[--to <video>\]/);
+
+    const run = kineto(fx.root, "tool", "echo", "hi", "--shout", "--to", "demo", "--as", "note");
+    assert.equal(run.status, 0, JSON.stringify(run.err));
+    assert.equal(run.out.data.linked.staticFile, "demo/note.txt");
+    assert.equal(kineto(fx.root, "check").status, 0);
+
+    assert.equal(kineto(fx.root, "tool", "echo", "hi", "--bogus").status, 2);
+    const missing = kineto(fx.root, "tool", "nope");
+    assert.equal(missing.status, 1);
+    assert.equal(missing.err.error.code, "TOOL_NOT_FOUND");
+  } finally {
+    await fx.cleanup();
+  }
+});

@@ -14,5 +14,5 @@
     "noUnusedLocals": true,
     "noUncheckedIndexedAccess": true
   },
-  "include": ["cli", "kernel", "remotion.config.ts"]
+  "include": ["cli", "kernel", "tools", "remotion.config.ts"]
 }

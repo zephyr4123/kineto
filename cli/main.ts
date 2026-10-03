@@ -8,9 +8,12 @@ import { parseArgs } from "node:util";
 import { z } from "zod";
 import { KinetoError } from "../kernel/errors.ts";
 import { withRepoLock } from "../kernel/lock.ts";
+import { findRoot, pathsFor } from "../kernel/paths.ts";
+import { loadTool } from "../kernel/tools/host.ts";
 import type { CommandSpec, Flags } from "./command.ts";
 import { UsageError } from "./command.ts";
 import { COMMANDS } from "./commands/index.ts";
+import { toolCommand } from "./commands/tools.ts";
 import { Context } from "./context.ts";
 
 const GLOBAL_OPTIONS = {
@@ -31,10 +34,10 @@ async function main(argv: string[]): Promise<number> {
     }
     const words = argv.filter((a) => !a.startsWith("-"));
     if (words.length === 0 || words[0] === "help") {
-      const target = words[0] === "help" ? resolve(words.slice(1)) : undefined;
+      const target = words[0] === "help" ? (resolve(words.slice(1)) ?? (await resolveTool(words.slice(1)))) : undefined;
       return print(json, "help", target ? commandHelp(target.spec) : globalHelp());
     }
-    const resolved = resolve(words);
+    const resolved = resolve(words) ?? (await resolveTool(words));
     if (!resolved) {
       throw new UsageError(`Unknown command "${words[0]}"`, "Run `./kineto help` to list commands.");
     }
@@ -62,6 +65,13 @@ function resolve(words: string[]): { spec: CommandSpec<any>; depth: number } | u
     if (spec && words.length >= depth) return { spec, depth };
   }
   return undefined;
+}
+
+// `tool <name>` 不在静态命令表里：用到时才去 tools/<name> 加载插件，核心命令永远不碰插件代码
+async function resolveTool(words: string[]): Promise<{ spec: CommandSpec<any>; depth: number } | undefined> {
+  if (words[0] !== "tool" || words[1] === undefined) return undefined;
+  const spec = await loadTool(pathsFor(findRoot(process.cwd())), words[1]);
+  return { spec: toolCommand(spec), depth: 2 };
 }
 
 function parse(spec: CommandSpec<any>, tokens: string[]): { args: string[]; flags: Flags } {

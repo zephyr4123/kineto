@@ -52,6 +52,8 @@ const ConfigSchema = z
         path: ["s3"],
       })
       .prefault({}),
+    // 工具插件的配置：写了 tools.<name> 才算启用（值可以为空），每段由插件自己的 schema 校验
+    tools: z.record(z.string(), z.unknown()).default({}),
     remotion: z
       .object({
         // Remotion 5.0 起渲染必须传 license key；免费授权填 "free-license"

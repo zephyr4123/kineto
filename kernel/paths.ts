@@ -21,6 +21,8 @@ export interface KinetoPaths {
   tmpDir: string;
   // 远端存储后端在本机的只读缓存
   cacheDir: string;
+  // 工具插件：tools/<name>/index.ts
+  toolsDir: string;
 }
 
 export function pathsFor(root: string): KinetoPaths {
@@ -38,6 +40,7 @@ export function pathsFor(root: string): KinetoPaths {
     publicDir: at(remotionSettings.publicDir),
     tmpDir: at(".kineto", "tmp"),
     cacheDir: at(".kineto", "cache"),
+    toolsDir: at("tools"),
   };
 }
 
