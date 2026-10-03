@@ -54,11 +54,15 @@ export const checkCommand = defineCommand({
 
 export const renderCommand = defineCommand({
   name: "render",
-  summary: "Render a video (or one of its scenes), store the file and append to renders.jsonl",
+  summary: "Render a video, one of its scenes or a <Still>, store the file and append to renders.jsonl",
   args: [{ name: "id", description: "Video id" }],
   options: {
     composition: { type: "string", value: "id", description: "Composition to render (default: the video id)" },
-    codec: { type: "string", value: "codec", description: "h264 (default), h265, vp8, vp9, prores, gif" },
+    codec: {
+      type: "string",
+      value: "codec",
+      description: "Videos: h264 (default), h265, vp8, vp9, prores, gif. Stills (<Still>): png (default), jpeg, webp",
+    },
   },
   async run(ctx, { args, flags }) {
     const { config } = await ctx.config();
@@ -70,8 +74,9 @@ export const renderCommand = defineCommand({
     });
   },
   human: (d) =>
-    `Rendered ${d.record.composition} (${d.record.width}x${d.record.height}, ${d.record.durationInFrames}f @ ${d.record.fps}fps, ` +
-    `${(d.record.bytes / 1e6).toFixed(1)} MB) in ${(d.record.elapsedMs / 1000).toFixed(1)}s\n${d.file}` +
+    `Rendered ${d.record.composition} (${d.record.width}x${d.record.height}, ` +
+    (d.record.durationInFrames === 1 ? d.record.codec : `${d.record.durationInFrames}f @ ${d.record.fps}fps`) +
+    `, ${(d.record.bytes / 1e6).toFixed(1)} MB) in ${(d.record.elapsedMs / 1000).toFixed(1)}s\n${d.file}` +
     (d.record.storage.url ? `\n${d.record.storage.url}` : ""),
 });
 

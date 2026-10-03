@@ -1,4 +1,4 @@
-// 渲染：暂存这条视频 → 只打包这条视频 → selectComposition → renderMedia → 入存储 → 追加 renders.jsonl。
+// 渲染：暂存这条视频 → 只打包这条视频 → selectComposition → renderMedia（<Still> 走 renderStill）→ 入存储 → 追加 renders.jsonl。
 // 走 Node API 而不是 `npx remotion render`：拿得到结构化结果，才能入库和留痕。
 // 只打包目标视频是硬要求：别的视频模块顶层就加载素材（官方字体示例即如此），
 // 一条视频缺素材或写坏了，不能拖累整个仓库都渲染不了。
@@ -7,7 +7,7 @@ import { mkdir, rename, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import { bundle } from "@remotion/bundler";
-import { renderMedia, selectComposition } from "@remotion/renderer";
+import { renderMedia, renderStill, selectComposition } from "@remotion/renderer";
 import { VERSION } from "remotion/version";
 import { listVideoIds, readVideo } from "../catalog/catalog.ts";
 import { compositionOwner } from "../catalog/compositions.ts";
@@ -32,6 +32,14 @@ export const CODEC_EXTENSIONS = {
   gif: "gif",
 } as const;
 export type SupportedCodec = keyof typeof CODEC_EXTENSIONS;
+
+// <Still>（只有一帧的 composition）出图片，如封面、缩略图
+export const STILL_EXTENSIONS = {
+  png: "png",
+  jpeg: "jpg",
+  webp: "webp",
+} as const;
+export type StillFormat = keyof typeof STILL_EXTENSIONS;
 
 export interface RenderProgress {
   stage: "bundle" | "render";
@@ -64,13 +72,12 @@ export async function renderVideo(
       hint: `Composition ids of this video are "${video.id}" or start with "${video.id}-".`,
     });
   }
-  const codec = options.codec ?? "h264";
-  if (!Object.hasOwn(CODEC_EXTENSIONS, codec)) {
-    throw new KinetoError("INVALID_ARGUMENT", `Unsupported codec "${codec}"`, {
-      hint: `Use one of: ${Object.keys(CODEC_EXTENSIONS).join(", ")}.`,
+  // 是不是 <Still> 要打包后才知道；未知格式先在这里拦下，不白白打包一次
+  if (options.codec !== undefined && !Object.hasOwn(CODEC_EXTENSIONS, options.codec) && !Object.hasOwn(STILL_EXTENSIONS, options.codec)) {
+    throw new KinetoError("INVALID_ARGUMENT", `Unsupported codec "${options.codec}"`, {
+      hint: `Videos: ${Object.keys(CODEC_EXTENSIONS).join(", ")}. Stills: ${Object.keys(STILL_EXTENSIONS).join(", ")}.`,
     });
   }
-  const ext = CODEC_EXTENSIONS[codec as SupportedCodec];
 
   // 本次渲染专用的工作目录：public dir 只含这条视频的素材、入口文件也是私有的，
   // 打包期间不怕别的命令同时重建共享暂存区或改写共享入口；无论成败最后整个删掉
@@ -105,18 +112,40 @@ export async function renderVideo(
       },
     );
 
+    const isStill = composition.durationInFrames === 1;
+    const codec = options.codec ?? (isStill ? "png" : "h264");
+    if (isStill !== Object.hasOwn(STILL_EXTENSIONS, codec)) {
+      throw new KinetoError("INVALID_ARGUMENT", `"${compositionId}" is a ${isStill ? "still" : "video"}; "${codec}" is not`, {
+        hint: isStill
+          ? `Render a <Still> as ${Object.keys(STILL_EXTENSIONS).join(", ")} (default png).`
+          : `Render a video as ${Object.keys(CODEC_EXTENSIONS).join(", ")} (default h264).`,
+      });
+    }
+    const ext = isStill ? STILL_EXTENSIONS[codec as StillFormat] : CODEC_EXTENSIONS[codec as SupportedCodec];
     const tmp = path.join(workDir, `${compositionId}.${ext}`);
-    await renderMedia({
-      serveUrl,
-      composition,
-      codec: codec as SupportedCodec,
-      outputLocation: tmp,
-      inputProps: {},
-      imageFormat: remotionSettings.videoImageFormat,
-      licenseKey: config.remotion.licenseKey,
-      logLevel: "error",
-      onProgress: ({ progress }) => report({ stage: "render", progress }),
-    });
+    if (isStill) {
+      await renderStill({
+        serveUrl,
+        composition,
+        output: tmp,
+        inputProps: {},
+        imageFormat: codec as StillFormat,
+        licenseKey: config.remotion.licenseKey,
+        logLevel: "error",
+      });
+    } else {
+      await renderMedia({
+        serveUrl,
+        composition,
+        codec: codec as SupportedCodec,
+        outputLocation: tmp,
+        inputProps: {},
+        imageFormat: remotionSettings.videoImageFormat,
+        licenseKey: config.remotion.licenseKey,
+        logLevel: "error",
+        onProgress: ({ progress }) => report({ stage: "render", progress }),
+      });
+    }
 
     try {
       const [hex, { size }] = await Promise.all([sha256File(tmp), stat(tmp)]);
