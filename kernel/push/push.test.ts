@@ -72,3 +72,39 @@ test("目标后端就是本地存储时报 STORAGE_PUSH_NOOP", async () => {
     await fx.cleanup();
   }
 });
+
+test("本机副本被改坏的对象记为 corrupt、不中止整次 push；reupload 时远端已有的也重新上传", async () => {
+  const fx = await makeRepo();
+  try {
+    const { chmod } = await import("node:fs/promises");
+    const local = new LocalStorage(path.join(fx.root, ".kineto/store"));
+    const shared = new LocalStorage(path.join(fx.root, "shared"));
+    const ids: string[] = [];
+    for (const body of ["one", "two"]) {
+      const src = path.join(fx.root, `${body}.wav`);
+      await writeFile(src, body);
+      ids.push((await ingestAsset(fx.paths, local, { source: src, license: "CC0-1.0", now: FIXED_NOW })).id);
+    }
+    const keyOf = (id: string) => `assets/${id.slice(7, 9)}/${id.slice(7)}.wav`;
+    const broken = await local.fetch(keyOf(ids[0]!));
+    await chmod(broken, 0o644);
+    await writeFile(broken, "ONE");
+    // 目标是 S3 时坏副本在 put 里被发现；这里用一个按哈希验源的假目标模拟
+    const verifying = Object.assign(Object.create(shared) as LocalStorage, {
+      put: async (file: string, key: string, opts: { sha256?: string; force?: boolean } = {}) => {
+        const { sha256File } = await import("../hash.ts");
+        if (opts.sha256 && (await sha256File(file)) !== opts.sha256) {
+          const { KinetoError } = await import("../errors.ts");
+          throw new KinetoError("STORAGE_SOURCE_CORRUPT", `${file} is corrupt`);
+        }
+        return shared.put(file, key, opts);
+      },
+    });
+    const first = await pushObjects(fx.paths, local, verifying);
+    assert.deepEqual(Object.fromEntries(first.objects.map((o) => [o.key, o.status])), { [keyOf(ids[0]!)]: "corrupt", [keyOf(ids[1]!)]: "uploaded" });
+    const again = await pushObjects(fx.paths, local, verifying, { reupload: true });
+    assert.equal(again.objects.find((o) => o.key === keyOf(ids[1]!))?.status, "uploaded");
+  } finally {
+    await fx.cleanup();
+  }
+});

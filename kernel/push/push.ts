@@ -10,8 +10,9 @@ import type { StorageBackend } from "../storage/types.ts";
 export interface PushedObject {
   key: string;
   kind: "asset" | "render";
-  // uploaded：目标缺失或损坏，已上传；present：目标已有；missing：本机和目标都没有
-  status: "uploaded" | "present" | "missing";
+  // uploaded：目标缺失或损坏，已上传；present：目标已有；missing：本机和目标都没有；
+  // corrupt：本机这份与登记的哈希对不上，没有上传
+  status: "uploaded" | "present" | "missing" | "corrupt";
   url: string | null;
 }
 
@@ -19,7 +20,7 @@ export async function pushObjects(
   paths: KinetoPaths,
   from: StorageBackend,
   to: StorageBackend,
-  onProgress: (done: number, total: number) => void = () => {},
+  { reupload = false, onProgress = () => {} }: { reupload?: boolean; onProgress?: (done: number, total: number) => void } = {},
 ): Promise<{ objects: PushedObject[] }> {
   // 调用方（CLI）在 storage.backend 为 local 时就会拦下；这里兜住传了同一个后端的情况
   if (from === to) {
@@ -36,8 +37,15 @@ export async function pushObjects(
       objects.push({ key, kind, status: (await to.has(key)) ? "present" : "missing", url: null });
       continue;
     }
-    const stored = await to.put(await from.fetch(key), key, { sha256 });
-    objects.push({ key, kind, status: stored.written ? "uploaded" : "present", url: stored.url });
+    try {
+      // reupload：远端内容坏了、元数据却对得上（旧版本留下的）时，只能强制重传修复
+      const stored = await to.put(await from.fetch(key), key, { sha256, force: reupload });
+      objects.push({ key, kind, status: stored.written ? "uploaded" : "present", url: stored.url });
+    } catch (err) {
+      // 一份坏副本不中止整次 push：记下来，其余照推
+      if (!(err instanceof KinetoError) || err.code !== "STORAGE_SOURCE_CORRUPT") throw err;
+      objects.push({ key, kind, status: "corrupt", url: null });
+    }
   }
   return { objects };
 }

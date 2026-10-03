@@ -110,7 +110,7 @@ export async function runTool(
     });
   }
   // 产物最后要进存储：存储不可用就别先花钱生成
-  await storage.probe();
+  await storage.probe({ write: true });
 
   await removeOrphanedWorkDirs(paths);
   const workDir = path.join(paths.tmpDir, `tool-${process.pid}-${Date.now()}`);

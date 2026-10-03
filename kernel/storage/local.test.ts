@@ -71,3 +71,16 @@ test("put 返回这次是否真的写入", async () => {
     assert.equal((await store.put(src, "k/a.txt")).written, false);
   });
 });
+
+test("probe 分只读与可写：只读探测不建目录、目录不存在不算错；可写探测失败报 STORAGE_UNAVAILABLE 而不是原生错误", async () => {
+  await withStore(async (store, dir) => {
+    const { access } = await import("node:fs/promises");
+    await store.probe();
+    await assert.rejects(access(path.join(dir, "store")), { code: "ENOENT" });
+    await store.probe({ write: true });
+    await access(path.join(dir, "store"));
+    const bad = new LocalStorage("/nonexistent-kineto-root/store");
+    await bad.probe();
+    await assert.rejects(bad.probe({ write: true }), { code: "STORAGE_UNAVAILABLE" });
+  });
+});

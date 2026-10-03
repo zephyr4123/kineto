@@ -188,3 +188,15 @@ test("存储后端本身不可用（桶名写错、凭据无效）时 check 报�
     await fx.cleanup();
   }
 });
+
+test("check 只读：在新 clone 上跑不会建出 .kineto/store", async () => {
+  const fx = await makeRepo();
+  try {
+    const { access } = await import("node:fs/promises");
+    const store = new LocalStorage(path.join(fx.root, ".kineto/store"));
+    await checkRepo(fx.paths, store);
+    await assert.rejects(access(path.join(fx.root, ".kineto/store")), { code: "ENOENT" });
+  } finally {
+    await fx.cleanup();
+  }
+});

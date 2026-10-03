@@ -43,19 +43,23 @@ export class S3Storage implements StorageBackend {
     this.#transport = transport;
   }
 
-  async put(localFile: string, key: string, options: { sha256?: string } = {}): Promise<StoredObject> {
+  async put(localFile: string, key: string, options: { sha256?: string; force?: boolean } = {}): Promise<StoredObject> {
     assertSafeKey(key);
     const objectKey = this.#objectKey(key);
-    // 永远自己算源文件的哈希：远端元数据里的 sha256 是日后判断「完好」的依据，不能照抄调用方给的值
-    const [{ size }, hex] = await Promise.all([stat(localFile), sha256File(localFile)]);
+    const [{ size }, head] = await Promise.all([stat(localFile), this.#transport.head(objectKey)]);
+    // 已知应有的哈希、远端也对得上：不读源文件（storage push 不必把整库读一遍），本地缓存也不碰
+    if (!options.force && options.sha256 !== undefined && head?.size === size && head.sha256 === options.sha256) {
+      return { backend: this.name, key, url: this.#url(key), written: false };
+    }
+    // 要写入时永远自己算源文件的哈希：远端元数据里的 sha256 是日后判断「完好」的依据，不能照抄调用方给的值
+    const hex = await sha256File(localFile);
     if (options.sha256 !== undefined && options.sha256 !== hex) {
       throw new KinetoError("STORAGE_SOURCE_CORRUPT", `${localFile} hashes to ${hex}, but ${key} is recorded as ${options.sha256}`, {
         hint: "This copy was modified. Re-add the original file with `./kineto asset add`, or push from a machine with an intact copy.",
       });
     }
-    const head = await this.#transport.head(objectKey);
-    // 同 key 必同内容；远端对不上（大小或哈希）说明被改坏或传了一半，覆盖修复
-    const intact = head !== null && head.size === size && (head.sha256 === undefined || head.sha256 === hex);
+    // 同 key 必同内容；远端对不上（大小或哈希）说明被改坏或传了一半，覆盖修复。force 用于远端内容坏了、元数据却对的情况
+    const intact = !options.force && head !== null && head.size === size && (head.sha256 === undefined || head.sha256 === hex);
     if (!intact) await this.#transport.upload(localFile, objectKey, { contentType: contentTypeFor(key), sha256: hex });
     await this.#cacheCopy(localFile, key, hex);
     return { backend: this.name, key, url: this.#url(key), written: !intact };
@@ -86,7 +90,7 @@ export class S3Storage implements StorageBackend {
       const expected = meta.sha256 ?? hashInKey(key);
       if (expected !== undefined && (await sha256File(partial)) !== expected) {
         throw new KinetoError("STORAGE_OBJECT_CORRUPT", `s3://${this.#settings.bucket}/${this.#objectKey(key)} does not match its sha256 ${expected}`, {
-          hint: "Re-upload it with `./kineto storage push` (or `./kineto asset add` with the original file) from a machine with an intact copy.",
+          hint: "Re-upload it from a machine with an intact copy: `./kineto storage push --reupload`.",
         });
       }
       await chmod(partial, 0o444);
@@ -98,7 +102,8 @@ export class S3Storage implements StorageBackend {
     return file;
   }
 
-  async probe(): Promise<void> {
+  // 远端探测本身就是只读的（HeadBucket），不分模式
+  async probe(_options?: { write?: boolean }): Promise<void> {
     await this.#transport.probe();
   }
 

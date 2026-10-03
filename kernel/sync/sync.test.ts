@@ -79,7 +79,7 @@ test("syncVideo：单条视频引用了 manifest 里没有的素材报 ASSET_NOT
       // 换一个空存储：模拟别人 clone 后本机没有这份二进制
       const empty = new LocalStorage(path.join(fx2.root, ".kineto/empty"));
       const result = await syncAll(fx2.paths, empty);
-      assert.deepEqual(result.missing, [{ video: "v", alias: "pic", key: assetStorageKey(rec) }]);
+      assert.deepEqual(result.missing, [{ video: "v", alias: "pic", key: assetStorageKey(rec), reason: "missing" }]);
       assert.equal(result.staged, 0);
     } finally {
       await fx2.cleanup();
@@ -99,6 +99,28 @@ test("某条视频有悬空素材引用时 syncAll 不整体失败：其它视�
     const result = await syncAll(fx.paths, store);
     assert.deepEqual(result.unresolved, [{ video: "bad", alias: "ghost", asset: "sha256:" + "b".repeat(64) }]);
     assert.match(await readFile(fx.paths.registryFile, "utf8"), /V_good/);
+  } finally {
+    await fx.cleanup();
+  }
+});
+
+test("远端对象损坏（STORAGE_OBJECT_CORRUPT）当作缺失记下来继续同步，不拖垮整次 sync", async () => {
+  const fx = await makeRepo();
+  try {
+    const store = new LocalStorage(path.join(fx.root, ".kineto/store"));
+    await createVideo(fx.paths, { id: "demo", title: "Demo" });
+    const src = path.join(fx.root, "a.wav");
+    await writeFile(src, "aaa");
+    const asset = await ingestAsset(fx.paths, store, { source: src, license: "CC0-1.0" });
+    await linkAsset(fx.paths, "demo", "a", asset.id);
+    const { KinetoError } = await import("../errors.ts");
+    const corrupt = Object.assign(Object.create(store) as LocalStorage, {
+      fetch: async () => {
+        throw new KinetoError("STORAGE_OBJECT_CORRUPT", "remote copy is corrupt");
+      },
+    });
+    const result = await syncAll(fx.paths, corrupt);
+    assert.deepEqual(result.missing, [{ video: "demo", alias: "a", key: assetStorageKey(asset), reason: "corrupt" }]);
   } finally {
     await fx.cleanup();
   }

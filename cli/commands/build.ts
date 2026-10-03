@@ -27,7 +27,11 @@ export const syncCommand = defineCommand({
       : [
           d.written.length ? `Wrote ${d.written.join(", ")}` : "Generated files already up to date.",
           `Staged ${d.staged} asset(s).`,
-          ...d.missing.map((m) => `warning: ${m.video}/${m.alias} is not in storage (${m.key})`),
+          ...d.missing.map((m) =>
+            m.reason === "corrupt"
+              ? `warning: ${m.video}/${m.alias} is corrupt in storage (${m.key}); repair with \`./kineto storage push --reupload\` from a machine with an intact copy`
+              : `warning: ${m.video}/${m.alias} is not in storage (${m.key})`,
+          ),
           ...d.unresolved.map((u) => `warning: ${u.video}/${u.alias} references unknown asset ${u.asset} (run \`./kineto check\`)`),
         ].join("\n"),
 });

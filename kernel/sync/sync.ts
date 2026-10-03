@@ -50,6 +50,8 @@ export interface MissingAsset {
   video: string;
   alias: string;
   key: string;
+  // missing：存储里没有；corrupt：远端内容与哈希对不上（下载时验出）
+  reason: "missing" | "corrupt";
 }
 
 export interface UnresolvedAsset {
@@ -178,8 +180,9 @@ async function stageAssets(
     try {
       local = await storage.fetch(key);
     } catch (err) {
-      if (err instanceof KinetoError && err.code === "STORAGE_OBJECT_MISSING") {
-        missing.push({ video: videoId, alias, key });
+      // 一个素材取不到不拖垮整次同步（会牵连 new / asset add / studio 等所有命令）：记下来，交给 check 报告
+      if (err instanceof KinetoError && (err.code === "STORAGE_OBJECT_MISSING" || err.code === "STORAGE_OBJECT_CORRUPT")) {
+        missing.push({ video: videoId, alias, key, reason: err.code === "STORAGE_OBJECT_CORRUPT" ? "corrupt" : "missing" });
         continue;
       }
       throw err;

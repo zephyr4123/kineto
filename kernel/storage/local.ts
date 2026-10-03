@@ -1,7 +1,7 @@
 import { constants } from "node:fs";
 import { access, chmod, copyFile, mkdir, rename, rm, stat } from "node:fs/promises";
 import path from "node:path";
-import { KinetoError } from "../errors.ts";
+import { isNodeError, KinetoError } from "../errors.ts";
 import { sha256File } from "../hash.ts";
 import { assertSafeKey } from "./keys.ts";
 import type { StorageBackend, StoredObject } from "./types.ts";
@@ -20,11 +20,12 @@ export class LocalStorage implements StorageBackend {
     return path.join(this.root, ...key.split("/"));
   }
 
-  async put(localFile: string, key: string, options: { sha256?: string } = {}): Promise<StoredObject> {
+  async put(localFile: string, key: string, options: { sha256?: string; force?: boolean } = {}): Promise<StoredObject> {
     const dest = this.resolve(key);
     const [src, existing] = await Promise.all([stat(localFile), stat(dest).catch(() => null)]);
     // 已存在的对象要复核：暂存区是硬链接，改暂存文件就是改这里。给了哈希按哈希比，否则按大小比
     const intact =
+      options.force !== true &&
       existing !== null &&
       existing.size === src.size &&
       (options.sha256 === undefined || (await sha256File(dest)) === options.sha256);
@@ -69,10 +70,23 @@ export class LocalStorage implements StorageBackend {
     return file;
   }
 
-  // doctor 用：存储目录能建、能写
-  async probe(): Promise<void> {
-    await mkdir(this.root, { recursive: true });
-    await access(this.root, constants.W_OK);
+  async probe({ write = false }: { write?: boolean } = {}): Promise<void> {
+    try {
+      if (write) {
+        await mkdir(this.root, { recursive: true });
+        await access(this.root, constants.W_OK);
+      } else {
+        // 只读：目录还不存在只说明本机没存过东西，不算错；存在就得读得了
+        await access(this.root, constants.R_OK).catch((err: unknown) => {
+          if (!isNodeError(err, "ENOENT")) throw err;
+        });
+      }
+    } catch (err) {
+      throw new KinetoError("STORAGE_UNAVAILABLE", `Local storage ${this.root} is not usable: ${(err as Error).message}`, {
+        hint: "Point storage.local.root at a directory you can write to, or fix its permissions.",
+        cause: err,
+      });
+    }
   }
 
   describe() {

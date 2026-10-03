@@ -67,7 +67,7 @@ export const doctorCommand = defineCommand({
         add({ name: "envFile", status: "warn", detail: `${envFile} is readable by other users`, hint: `Run \`chmod 600 ${envFile}\`.` });
       }
       const storage = await ctx.storage();
-      await storage.probe();
+      await storage.probe({ write: true });
       add({ name: "storage", status: "ok", detail: JSON.stringify(storage.describe()) });
     } catch (err) {
       if (!(err instanceof KinetoError) && !(err instanceof Error)) throw err;

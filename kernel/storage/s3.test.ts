@@ -156,7 +156,7 @@ test("下载内容与远端记录的 sha256 对不上时报 STORAGE_OBJECT_CORRU
   });
 });
 
-test("put 返回这次是否真的写入；本机缓存被改坏时 put 一份完好的文件能修好它", async () => {
+test("put 返回这次是否真的写入；本机缓存被改坏时强制重传（storage push --reupload）能修好它", async () => {
   await withS3(async (store, fake, dir) => {
     const src = path.join(dir, "a.wav");
     await writeFile(src, "hello");
@@ -170,7 +170,7 @@ test("put 返回这次是否真的写入；本机缓存被改坏时 put 一份�
     const { chmod } = await import("node:fs/promises");
     await chmod(cached, 0o644);
     await writeFile(cached, "HELLO");
-    await store.put(src, "assets/2c/x.wav", { sha256: HELLO_SHA });
+    await store.put(src, "assets/2c/x.wav", { sha256: HELLO_SHA, force: true });
     assert.equal(await readFile(await store.fetch("assets/2c/x.wav"), "utf8"), "hello");
   });
 });
@@ -203,4 +203,20 @@ test("桶不存在时 GET 报 STORAGE_UNAVAILABLE，而不是当成对象不存�
     server.close();
     await rm(dir, { recursive: true, force: true });
   }
+});
+
+test("给了登记哈希且远端完好时，put 不读源文件（push 不必把整库读一遍）；--reupload 式的 force 则一定重新上传", async () => {
+  await withS3(async (store, fake, dir) => {
+    const src = path.join(dir, "a.wav");
+    await writeFile(src, "hello");
+    await store.put(src, "assets/2c/x.wav", { sha256: HELLO_SHA });
+    // 本地副本已被改坏但大小没变：远端完好就直接判 present，不去读它
+    await writeFile(src, "HELLO");
+    assert.equal((await store.put(src, "assets/2c/x.wav", { sha256: HELLO_SHA })).written, false);
+    // 强制重传时照样验源文件：坏的不许传
+    await assert.rejects(store.put(src, "assets/2c/x.wav", { sha256: HELLO_SHA, force: true }), { code: "STORAGE_SOURCE_CORRUPT" });
+    await writeFile(src, "hello");
+    assert.equal((await store.put(src, "assets/2c/x.wav", { sha256: HELLO_SHA, force: true })).written, true);
+    assert.equal(fake.uploads.length, 2);
+  });
 });
