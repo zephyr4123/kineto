@@ -29,8 +29,8 @@ const STAR_FLY = [STOMP + 2, STOMP + 56] as const;
 const HOP_UP = [150, 178] as const;
 const CARD = 176;
 
-const LOGO_SCALE = 0.42;
-const LOGO_TO_Y = 150;
+const LOGO_SCALE = 0.36;
+const LOGO_TO_Y = 135;
 const LOGO_CENTER = { x: 960, y: 470 };
 const CLAWD_S = 5;
 
@@ -87,9 +87,9 @@ export const Github: React.FC = () => {
       <AbsoluteFill style={{ transform: `translate(${s.x}px, ${s.y}px)` }}>
         {/* 标题缩到顶上 */}
         <AbsoluteFill style={{ transformOrigin: `${LOGO_CENTER.x}px ${LOGO_CENTER.y}px`, transform: `translateY(${dy}px) scale(${k})` }}>
-          <LogoArt progress={LOGO.strokes.map(() => 1)} solid={1} />
+          <LogoArt main={1} cross={1} solid={1} />
         </AbsoluteFill>
-        <div style={{ position: "absolute", left: 0, right: 0, top: 800 + 80 * sp, textAlign: "center", opacity: 1 - sp }}>
+        <div style={{ position: "absolute", left: 0, right: 0, top: 820 + 80 * sp, textAlign: "center", opacity: 1 - sp }}>
           <PixelText size={76} font={FONT_BODY} color={CREAM} outline={5} outlineColor={INK} shadow={6} shadowColor={CLAWD}>
             {TAGLINE}
           </PixelText>

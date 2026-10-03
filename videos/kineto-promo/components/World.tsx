@@ -74,10 +74,10 @@ function ridge(seed: string, width: number, step: number, base: number, amp: num
 }
 
 // 一条横向无缝循环的层：内容画两遍，按 offset 取模平移
-const Loop: React.FC<{ offset: number; width: number; children: React.ReactNode; top?: number }> = ({ offset, width, children, top = 0 }) => {
+const Loop: React.FC<{ offset: number; width: number; children: React.ReactNode; top?: number; opacity?: number }> = ({ offset, width, children, top = 0, opacity = 1 }) => {
   const x = -(((offset % width) + width) % width);
   return (
-    <div style={{ position: "absolute", left: x, top, width: width * 2, height: 1080 }}>
+    <div style={{ position: "absolute", left: x, top, width: width * 2, height: 1080, opacity }}>
       <div style={{ position: "absolute", left: 0, top: 0 }}>{children}</div>
       <div style={{ position: "absolute", left: width, top: 0 }}>{children}</div>
     </div>
@@ -98,19 +98,20 @@ export const Cloud: React.FC<{ x: number; y: number; s: number; p: Palette }> = 
 const CLOUD_SPAN = 3200;
 
 // camY < 0 表示镜头升高：远处的层下沉得慢、近处的下沉得快，天顶露出更深的蓝
-export const Sky: React.FC<{ camX: number; camY?: number; frame: number; mood: number; sunset?: number; sunY?: number }> = ({
+export const Sky: React.FC<{ camX: number; camY?: number; frame: number; mood: number; sunset?: number; sunY?: number; clouds?: number }> = ({
   camX,
   camY = 0,
   frame,
   mood,
   sunset = 0,
   sunY = 600,
+  clouds = 1,
 }) => {
   const p = palette(mood, sunset);
   const lift = (k: number) => -camY * k;
   const far = useMemo(() => ridge("far", 3600, 40, 760, 360, 0.6), []);
   const mid = useMemo(() => ridge("mid", 3000, 60, 860, 260, 0.75), []);
-  const clouds = useMemo(
+  const cloudList = useMemo(
     () =>
       Array.from({ length: 9 }, (_, i) => ({
         x: (i / 9) * CLOUD_SPAN + 200 * random(`cx${i}`),
@@ -152,8 +153,8 @@ export const Sky: React.FC<{ camX: number; camY?: number; frame: number; mood: n
         ))}
       </div>
       {/* 远云：视差 0.08，外加自己飘 */}
-      {clouds.slice(0, 5).map((c, i) => (
-        <Loop key={i} offset={camX * 0.08 + frame * c.speed} width={CLOUD_SPAN} top={lift(0.1)}>
+      {cloudList.slice(0, 5).map((c, i) => (
+        <Loop key={i} offset={camX * 0.08 + frame * c.speed} width={CLOUD_SPAN} top={lift(0.1)} opacity={clouds}>
           <Cloud x={c.x} y={c.y} s={c.s * 0.8} p={p} />
         </Loop>
       ))}
@@ -164,8 +165,8 @@ export const Sky: React.FC<{ camX: number; camY?: number; frame: number; mood: n
           </svg>
         </Loop>
       </div>
-      {clouds.slice(5).map((c, i) => (
-        <Loop key={i} offset={camX * 0.25 + frame * c.speed * 1.6} width={CLOUD_SPAN} top={lift(0.25)}>
+      {cloudList.slice(5).map((c, i) => (
+        <Loop key={i} offset={camX * 0.25 + frame * c.speed * 1.6} width={CLOUD_SPAN} top={lift(0.25)} opacity={clouds}>
           <Cloud x={c.x} y={c.y + 120} s={c.s} p={p} />
         </Loop>
       ))}

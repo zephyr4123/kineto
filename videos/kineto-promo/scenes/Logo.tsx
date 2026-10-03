@@ -1,107 +1,148 @@
-import { AbsoluteFill, interpolate, random, useCurrentFrame } from "remotion";
+import { useMemo } from "react";
+import { AbsoluteFill, Easing, interpolate, random, useCurrentFrame } from "remotion";
 import { Clawd } from "../components/Clawd";
 import { CitySkyline, RAINBOW, RainbowTrail } from "../components/Flight";
 import { Burst, Shockwave, Twinkle } from "../components/Particles";
 import { PixelText } from "../components/PixelText";
-import { Cues } from "../components/Sfx";
 import { Crt } from "../components/Retro";
+import { Cues } from "../components/Sfx";
+import { Sprite } from "../components/Sprite";
 import { Sky } from "../components/World";
 import { blinking, clamp, easeInOut, easeOut, jumpArc, landSquash, shake, tween, typed } from "../fx";
-import { LOGO, pointAt, STROKE, toPath } from "../logo";
+import { LOGO, nibOffsets, NIB, pointAt, toPath, type Stroke } from "../logo";
 import { CLAWD, CREAM, FONT_BODY, FONT_MONO } from "../theme";
 
-// 落名：Clawd 从城市上空冲上夜空，拖着彩虹一笔一笔写出 kineto，写完一闪变成实心的字，
-// 最后跳到 i 头上，当那个点。
-const S = 6;
-const RISE = 40;
-const DRAW_END = 300;
-const HOP = 8;
+// 落名：一支羽毛笔从夜空里飞进来，行书一笔连写出 kineto，回头补上 t 的横；
+// 笔尖点向 i 的上方，Clawd 拖着彩虹从城市里冲上来，落在那儿当点。墨迹一闪变成实心立体字。
+const FLY_IN = [0, 36] as const;
+const WRITE = [36, 250] as const;
+const TO_CROSS = [250, 262] as const;
+const CROSS = [262, 280] as const;
+const TO_DOT = [280, 298] as const;
+const CLAWD_UP = [292, 316] as const;
+const FLY_OUT = [312, 344] as const;
 export const SOLID_AT = 322;
-const DOT_HOP = [302, 320] as const;
 const TAGLINE_AT = 344;
 export const TAGLINE = "Give your agent a path.";
 export const SUBLINE = "an agent-first video studio · built on Remotion";
 
-// 每一笔的起止帧：笔画之间跳一下（不留痕），总书写时长固定
-const totalLength = LOGO.strokes.reduce((s, st) => s + st.length, 0);
-const speed = totalLength / (DRAW_END - RISE - HOP * (LOGO.strokes.length - 1));
-const SCHEDULE = (() => {
-  let t = RISE;
-  return LOGO.strokes.map((st, i) => {
-    if (i > 0) t += HOP;
-    const start = t;
-    t += st.length / speed;
-    return { start, end: t };
-  });
-})();
+const S = 6;
+const writeEase = Easing.inOut(Easing.sin);
 
-const strokeProgress = (f: number) => SCHEDULE.map((s) => tween(f, [s.start, s.end], [0, 1]));
+const writeProgress = (f: number) => tween(f, WRITE, [0, 1], writeEase);
+const crossProgress = (f: number) => tween(f, CROSS, [0, 1], Easing.inOut(Easing.quad));
 
-function penAt(f: number): { x: number; y: number; drawing: boolean } {
-  const first = LOGO.strokes[0].points[0];
-  if (f < RISE) {
-    const p = easeOut(Math.max(0, f) / RISE);
-    return { x: interpolate(p, [0, 1], [first.x - 260, first.x]), y: interpolate(p, [0, 1], [1250, first.y]), drawing: false };
+// 笔尖在哪、朝哪写、是否正在出墨
+function nibAt(f: number): { x: number; y: number; angle: number; inking: boolean } {
+  const main = LOGO.main;
+  const start = main.points[0];
+  if (f < FLY_IN[1]) {
+    const p = easeOut(tween(f, FLY_IN, [0, 1]));
+    return { x: interpolate(p, [0, 1], [2100, start.x]), y: interpolate(p, [0, 1], [-160, start.y]) - jumpArc(p, 1, 120), angle: Math.PI, inking: false };
   }
-  for (let i = 0; i < SCHEDULE.length; i++) {
-    const s = SCHEDULE[i];
-    if (f < s.start) {
-      // 两笔之间：从上一笔终点跳到这一笔起点
-      const prev = LOGO.strokes[i - 1];
-      const a = prev.points[prev.points.length - 1];
-      const b = LOGO.strokes[i].points[0];
-      const p = (f - (s.start - HOP)) / HOP;
-      return { x: a.x + (b.x - a.x) * p, y: a.y + (b.y - a.y) * p - jumpArc(p, 1, 70), drawing: false };
-    }
-    if (f <= s.end) return { ...pointAt(LOGO.strokes[i], (f - s.start) * speed), drawing: true };
+  if (f < WRITE[1]) return { ...pointAt(main, writeProgress(f) * main.length), inking: true };
+  const end = main.points[main.points.length - 1];
+  const crossStart = LOGO.cross.points[0];
+  if (f < TO_CROSS[1]) {
+    const p = tween(f, TO_CROSS, [0, 1], easeInOut);
+    return { x: interpolate(p, [0, 1], [end.x, crossStart.x]), y: interpolate(p, [0, 1], [end.y, crossStart.y]) - jumpArc(p, 1, 90), angle: Math.PI, inking: false };
   }
-  const last = LOGO.strokes[LOGO.strokes.length - 1];
-  const a = last.points[last.points.length - 1];
-  const p = tween(f, DOT_HOP, [0, 1], easeInOut);
-  return { x: a.x + (LOGO.iDot.x - a.x) * p, y: a.y + (LOGO.iDot.y + 30 - a.y) * p - jumpArc(p, 1, 260), drawing: false };
+  if (f < CROSS[1]) return { ...pointAt(LOGO.cross, crossProgress(f) * LOGO.cross.length), inking: true };
+  const crossEnd = LOGO.cross.points[LOGO.cross.points.length - 1];
+  const hover = { x: LOGO.iDot.x + 40, y: LOGO.iDot.y - 40 };
+  if (f < FLY_OUT[0]) {
+    const p = tween(f, TO_DOT, [0, 1], easeInOut);
+    const tap = f >= TO_DOT[1] && f < TO_DOT[1] + 10 ? 12 * Math.sin(((f - TO_DOT[1]) / 10) * Math.PI) : 0;
+    return { x: interpolate(p, [0, 1], [crossEnd.x, hover.x]), y: interpolate(p, [0, 1], [crossEnd.y, hover.y]) - jumpArc(p, 1, 80) + tap, angle: Math.PI, inking: false };
+  }
+  const p = tween(f, FLY_OUT, [0, 1], Easing.in(Easing.cubic));
+  return { x: interpolate(p, [0, 1], [hover.x, 2150]), y: interpolate(p, [0, 1], [hover.y, -220]), angle: Math.PI, inking: false };
 }
 
-// 字：彩虹管（外红内紫的六层同心描边），solid 时换成奶油色实心字 + 橙色立体投影
-export const LogoArt: React.FC<{ progress: readonly number[]; solid: number }> = ({ progress, solid }) => (
+// 一笔墨迹：同一条路径沿笔尖方向平移叠起来，按进度从头露到尾
+const Ink: React.FC<{ stroke: Stroke; progress: number; color: string; dx?: number; dy?: number }> = ({ stroke, progress, color, dx = 0, dy = 0 }) => {
+  const d = useMemo(() => toPath(stroke.points), [stroke]);
+  if (progress <= 0) return null;
+  const len = stroke.length + 2;
+  return (
+    <g transform={`translate(${dx} ${dy})`}>
+      {nibOffsets.map((o, i) => (
+        <path
+          key={i}
+          d={d}
+          transform={`translate(${o.dx} ${o.dy})`}
+          fill="none"
+          stroke={color}
+          strokeWidth={NIB.line}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeDasharray={`${len} ${len}`}
+          strokeDashoffset={len * (1 - progress)}
+        />
+      ))}
+    </g>
+  );
+};
+
+// 字：书写时是发着金光的墨，solid 之后是奶油色实心字 + 橙色立体投影
+export const LogoArt: React.FC<{ main: number; cross: number; solid: number }> = ({ main, cross, solid }) => (
   <svg width={1920} height={1080} style={{ position: "absolute", left: 0, top: 0, overflow: "visible" }}>
     {solid > 0
       ? [
-          { dx: 16, dy: 20, color: "#5a2618" },
-          { dx: 9, dy: 11, color: CLAWD },
-        ].map((layer, li) => (
-          <g key={li} opacity={solid} transform={`translate(${layer.dx} ${layer.dy})`}>
-            {LOGO.strokes.map((st, i) => (
-              <path key={i} d={toPath(st.points)} fill="none" stroke={layer.color} strokeWidth={STROKE} strokeLinecap="square" strokeLinejoin="miter" />
-            ))}
+          { dx: 14, dy: 18, color: "#5a2618" },
+          { dx: 7, dy: 9, color: CLAWD },
+        ].map((layer, i) => (
+          <g key={i} opacity={solid}>
+            <Ink stroke={LOGO.main} progress={main} color={layer.color} dx={layer.dx} dy={layer.dy} />
+            <Ink stroke={LOGO.cross} progress={cross} color={layer.color} dx={layer.dx} dy={layer.dy} />
           </g>
         ))
       : null}
-    <g opacity={1 - solid}>
-      {LOGO.strokes.map((st, i) =>
-        RAINBOW.map((c, k) => (
-          <path
-            key={`${i}-${k}`}
-            d={toPath(st.points)}
-            fill="none"
-            stroke={c}
-            strokeWidth={(STROKE * (RAINBOW.length - k)) / RAINBOW.length}
-            strokeLinecap="square"
-            strokeLinejoin="miter"
-            strokeDasharray={`${st.length + 1} ${st.length + 1}`}
-            strokeDashoffset={(st.length + 1) * (1 - progress[i])}
-          />
-        )),
-      )}
+    <g style={{ filter: solid < 1 ? `drop-shadow(0 0 ${14 * (1 - solid)}px rgba(255,196,110,0.9))` : undefined }}>
+      <Ink stroke={LOGO.main} progress={main} color={solid > 0 ? CREAM : "#fff2cf"} />
+      <Ink stroke={LOGO.cross} progress={cross} color={solid > 0 ? CREAM : "#fff2cf"} />
     </g>
-    {solid > 0 ? (
-      <g opacity={solid}>
-        {LOGO.strokes.map((st, i) => (
-          <path key={i} d={toPath(st.points)} fill="none" stroke={CREAM} strokeWidth={STROKE} strokeLinecap="square" strokeLinejoin="miter" />
-        ))}
-      </g>
-    ) : null}
   </svg>
 );
+
+// 像素羽毛笔：笔尖朝下，羽片一侧宽一侧窄，中间一根羽轴，下端是笔杆和墨色笔尖
+const QUILL = (() => {
+  const W = 15;
+  const rows: string[] = [];
+  for (let y = 0; y < 46; y++) {
+    const row = Array<string>(W).fill(".");
+    if (y < 33) {
+      const t = y / 33;
+      const right = Math.round(Math.sin(Math.PI * Math.min(1, t * 1.15)) * 6.2);
+      const left = Math.round(Math.sin(Math.PI * Math.min(1, t * 1.05)) * 4.2);
+      for (let x = 7 - left; x <= 7 + right; x++) row[x] = (x + y) % 4 === 0 ? "b" : "w";
+      if (7 - left >= 0) row[7 - left] = "e";
+      if (7 + right < W) row[7 + right] = "e";
+      if (y > 0) row[7] = "r";
+    } else if (y < 41) {
+      row[7] = "r";
+      row[8] = y < 38 ? "r" : ".";
+    } else {
+      row[7] = "k";
+      if (y < 44) row[8] = "k";
+    }
+    rows.push(row.join(""));
+  }
+  return rows;
+})();
+const QUILL_PAL = { w: "#f6f1ff", b: "#c9d6ff", e: "#8fa3e6", r: "#d9c9a8", k: "#1b1426" };
+const QS = 5;
+
+const Quill: React.FC<{ x: number; y: number; tilt: number; frame: number }> = ({ x, y, tilt, frame }) => {
+  const tipX = 7.5 * QS;
+  const tipY = 46 * QS;
+  return (
+    <div style={{ position: "absolute", left: x - tipX, top: y - tipY, transformOrigin: `${tipX}px ${tipY}px`, transform: `rotate(${tilt + Math.sin(frame / 9) * 2}deg)` }}>
+      <div style={{ position: "absolute", left: -30, top: -30, width: 15 * QS + 60, height: 46 * QS + 60, background: "radial-gradient(ellipse, rgba(255,226,170,0.35), rgba(255,226,170,0) 65%)" }} />
+      <Sprite grid={QUILL} palette={QUILL_PAL} scale={QS} />
+    </div>
+  );
+};
 
 // 夜空里的星星
 export const Stars: React.FC<{ frame: number; opacity: number }> = ({ frame, opacity }) => (
@@ -116,51 +157,72 @@ export const Stars: React.FC<{ frame: number; opacity: number }> = ({ frame, opa
 
 export const NightSky: React.FC<{ frame: number; camY: number; cityCamY: number }> = ({ frame, camY, cityCamY }) => (
   <>
-    <Sky camX={9000} camY={camY} frame={frame} mood={0} sunset={1} sunY={2000} />
+    <Sky camX={9000} camY={camY} frame={frame} mood={0} sunset={1} sunY={2000} clouds={0.3} />
     <Stars frame={frame} opacity={tween(-camY, [900, 2200], [0, 1])} />
     <CitySkyline camX={11000} camY={cityCamY} opacity={1} frame={frame} />
   </>
 );
 
 const CUES = [
-  [0, "launch"],
-  ...SCHEDULE.map((s) => [s.start, "sparkle", 0.6] as const),
-  [DOT_HOP[0], "jump"],
-  [DOT_HOP[1], "pop"],
+  [FLY_IN[0], "whoosh", 0.7],
+  [WRITE[0], "sparkle", 0.7],
+  [TO_CROSS[0], "whoosh", 0.4],
+  [CROSS[0], "sparkle", 0.6],
+  [TO_DOT[1], "pop", 0.6],
+  [CLAWD_UP[0], "launch"],
+  [CLAWD_UP[1], "pop"],
+  [FLY_OUT[0], "whoosh", 0.5],
   [SOLID_AT, "hit"],
-  ...Array.from(TAGLINE, (_, i) => i).filter((i) => i % 2 === 0).map((i) => [TAGLINE_AT + i * 2, "key", 0.35] as const),
+  ...Array.from(TAGLINE, (_, i) => i)
+    .filter((i) => i % 2 === 0)
+    .map((i) => [TAGLINE_AT + i * 2, "key", 0.35] as const),
 ] as const;
 
 export const Logo: React.FC = () => {
   const f = useCurrentFrame();
   const camY = interpolate(f, [0, 70], [-700, -2600], { ...clamp, easing: easeInOut });
   const cityCamY = interpolate(f, [0, 70], [-500, -2400], { ...clamp, easing: easeInOut });
-  const pen = penAt(f);
-  const progress = strokeProgress(f);
+  const nib = nibAt(f);
   const solid = tween(f, [SOLID_AT, SOLID_AT + 6], [0, 1]);
-  const landed = f >= DOT_HOP[1];
   const s = shake(f, SOLID_AT, 18, 16, "solid");
-  const trail: { x: number; y: number }[] = [];
-  if (f < DOT_HOP[0]) for (let k = 0; k < 12; k++) trail.push(penAt(f - k));
   const pop = solid > 0 ? 1 + 0.06 * Math.exp(-(f - SOLID_AT) / 8) * Math.cos((f - SOLID_AT) / 3) : 1;
+  // 写字时笔杆随书写方向轻轻摆：往右写略直、往回勾略斜
+  const tilt = 30 + (nib.inking ? 8 * Math.sin(nib.angle) : -10);
+
+  // Clawd 从城市里冲上来当 i 的点
+  const riseAt = (t: number) => interpolate(tween(t, CLAWD_UP, [0, 1], Easing.out(Easing.quad)), [0, 1], [1260, LOGO.iDot.y + 30]);
+  const dot = { x: LOGO.iDot.x, y: LOGO.iDot.y + 30 };
+  const rising = f >= CLAWD_UP[0] && f < CLAWD_UP[1];
+  const landed = f >= CLAWD_UP[1];
+  const clawdTrail: { x: number; y: number }[] = [];
+  if (rising) for (let k = 0; k < 14; k++) clawdTrail.push({ x: dot.x, y: riseAt(f - k) - 30 });
 
   return (
     <AbsoluteFill style={{ overflow: "hidden" }}>
       <NightSky frame={f} camY={camY} cityCamY={cityCamY} />
-      <AbsoluteFill style={{ transform: `translate(${s.x}px, ${s.y}px) scale(${pop})`, transformOrigin: "960px 520px" }}>
-        <LogoArt progress={progress} solid={solid} />
-        {f < DOT_HOP[0] ? <RainbowTrail points={trail} band={5} /> : null}
-        {/* 笔尖火花 */}
-        {pen.drawing ? <Twinkle x={pen.x} y={pen.y} frame={f} start={f - (f % 6)} life={10} size={8} color="#fff6d8" /> : null}
-        <Clawd
-          x={pen.x}
-          y={pen.y + (landed ? 0 : 5 * S)}
-          scale={S}
-          pose={{ eyes: landed ? (blinking(f, 30) ? "closed" : "center") : "wide", arms: landed && f < DOT_HOP[1] + 40 ? "up" : landed ? "side" : "up", legs: landed ? "stand" : "tuck" }}
-          squash={landSquash(f, DOT_HOP[1])}
-        />
-        <Shockwave x={960} y={520} frame={f} start={SOLID_AT} life={30} maxSize={2200} color={CREAM} thickness={24} />
-        <Burst frame={f} start={SOLID_AT} x={960} y={520} seed="solid" colors={[...RAINBOW, CREAM]} count={60} speed={[10, 30]} angle={[-180, 180]} gravity={0.25} life={50} size={[12, 22]} />
+      <AbsoluteFill style={{ transform: `translate(${s.x}px, ${s.y}px) scale(${pop})`, transformOrigin: "960px 470px" }}>
+        <LogoArt main={writeProgress(f)} cross={crossProgress(f)} solid={solid} />
+        {/* 笔尖的金色火星 */}
+        {nib.inking
+          ? [0, 1, 2].map((k) => {
+              const at = f - ((f + k * 3) % 9);
+              return <Twinkle key={k} x={nib.x + (random(`nib-${at}-${k}`) - 0.5) * 30} y={nib.y + (random(`nibY-${at}-${k}`) - 0.5) * 30} frame={f} start={at} life={12} size={6} color={k % 2 ? "#ffd24a" : "#fff6d8"} />;
+            })
+          : null}
+        {rising ? <RainbowTrail points={clawdTrail} band={7} /> : null}
+        {f >= CLAWD_UP[0] ? (
+          <Clawd
+            x={dot.x}
+            y={rising ? riseAt(f) : dot.y}
+            scale={S}
+            pose={{ eyes: landed ? (blinking(f, 30) ? "closed" : "center") : "wide", arms: landed && f >= CLAWD_UP[1] + 40 ? "side" : "up", legs: landed ? "stand" : "tuck" }}
+            squash={landSquash(f, CLAWD_UP[1])}
+          />
+        ) : null}
+        {f < FLY_OUT[1] ? <Quill x={nib.x} y={nib.y} tilt={tilt} frame={f} /> : null}
+        <Shockwave x={960} y={470} frame={f} start={SOLID_AT} life={30} maxSize={2200} color={CREAM} thickness={24} />
+        <Burst frame={f} start={SOLID_AT} x={960} y={470} seed="solid" colors={[...RAINBOW, CREAM]} count={60} speed={[10, 30]} angle={[-180, 180]} gravity={0.25} life={50} size={[12, 22]} />
+        <Burst frame={f} start={CLAWD_UP[1]} x={dot.x} y={dot.y} seed="dot" colors={[...RAINBOW]} count={16} speed={[4, 12]} angle={[-180, 0]} gravity={0.3} life={26} size={[8, 12]} />
         {[0, 1, 2, 3, 4].map((i) => (
           <Twinkle key={i} x={420 + i * 270} y={260 + (i % 2) * 380} frame={f} start={SOLID_AT + 10 + i * 9} size={12} color={i % 2 ? "#ffd24a" : "white"} />
         ))}
@@ -174,7 +236,7 @@ export const Logo: React.FC = () => {
 };
 
 export const Tagline: React.FC<{ f: number }> = ({ f }) => (
-  <div style={{ position: "absolute", left: 0, right: 0, top: 800, display: "flex", flexDirection: "column", alignItems: "center", gap: 26 }}>
+  <div style={{ position: "absolute", left: 0, right: 0, top: 820, display: "flex", flexDirection: "column", alignItems: "center", gap: 26 }}>
     <PixelText size={76} font={FONT_BODY} color={CREAM} outline={5} outlineColor="#141019" shadow={6} shadowColor={CLAWD}>
       {typed(TAGLINE, f, TAGLINE_AT, 2)}
     </PixelText>
@@ -183,4 +245,3 @@ export const Tagline: React.FC<{ f: number }> = ({ f }) => (
     </PixelText>
   </div>
 );
-
