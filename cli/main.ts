@@ -18,7 +18,6 @@ import { toolCommand } from "./commands/tools.ts";
 import { Context } from "./context.ts";
 
 const GLOBAL_OPTIONS = {
-  version: { type: "boolean", description: "Print the kineto version" },
   json: { type: "boolean", description: "Force JSON output (default when stdout is not a terminal)" },
   help: { type: "boolean", description: "Show help for the command" },
 } as const;
@@ -35,7 +34,11 @@ async function main(argv: string[]): Promise<number> {
       throw new UsageError(`Option ${misplaced} must come after the command`, "Usage: kineto <command> [options]");
     }
     const words = argv.filter((a) => !a.startsWith("-"));
-    if (words.length === 0 && argv.includes("--version")) {
+    // --version 只能单独用：不是全局选项，写在命令后面会被当成未知参数报错，而不是被忽略、照样执行命令
+    if (argv.includes("--version") && words.length > 0) {
+      throw new UsageError("--version takes no command", "Run `./kineto --version` on its own.");
+    }
+    if (argv.includes("--version")) {
       return print(json, "version", { version: await kinetoVersion() }, (d: { version: string }) => `kineto ${d.version}`);
     }
     if (words.length === 0 || words[0] === "help") {

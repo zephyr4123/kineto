@@ -307,3 +307,15 @@ test("--version 输出 package.json 里的版本", async () => {
     await fx.cleanup();
   }
 });
+
+test("--version 只能单独用：写在命令后面或带着命令都报用法错误，不静默执行命令", async () => {
+  const fx = await makeRepo();
+  try {
+    const after = kineto(fx.root, "new", "zz", "--title", "T", "--version");
+    assert.equal(after.status, 2);
+    assert.equal(kineto(fx.root, "list").out.data.videos.length, 0);
+    assert.equal(kineto(fx.root, "--version", "list").status, 2);
+  } finally {
+    await fx.cleanup();
+  }
+});
