@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Agent-first video studio built on Remotion: one CLI to create, render and manage every video",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "type": "module",
   "engines": {
     "node": "^22.18 || >=23.6"
