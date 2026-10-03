@@ -2,10 +2,8 @@
 // 走 Node API 而不是 `npx remotion render`：拿得到结构化结果，才能入库和留痕。
 // 只打包目标视频是硬要求：别的视频模块顶层就加载素材（官方字体示例即如此），
 // 一条视频缺素材或写坏了，不能拖累整个仓库都渲染不了。
-import { execFile } from "node:child_process";
 import { mkdir, rename, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { promisify } from "node:util";
 import { bundle } from "@remotion/bundler";
 import { renderMedia, renderStill, selectComposition } from "@remotion/renderer";
 import { VERSION } from "remotion/version";
@@ -19,6 +17,7 @@ import type { StorageBackend } from "../storage/types.ts";
 import { withRepoLock } from "../lock.ts";
 import { removeOrphanedWorkDirs } from "../workdirs.ts";
 import { syncVideo } from "../sync/sync.ts";
+import { gitState } from "./git.ts";
 import { appendRender, type RenderRecord } from "./records.ts";
 import { remotionSettings } from "./settings.ts";
 
@@ -197,17 +196,3 @@ export async function writeVideoEntry(paths: KinetoPaths, id: string, file: stri
   return file;
 }
 
-const run = promisify(execFile);
-
-async function gitState(cwd: string): Promise<RenderRecord["git"]> {
-  try {
-    const [{ stdout: sha }, { stdout: status }] = await Promise.all([
-      run("git", ["rev-parse", "HEAD"], { cwd }),
-      run("git", ["status", "--porcelain"], { cwd }),
-    ]);
-    return { sha: sha.trim(), dirty: status.trim() !== "" };
-  } catch {
-    // 不在 git 仓库里（或还没有任何提交）：如实记为未知，不阻断渲染
-    return { sha: null, dirty: true };
-  }
-}
