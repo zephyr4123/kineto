@@ -3,6 +3,7 @@
 import { cp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
+import { writeFileAtomic } from "../atomic.ts";
 import { isNodeError, KinetoError } from "../errors.ts";
 import { videoDir, type KinetoPaths } from "../paths.ts";
 import { compositionOwner, readCompositionIds } from "./compositions.ts";
@@ -255,7 +256,7 @@ export function assertAlias(alias: string): void {
 async function writeVideo(paths: KinetoPaths, manifest: VideoManifest): Promise<VideoManifest> {
   const valid = VideoManifest.parse(manifest);
   const file = path.join(videoDir(paths, valid.id), MANIFEST_FILE);
-  await writeFile(file, JSON.stringify(valid, null, 2) + "\n");
+  await writeFileAtomic(file, JSON.stringify(valid, null, 2) + "\n");
   return valid;
 }
 

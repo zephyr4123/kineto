@@ -3,10 +3,11 @@
 // - videos/<id>/assets.gen.ts：素材别名 → staticFile 路径的类型化常量
 // - .kineto/public/<id>/<alias><ext>：存储副本的硬链接（Remotion 每次运行只认一个 public dir）。
 //   不能用符号链接：Remotion 的静态服务对 symlink 一律回 404（renderer/dist/serve-handler 里 lstat 判定）
-import { copyFile, link, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { copyFile, link, mkdir, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import { listVideos } from "../catalog/catalog.ts";
 import type { VideoManifest } from "../catalog/schema.ts";
+import { writeFileAtomic } from "../atomic.ts";
 import { KinetoError, isNodeError } from "../errors.ts";
 import { videoDir, type KinetoPaths } from "../paths.ts";
 import { assetStorageKey, readManifest, type AssetRecord } from "../assets/assets.ts";
@@ -104,7 +105,7 @@ export async function syncAll(
   }
   if (options.check) return { drift, written: [], staged: 0, missing: [], unresolved };
 
-  for (const rel of drift) await writeFile(path.join(paths.root, rel), expected.get(path.join(paths.root, rel))!);
+  for (const rel of drift) await writeFileAtomic(path.join(paths.root, rel), expected.get(path.join(paths.root, rel))!);
 
   // 暂存区整体重建：别名改名、素材解绑后不会留下陈旧链接
   await rm(paths.publicDir, { recursive: true, force: true });
@@ -136,7 +137,7 @@ export async function syncVideo(
     assets.map(({ alias, record }) => ({ alias, ext: record.ext })),
   );
   const written = (await readOrNull(file)) !== content;
-  if (written) await writeFile(file, content);
+  if (written) await writeFileAtomic(file, content);
   return { written, ...(await stageVideoAssets(paths, storage, video, publicDir, assets)) };
 }
 

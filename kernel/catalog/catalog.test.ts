@@ -202,3 +202,26 @@ test("代码里还在用 assets.<alias> 时 unlinkAsset 报 ASSET_IN_USE 并点�
     await fx.cleanup();
   }
 });
+
+test("video.json 原子写入：不拿锁的读取（asset add 的预检查、render、show）永远读不到写了一半的文件", async () => {
+  const fx = await makeRepo();
+  try {
+    await createVideo(fx.paths, { id: "demo", title: "Demo" });
+    let writing = true;
+    const writer = (async () => {
+      for (let i = 0; i < 150; i++) await updateVideo(fx.paths, "demo", { description: "x".repeat(2000 + i) });
+      writing = false;
+    })();
+    let reads = 0;
+    const torn: string[] = [];
+    while (writing) {
+      await readVideo(fx.paths, "demo").catch((err: { code?: string }) => torn.push(err.code ?? String(err)));
+      reads++;
+    }
+    await writer;
+    assert.ok(reads > 0);
+    assert.deepEqual(torn, []);
+  } finally {
+    await fx.cleanup();
+  }
+});
