@@ -1,0 +1,50 @@
+name: release
+
+# 推 v*.*.* 标签即发版：先跑与 CI 相同的门禁，再校验版本号，最后用 CHANGELOG.md 对应小节建 GitHub Release
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - name: Tag matches package.json version
+        run: |
+          version="$(node -p 'require("./package.json").version')"
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match package.json version $version"
+            exit 1
+          fi
+      - name: Release notes from CHANGELOG.md
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          # 取 "## [<version>]" 到下一个 "## [" 或链接定义之间的内容
+          awk -v v="[$version]" '
+            /^## \[/ { p = (index($0, v) == 4); next }
+            /^\[[^]]+\]: / { p = 0 }
+            p
+          ' CHANGELOG.md > notes.md
+          if ! grep -q '[^[:space:]]' notes.md; then
+            echo "::error file=CHANGELOG.md::no release notes for $version"
+            exit 1
+          fi
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --title "kineto $GITHUB_REF_NAME" --notes-file notes.md --verify-tag

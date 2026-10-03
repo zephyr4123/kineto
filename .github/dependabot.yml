@@ -1,0 +1,26 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+    groups:
+      # Remotion 全家必须是同一个精确版本（./kineto doctor 检查），只能一起升；
+      # 升完还要跑 ./kineto setup --update 让 agent skills 跟上
+      remotion:
+        patterns: ["remotion", "@remotion/*"]
+      aws-sdk:
+        patterns: ["@aws-sdk/*"]
+      react:
+        patterns: ["react", "react-dom", "@types/react"]
+      dev-tools:
+        dependency-type: development

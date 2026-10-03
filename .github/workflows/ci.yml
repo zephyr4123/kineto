@@ -2,17 +2,40 @@ name: ci
 
 on:
   push:
+    branches: ["**"]
   pull_request:
+    branches: [main]
+  # release.yml 发版前复用同一道门禁
+  workflow_call:
+
+permissions:
+  contents: read
+
+# 同一分支 / PR 的新推送取消旧的运行；main 与发版不取消，每次都要完整的结论
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref != 'refs/heads/main') }}
 
 jobs:
   verify:
+    name: verify (node ${{ matrix.node }})
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        # 支持的最低版本（原生类型剥离默认开启的第一个 22.x）+ 当前 LTS
+        node: ["22.18", "24"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci
-      # 类型检查 + lint + 单测 + kineto check（CI 上没有素材二进制，只会出 ASSET_NOT_LOCAL 警告）
+      # 类型检查 + lint + 单测 + kineto check --deep（CI 上没有素材二进制，只会出 ASSET_NOT_LOCAL 警告）
       - run: npm run verify
+      - name: CHANGELOG.md has a section for the package.json version
+        run: |
+          version="$(node -p 'require("./package.json").version')"
+          grep -q "^## \[$version\]" CHANGELOG.md || { echo "::error file=CHANGELOG.md::no '## [$version]' section"; exit 1; }
