@@ -7,10 +7,11 @@ import { Github } from "./scenes/Github";
 import { Logo } from "./scenes/Logo";
 import { Prompt } from "./scenes/Prompt";
 import { Speedrun } from "./scenes/Speedrun";
+import { TEASER_FPS, TEASER_FRAMES, TEASER_H, TEASER_W, Teaser } from "./scenes/Teaser";
 import { SCENES, TOTAL } from "./timing";
 
 // 成片 + 每个场景各一个 composition，场景可在 Studio 里单独预览。时长统一从 timing.ts 取。
-// 最后两个是发布用的封面（横版 16:9、竖版 3:4）。
+// 最后是发布用的物料：README 的 GIF 预告，封面两张（横版 16:9、竖版 3:4）。
 export const Compositions: React.FC = () => {
   return (
     <>
@@ -21,6 +22,7 @@ export const Compositions: React.FC = () => {
       <Composition id="kineto-promo-speedrun" component={Speedrun} durationInFrames={SCENES.speedrun} fps={60} width={1920} height={1080} />
       <Composition id="kineto-promo-logo" component={Logo} durationInFrames={SCENES.logo} fps={60} width={1920} height={1080} />
       <Composition id="kineto-promo-github" component={Github} durationInFrames={SCENES.github} fps={60} width={1920} height={1080} />
+      <Composition id="kineto-promo-teaser" component={Teaser} durationInFrames={TEASER_FRAMES} fps={TEASER_FPS} width={TEASER_W} height={TEASER_H} />
       <Still id="kineto-promo-cover" component={Cover} width={1920} height={1080} />
       <Still id="kineto-promo-cover-portrait" component={CoverPortrait} width={1080} height={1440} />
     </>
