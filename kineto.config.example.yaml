@@ -1,0 +1,15 @@
+# kineto 配置示例（入库）。复制为 kineto.config.yaml（不入库）后按需修改；
+# 不建 kineto.config.yaml 时全部取下面的默认值，零配置即可跑通。
+# 密钥一律写成 ${ENV_NAME} 引用，从环境变量读，永远不要把真实密钥写进任何配置文件。
+
+storage:
+  # 存储后端：大文件（素材、渲染产物）放哪。目前支持 local
+  backend: local
+  local:
+    # 相对仓库根的目录，已被 .gitignore 忽略
+    root: .kineto/store
+
+remotion:
+  # Remotion 5.0 起渲染必须传 license key。个人 / ≤3 人公司 / 非营利填 free-license，
+  # 其余见 https://remotion.pro/license
+  licenseKey: free-license

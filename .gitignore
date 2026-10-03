@@ -7,6 +7,19 @@ CLAUDE.local.md
 .env.*
 !.env.example
 
+# 本机真实配置；入库的是带占位符的 kineto.config.example.yaml
+kineto.config.yaml
+
+# 依赖与本机运行态（资产缓存、暂存素材目录、渲染产物、本地存储后端）
+node_modules/
+.kineto/
+out/
+
+# 官方 Remotion skills 由 `kineto setup` 安装：上游仓库没有 LICENSE，不能随本仓库分发
+.agents/skills/remotion-*
+.claude/skills/remotion-*
+skills-lock.json
+
 # 系统与编辑器
 .DS_Store
 .idea/
