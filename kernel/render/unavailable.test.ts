@@ -11,5 +11,7 @@ test("渲染时取不到素材：缺失与损坏分开报，损坏的给出能�
   ]);
   assert.equal(corrupt.code, "STORAGE_OBJECT_CORRUPT");
   assert.match(corrupt.message, /"b"/);
+  // 缺失的也一并报出来，不等修好损坏的再冒出来
+  assert.match(corrupt.message, /missing: a/);
   assert.match(corrupt.hint ?? "", /--reupload/);
 });

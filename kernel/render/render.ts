@@ -63,8 +63,10 @@ export interface RenderResult {
 // 缺失与损坏分开报：损坏的重新 asset add 不会重传（远端看起来完好），要给出能真正修好的命令
 export function assetsUnavailable(videoId: string, missing: MissingAsset[]): KinetoError {
   const corrupt = missing.filter((m) => m.reason === "corrupt");
+  const absent = missing.filter((m) => m.reason !== "corrupt");
   if (corrupt.length > 0) {
-    return new KinetoError("STORAGE_OBJECT_CORRUPT", `Assets of "${videoId}" are damaged in storage: ${corrupt.map((m) => `"${m.alias}"`).join(", ")}`, {
+    const alsoMissing = absent.length > 0 ? `; missing: ${absent.map((m) => m.alias).join(", ")}` : "";
+    return new KinetoError("STORAGE_OBJECT_CORRUPT", `Assets of "${videoId}" are damaged in storage: ${corrupt.map((m) => `"${m.alias}"`).join(", ")}${alsoMissing}`, {
       hint: "Re-upload it with the original file: `./kineto asset add <file> --license <license> --reupload`, or `./kineto storage push --reupload` from a machine whose local store has it.",
     });
   }
@@ -174,7 +176,7 @@ export async function renderVideo(
     try {
       const [hex, { size }] = await Promise.all([sha256File(tmp), stat(tmp)]);
       const key = `renders/${video.id}/${compositionId}-${hex.slice(0, 12)}.${ext}`;
-      const stored = await storage.put(tmp, key);
+      const stored = await storage.put(tmp, key, { sha256: hex });
       const record: RenderRecord = {
         renderedAt: new Date().toISOString(),
         composition: compositionId,

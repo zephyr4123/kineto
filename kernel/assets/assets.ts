@@ -148,7 +148,8 @@ function assertCompatible(existing: AssetRecord | undefined, license: string, ex
       {
         hint:
           `To use it in another video: ./kineto asset link ${existing.id} --to <video> --as <alias>. ` +
-          `To correct the recorded license: ./kineto asset update ${existing.id} --license <license>`,
+          `To correct the recorded license: ./kineto asset update ${existing.id} --license <license>. ` +
+          `To re-upload it, rerun with --license "${existing.license}".`,
       },
     );
   }

@@ -77,11 +77,20 @@ export async function deepCheck(paths: KinetoPaths, storage: StorageBackend): Pr
       await mkdir(publicDir, { recursive: true });
       const { missing } = await stageVideoAssets(paths, storage, video, publicDir);
       if (missing.length > 0) {
+        // 损坏的素材前面已报 ASSET_CORRUPT（带修复命令）；这里只说明这条视频没法加载，措辞不把损坏说成缺失
+        const corrupt = missing.filter((m) => m.reason === "corrupt").map((m) => m.alias);
+        const absent = missing.filter((m) => m.reason !== "corrupt").map((m) => m.alias);
         problems.push({
           level: "warn",
           code: "DEEP_CHECK_SKIPPED",
-          message: `videos/${id} not loaded: assets missing from storage (${missing.map((m) => m.alias).join(", ")})`,
-          hint: "Configure the storage backend that holds them to include this video in the deep check.",
+          message:
+            `videos/${id} not loaded: ` +
+            [absent.length ? `missing from storage (${absent.join(", ")})` : "", corrupt.length ? `damaged in storage (${corrupt.join(", ")})` : ""]
+              .filter(Boolean)
+              .join("; "),
+          hint: corrupt.length
+            ? "Repair the damaged assets as the ASSET_CORRUPT problems say, then rerun."
+            : "Configure the storage backend that holds them to include this video in the deep check.",
         });
         continue;
       }

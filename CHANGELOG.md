@@ -24,14 +24,15 @@ First stable release.
 
 - Local storage backend (default, zero configuration).
 - S3-compatible backend for Tencent COS, AWS S3, Cloudflare R2, Alibaba OSS and MinIO, with a local read-only cache, content type and long-lived cache headers on upload, and a `publicUrl` that puts shareable links into render records.
-- `storage push` uploads this machine's assets and renders to the shared backend.
+- `storage push` uploads this machine's assets and renders to the shared backend without re-reading objects the backend already holds intact.
+- Integrity checks on both ends: sources are hashed before upload, downloads are verified before they enter the local cache, and `check --deep` reports damaged objects. `asset add --reupload` and `storage push --reupload` repair them.
 - `envFile` in `kineto.config.yaml` reads `${ENV}` secrets from a `chmod 600` file outside the repository.
 
 ### Tools
 
 - Plugin host: `tool list` and `tool <name>`. Plugins in `tools/<name>/` run only when enabled in `kineto.config.yaml`, and their results enter the asset library with license and provenance.
 - `tts`: text to voiceover WAV (Tencent Cloud TTS).
-- `transcribe`: speech to captions JSON for `@remotion/captions` (local whisper.cpp).
+- `transcribe`: speech to captions JSON for `@remotion/captions` (local whisper.cpp). Word-level timing for languages written with spaces; phrase-level for Chinese, Japanese and Korean, one caption page per phrase. `--hint` tells whisper how proper nouns are spelled.
 
 ### Agents and project
 

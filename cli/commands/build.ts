@@ -29,7 +29,7 @@ export const syncCommand = defineCommand({
           `Staged ${d.staged} asset(s).`,
           ...d.missing.map((m) =>
             m.reason === "corrupt"
-              ? `warning: ${m.video}/${m.alias} is damaged in storage (${m.key}); re-upload it with \`./kineto asset add <original file> --reupload\``
+              ? `warning: ${m.video}/${m.alias} is damaged in storage (${m.key}); re-upload it with \`./kineto asset add <original file> --license <license> --reupload\``
               : `warning: ${m.video}/${m.alias} is not in storage (${m.key})`,
           ),
           ...d.unresolved.map((u) => `warning: ${u.video}/${u.alias} references unknown asset ${u.asset} (run \`./kineto check\`)`),
