@@ -12,7 +12,8 @@ import path from "node:path";
 import { isNodeError, KinetoError } from "./errors.ts";
 import type { KinetoPaths } from "./paths.ts";
 
-const held = new AsyncLocalStorage<string>();
+// 当前异步调用链已持有的锁文件：嵌套拿不同的锁（工具锁里再拿仓库锁）时互不遮挡
+const held = new AsyncLocalStorage<ReadonlySet<string>>();
 
 interface Holder {
   pid: number | null;
@@ -20,29 +21,46 @@ interface Holder {
   stale: boolean;
 }
 
-export async function withRepoLock<T>(
+export function withRepoLock<T>(
   paths: KinetoPaths,
   fn: () => Promise<T>,
   { timeoutMs = 120_000 }: { timeoutMs?: number } = {},
 ): Promise<T> {
-  const file = path.join(paths.stateDir, "lock");
-  if (held.getStore() === file) return fn();
-  await mkdir(paths.stateDir, { recursive: true });
+  return withFileLock(path.join(paths.stateDir, "lock"), fn, {
+    timeoutMs,
+    onTimeout: (pid) =>
+      new KinetoError("REPO_LOCKED", `Another kineto command holds the repository lock (pid ${pid ?? "?"})`, {
+        hint: "Wait for it to finish. If that process no longer exists, delete .kineto/lock.",
+      }),
+  });
+}
+
+// 通用的跨进程互斥锁（锁文件 + 随机 token + 陈旧锁接管）。工具插件用它保护首次安装、下载这类不能并发的步骤
+export async function withFileLock<T>(
+  file: string,
+  fn: () => Promise<T>,
+  {
+    timeoutMs = 120_000,
+    onTimeout = (pid: number | null) =>
+      new KinetoError("LOCKED", `Another kineto process holds ${file} (pid ${pid ?? "?"})`, {
+        hint: `Wait for it to finish. If that process no longer exists, delete ${file}.`,
+      }),
+  }: { timeoutMs?: number; onTimeout?: (pid: number | null) => KinetoError } = {},
+): Promise<T> {
+  const holding = held.getStore() ?? new Set<string>();
+  if (holding.has(file)) return fn();
+  await mkdir(path.dirname(file), { recursive: true });
   const token = randomUUID();
   const deadline = Date.now() + timeoutMs;
   for (;;) {
     if (await tryCreate(file, token)) break;
     const holder = await readHolder(file);
     if (holder.stale && (await takeOver(file, holder))) continue;
-    if (Date.now() > deadline) {
-      throw new KinetoError("REPO_LOCKED", `Another kineto command holds the repository lock (pid ${holder.pid ?? "?"})`, {
-        hint: "Wait for it to finish. If that process no longer exists, delete .kineto/lock.",
-      });
-    }
+    if (Date.now() > deadline) throw onTimeout(holder.pid);
     await sleep(25 + Math.random() * 75);
   }
   try {
-    return await held.run(file, fn);
+    return await held.run(new Set([...holding, file]), fn);
   } finally {
     const holder = await readHolder(file);
     if (holder.token === token) await rm(file, { force: true });

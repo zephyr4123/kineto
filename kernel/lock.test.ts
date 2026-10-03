@@ -70,3 +70,28 @@ await withRepoLock(pathsFor(root), async () => {
     await fx.cleanup();
   }
 });
+
+test("withFileLock：同一个锁文件串行；持有它时再拿仓库锁不会死锁，持有仓库锁时再拿它也不会", async () => {
+  const fx = await makeRepo();
+  try {
+    const { withFileLock, withRepoLock } = await import("./lock.ts");
+    const file = path.join(fx.root, ".kineto/tools/demo/lock");
+    let inside = 0;
+    let maxInside = 0;
+    const work = () =>
+      withFileLock(file, async () => {
+        inside++;
+        maxInside = Math.max(maxInside, inside);
+        await new Promise((r) => setTimeout(r, 20));
+        inside--;
+      });
+    await Promise.all([work(), work(), work()]);
+    assert.equal(maxInside, 1);
+
+    const nested = await withFileLock(file, () => withRepoLock(fx.paths, () => withFileLock(file, async () => "ok")));
+    assert.equal(nested, "ok");
+    assert.equal(await withRepoLock(fx.paths, () => withFileLock(file, () => withRepoLock(fx.paths, async () => "ok"))), "ok");
+  } finally {
+    await fx.cleanup();
+  }
+});

@@ -53,33 +53,49 @@ export default defineTool({
     const version = ctx.config.whisperCppVersion;
     const input = await ctx.input(ctx.args[0]!);
 
-    // 重依赖在这里才加载：没启用这个工具的人不受它影响
+    // 重依赖在这里才加载：没启用这个工具的人不受它影响。两个内部路径函数没有从包入口导出，
+    // 版本按 AGENTS.md 规则锁死，升级 Remotion 时类型检查会发现它们变了
     const { installWhisperCpp, downloadWhisperModel, transcribe, toCaptions } = await import("@remotion/install-whisper-cpp");
     const { getWhisperExecutablePath } = await import("@remotion/install-whisper-cpp/dist/install-whisper-cpp.js");
+    const { getModelPath } = await import("@remotion/install-whisper-cpp/dist/download-whisper-model.js");
 
     const whisperDir = path.join(ctx.dataDir, `whisper.cpp-${version}`);
-    const executable = getWhisperExecutablePath(whisperDir, version);
-    if (!(await exists(executable))) {
-      // 上次编译到一半失败会留下残缺目录，installWhisperCpp 遇到它会静默跳过，先清掉
-      await rm(whisperDir, { recursive: true, force: true });
-      ctx.progress(`installing whisper.cpp ${version} (first use only, a few minutes)…`);
-      await installWhisperCpp({ version, to: whisperDir, printOutput: false }).catch((err: unknown) => {
-        throw new KinetoError("TOOL_FAILED", `Building whisper.cpp ${version} failed: ${(err as Error).message}`, {
-          hint: "It needs git, make and a C/C++ compiler (macOS: xcode-select --install; Linux: build-essential).",
-          cause: err,
-        });
-      });
+    // 两个进程同时首次运行时，后一个会把前一个正在编译的目录当成残缺目录删掉：安装与下载串行做
+    await ctx.lock(async () => {
+      const executable = getWhisperExecutablePath(whisperDir, version);
       if (!(await exists(executable))) {
-        throw new KinetoError("TOOL_FAILED", `whisper.cpp was built but ${executable} is missing`, {
-          hint: `Delete ${whisperDir} and retry.`,
+        // 上次编译到一半失败会留下残缺目录，installWhisperCpp 遇到它会静默跳过，先清掉
+        await rm(whisperDir, { recursive: true, force: true });
+        ctx.progress(`installing whisper.cpp ${version} (first use only, a few minutes)…`);
+        await installWhisperCpp({ version, to: whisperDir, printOutput: false }).catch((err: unknown) => {
+          throw new KinetoError("TOOL_FAILED", `Building whisper.cpp ${version} failed: ${(err as Error).message}`, {
+            hint: "It needs git, make and a C/C++ compiler (macOS: xcode-select --install; Linux: build-essential).",
+            cause: err,
+          });
         });
+        if (!(await exists(executable))) {
+          throw new KinetoError("TOOL_FAILED", `whisper.cpp was built but ${executable} is missing`, { hint: `Delete ${whisperDir} and retry.` });
+        }
       }
-    }
-    await downloadWhisperModel({
-      model,
-      folder: whisperDir,
-      printOutput: false,
-      onProgress: (downloaded, total) => ctx.progress(`downloading model ${model}: ${Math.round((downloaded / total) * 100)}%`),
+      // downloadWhisperModel 在 printOutput:false 时会把下载中断留下的残缺模型当成已下载：
+      // 下载成功后才写完成标记，没有标记的模型文件一律删掉重下
+      const modelFile = getModelPath(whisperDir, model);
+      const complete = `${modelFile}.complete`;
+      if (!(await exists(complete))) {
+        await rm(modelFile, { force: true });
+        await downloadWhisperModel({
+          model,
+          folder: whisperDir,
+          printOutput: false,
+          onProgress: (downloaded, total) => ctx.progress(`downloading model ${model}: ${Math.round((downloaded / total) * 100)}%`),
+        }).catch((err: unknown) => {
+          throw new KinetoError("TOOL_FAILED", `Downloading whisper model ${model} failed: ${(err as Error).message}`, {
+            hint: "Check the network (the model comes from huggingface.co), then retry.",
+            cause: err,
+          });
+        });
+        await writeFile(complete, "");
+      }
     });
 
     // whisper.cpp 只吃 16kHz 单声道 wav；用 Remotion 自带的 ffmpeg 转，不要求本机另装
@@ -104,6 +120,11 @@ export default defineTool({
       language: language as never,
       printOutput: false,
       onProgress: (p) => ctx.progress(`transcribing with ${model}: ${Math.round(p * 100)}%`),
+    }).catch((err: unknown) => {
+      throw new KinetoError("TOOL_FAILED", `whisper.cpp failed on ${input.record.id}: ${(err as Error).message.split("\n").slice(-3).join(" ")}`, {
+        hint: `If the model file is damaged, delete ${whisperDir} and retry.`,
+        cause: err,
+      });
     });
     const { captions } = toCaptions({ whisperCppOutput: output });
     if (captions.length === 0) {

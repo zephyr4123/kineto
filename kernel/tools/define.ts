@@ -32,6 +32,8 @@ export interface ToolContext<C> {
   workDir: string;
   // 这个工具自己的持久目录（.kineto/tools/<name>）：放下载的程序、模型等，跨次运行保留
   dataDir: string;
+  // 这个工具的跨进程锁：首次安装、下载模型这类不能被两个进程同时做的步骤包在里面
+  lock<T>(fn: () => Promise<T>): Promise<T>;
   // 取素材库里的输入：--to 那条视频的别名，或 sha256:… 素材 id
   input(ref: string): Promise<ToolInput>;
   progress(message: string): void;

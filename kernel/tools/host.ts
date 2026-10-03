@@ -10,7 +10,7 @@ import { ASSET_ID_RE } from "../catalog/schema.ts";
 import { assertAliasAvailable, linkAsset, readVideo } from "../catalog/catalog.ts";
 import type { LoadedConfig } from "../config.ts";
 import { isNodeError, KinetoError } from "../errors.ts";
-import { withRepoLock } from "../lock.ts";
+import { withFileLock, withRepoLock } from "../lock.ts";
 import type { KinetoPaths } from "../paths.ts";
 import type { StorageBackend } from "../storage/types.ts";
 import { syncAll } from "../sync/sync.ts";
@@ -123,6 +123,8 @@ export async function runTool(
       flags: input.flags,
       workDir,
       dataDir,
+      // 首次安装可能要几分钟，等锁的上限放宽
+      lock: (fn) => withFileLock(path.join(dataDir, "lock"), fn, { timeoutMs: 30 * 60_000 }),
       input: (ref) => resolveInput(paths, storage, video, ref),
       progress: input.onProgress ?? (() => {}),
     });
