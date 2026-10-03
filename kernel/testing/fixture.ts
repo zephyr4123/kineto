@@ -16,7 +16,7 @@ import { Video } from "./Video";
 export const Compositions: React.FC = () => {
   return (
     <Composition
-      id="__KINETO_ID__"
+      id="KINETO-VIDEO-ID"
       component={Video}
       durationInFrames={60}
       fps={30}

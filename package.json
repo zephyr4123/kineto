@@ -15,7 +15,7 @@
     "studio": "./kineto studio",
     "test": "node --test \"kernel/**/*.test.ts\" \"cli/**/*.test.ts\"",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json",
-    "lint": "eslint src engine videos templates",
+    "lint": "eslint --no-error-on-unmatched-pattern src engine videos templates",
     "verify": "npm run typecheck && npm run lint && npm test && ./kineto check"
   },
   "dependencies": {

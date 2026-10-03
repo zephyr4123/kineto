@@ -99,7 +99,8 @@ export async function createVideo(paths: KinetoPaths, input: CreateVideoInput): 
     throw err;
   }
   try {
-    await fillTemplate(dir, { __KINETO_ID__: input.id, __KINETO_TITLE__: input.title });
+    // id 占位符只用 composition id 合法字符，模板未替换时也能通过 Remotion 的 lint
+    await fillTemplate(dir, { "KINETO-VIDEO-ID": input.id, __KINETO_TITLE__: input.title });
     const at = (input.now ?? new Date()).toISOString();
     return await writeVideo(paths, {
       id: input.id,
@@ -176,7 +177,10 @@ async function fillTemplate(dir: string, tokens: Record<string, string>): Promis
     const file = path.join(entry.parentPath, entry.name);
     const text = await readFile(file, "utf8");
     let out = text;
-    for (const [token, value] of Object.entries(tokens)) out = out.replaceAll(token, value);
+    for (const [token, value] of Object.entries(tokens)) {
+      // 带引号的占位符是字符串字面量位置：整体换成 JSON 转义后的字面量，标题含引号、反斜杠也安全
+      out = out.replaceAll(`"${token}"`, JSON.stringify(value)).replaceAll(token, value);
+    }
     if (out !== text) await writeFile(file, out);
   }
 }

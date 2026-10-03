@@ -23,6 +23,18 @@ test("createVideo 复制模板、替换占位符并写入 draft 状态的 video.
   }
 });
 
+test("模板里带引号的占位符替换成 JSON 字符串字面量：标题含引号也不会写坏代码", async () => {
+  const fx = await makeRepo();
+  try {
+    await writeFile(path.join(fx.root, "templates/blank/Title.tsx"), 'export const TITLE = "__KINETO_TITLE__";\n');
+    await createVideo(fx.paths, { id: "q", title: 'Say "hi" \\ <b>' });
+    const src = await readFile(path.join(fx.root, "videos/q/Title.tsx"), "utf8");
+    assert.equal(src, `export const TITLE = ${JSON.stringify('Say "hi" \\ <b>')};\n`);
+  } finally {
+    await fx.cleanup();
+  }
+});
+
 test("createVideo 拒绝非法 id、重复 id 和不存在的模板", async () => {
   const fx = await makeRepo();
   try {
