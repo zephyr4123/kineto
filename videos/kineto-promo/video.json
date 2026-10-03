@@ -1,0 +1,22 @@
+{
+  "id": "kineto-promo",
+  "title": "kineto 宣传片",
+  "description": "",
+  "status": "draft",
+  "tags": [],
+  "createdAt": "2026-10-03T05:07:48.330Z",
+  "updatedAt": "2026-10-03T05:48:01.038Z",
+  "assets": {
+    "fontArcade": "sha256:034c77f1f05ec89421e4a63f0e3a4ca1ecf852cc6d2bf611f126f275728e017d",
+    "fontZh": "sha256:22099e1a41dbcc9655942b48d9a3e477959076636dc67f372970392d691bf662",
+    "fontMono": "sha256:6573eb37436b61997f1012b8a8af633f40979edc2ec9c76bcdb42fa23132c428",
+    "cornerHit": "sha256:e924d2983d0b80d362bbc2c64d049acbd7237868c4ef5a1180d012c0bcbd8b6e",
+    "github": "sha256:b143dcdf3d30cf980904d930dcb5c8a8a629b6d979c899fc9546a2d7a4a55ddc",
+    "musicPrompt": "sha256:ab538ef56da89a7a9b053bfa7410ab13f1c8e4c24f316f87db9fd32c108d9acc",
+    "musicChaos": "sha256:04043717b25caa314ca22bb4a0e265c02046da1c1dbed4c5c8dbcfb36c111fbd",
+    "musicCont": "sha256:56e4b4fa77cd41f67859c42b77d7b2d71a7ad8043650c78851a62e0847812159",
+    "musicSpeedrun": "sha256:da0e3c05904fba874305e46b0d22aa550b7eb8092a34b49ac7720db648c149fa",
+    "musicLogo": "sha256:61d8014f9cbded832a841271a81978b67c471bba5fc8bfe04225605c014a8617",
+    "sfx": "sha256:35b4d4d804e396d9937dbc12cfa2d8d66b126248bac9187a3bc1cc5e4ef2c1d6"
+  }
+}
