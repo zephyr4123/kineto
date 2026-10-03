@@ -9,7 +9,7 @@ export const FONT_MONO = "Fusion Pixel Mono";
 // 字体名以数字开头的单词（2P）在 CSS 里必须加引号，否则整条 font-family 失效、回落成衬线字
 export const FONT_ARCADE = '"Press Start 2P"';
 await Promise.all([
-  loadFont({ family: FONT_BODY, url: staticFile(assets.fontZh) }),
+  loadFont({ family: FONT_BODY, url: staticFile(assets.fontBody) }),
   loadFont({ family: FONT_MONO, url: staticFile(assets.fontMono) }),
   loadFont({ family: "Press Start 2P", url: staticFile(assets.fontArcade) }),
 ]);

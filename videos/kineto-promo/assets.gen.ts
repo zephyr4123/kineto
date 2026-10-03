@@ -3,17 +3,11 @@
 
 export const assets = {
   ambRain: "kineto-promo/ambRain.wav",
-  cornerHit: "kineto-promo/cornerHit.mp4",
   fontArcade: "kineto-promo/fontArcade.ttf",
+  fontBody: "kineto-promo/fontBody.woff2",
   fontMono: "kineto-promo/fontMono.woff2",
-  fontZh: "kineto-promo/fontZh.woff2",
   github: "kineto-promo/github.png",
-  musicChaos: "kineto-promo/musicChaos.wav",
-  musicCont: "kineto-promo/musicCont.wav",
-  musicLogo: "kineto-promo/musicLogo.wav",
   musicOpening: "kineto-promo/musicOpening.wav",
-  musicPrompt: "kineto-promo/musicPrompt.wav",
-  musicSpeedrun: "kineto-promo/musicSpeedrun.wav",
   musicStage1: "kineto-promo/musicStage1.wav",
   sfx: "kineto-promo/sfx.wav",
 } as const;
