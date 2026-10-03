@@ -81,9 +81,10 @@ function providerError(what: string, error: { Code: string; Message: string }, r
       hint: "Check secretId / secretKey of this tool in kineto.config.yaml (usually ${ENV} references into your envFile).",
     });
   }
-  if (/^(UnauthorizedOperation|ResourceUnavailable|ResourceInsufficient)|NotActivated|NotOpen|InArrears|ChargeResource/.test(error.Code)) {
+  // 服务没开通、额度用完、欠费、子账号没授权：都要人去控制台处理，重试没用
+  if (/^(UnauthorizedOperation|ResourceUnavailable|ResourceInsufficient)|NotActivated|NotOpen|Arrears|Exhausted|ChargeResource/.test(error.Code)) {
     return new KinetoError("TOOL_SERVICE_UNAVAILABLE", message, {
-      hint: "Enable the service (and pay-as-you-go billing if the free quota is used up) in the Tencent Cloud console, and grant this key its CAM policy.",
+      hint: "In the Tencent Cloud console: enable the service, claim its free quota or turn on pay-as-you-go billing, and grant this key its CAM policy.",
     });
   }
   return new KinetoError("TOOL_FAILED", message, { hint: "Check the tool's options against the provider's limits." });

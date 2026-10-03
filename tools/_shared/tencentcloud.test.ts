@@ -46,6 +46,13 @@ test("成功时返回 Response 体；接口报错翻译成带服务商错误码�
   await assert.rejects(call(fakeFetch({ Response: { Error: { Code: "UnauthorizedOperation.ErrorUserNotExist", Message: "x" }, RequestId: "r3" } })), {
     code: "TOOL_SERVICE_UNAVAILABLE",
   });
+  // 服务开了但额度用完（资源包耗尽、欠费）：同样是「去控制台处理计费」，不是参数错
+  await assert.rejects(call(fakeFetch({ Response: { Error: { Code: "UnsupportedOperation.PkgExhausted", Message: "pack exhausted" }, RequestId: "r5" } })), {
+    code: "TOOL_SERVICE_UNAVAILABLE",
+  });
+  await assert.rejects(call(fakeFetch({ Response: { Error: { Code: "UnsupportedOperation.AccountArrears", Message: "arrears" }, RequestId: "r6" } })), {
+    code: "TOOL_SERVICE_UNAVAILABLE",
+  });
   await assert.rejects(call(fakeFetch({ Response: { Error: { Code: "InvalidParameter.TextTooLong", Message: "too long" }, RequestId: "r4" } })), {
     code: "TOOL_FAILED",
   });
