@@ -1,0 +1,9 @@
+#!/usr/bin/env node
+// kineto CLI 入口。CLI 与 kernel 直接以 TypeScript 源码运行（Node 原生类型剥离），无需编译；
+// 这层纯 JS 外壳只负责在 Node 版本太旧时给出人话报错，而不是一个看不懂的语法错误。
+const [major, minor] = process.versions.node.split(".").map(Number);
+if (major < 22 || (major === 22 && minor < 18)) {
+  process.stderr.write(`kineto needs Node.js >= 22.18 (found ${process.versions.node}).\n`);
+  process.exit(1);
+}
+await import("./cli/main.ts");

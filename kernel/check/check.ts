@@ -3,6 +3,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { listVideoIds, readVideo } from "../catalog/catalog.ts";
+import { COMPOSITIONS_FILE, scanCompositionIds } from "../catalog/compositions.ts";
 import type { VideoManifest } from "../catalog/schema.ts";
 import { isNodeError, KinetoError } from "../errors.ts";
 import { videoDir, type KinetoPaths } from "../paths.ts";
@@ -24,8 +25,6 @@ export interface CheckReport {
   assets: number;
   problems: Problem[];
 }
-
-const COMPOSITIONS_FILE = "compositions.tsx";
 
 export async function checkRepo(paths: KinetoPaths, storage: StorageBackend): Promise<CheckReport> {
   const problems: Problem[] = [];
@@ -125,9 +124,8 @@ async function checkCompositions(paths: KinetoPaths, id: string, seen: Map<strin
     ];
   }
 
-  for (const match of source.matchAll(/\bid=(?:"([^"]*)"|'([^']*)'|(\{))/g)) {
-    const literal = match[1] ?? match[2];
-    if (literal === undefined) {
+  for (const literal of scanCompositionIds(source)) {
+    if (literal === null) {
       problems.push({
         level: "error",
         code: "COMPOSITION_ID_NOT_LITERAL",
