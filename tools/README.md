@@ -16,7 +16,7 @@ The provider is an implementation detail behind it, so swapping providers never 
 |---|---|---|---|
 | `transcribe` | Speech in an audio/video asset → captions JSON (`Caption[]` from `@remotion/captions`) | whisper.cpp, local | Free. First run builds whisper.cpp and downloads the model (needs git, make, a C compiler) |
 | `tts` | Text → voiceover WAV | Tencent Cloud TTS | Billed per character |
-| `image` | Prompt → image | Tencent Hunyuan | Billed per image |
+| `image` | Prompt → image | Tencent Hunyuan Hy-Image-3.0 on TokenHub | Billed per image |
 
 ## Hot-pluggable by configuration
 

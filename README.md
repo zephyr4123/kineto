@@ -130,7 +130,7 @@ Tools are plugins in [`tools/`](tools/README.md) that produce media outside Remo
 |---|---|---|
 | 🗣️ `tts` | Text → voiceover WAV | Tencent Cloud TTS |
 | 💬 `transcribe` | Speech in an asset → captions for `@remotion/captions` | whisper.cpp, local and free |
-| 🎨 `image` | Prompt → image | Tencent Hunyuan |
+| 🎨 `image` | Prompt → image | Tencent Hunyuan Hy-Image-3.0 (TokenHub) |
 
 ```bash
 ./kineto tool tts "Every video starts with a single line." --to hello --as voice

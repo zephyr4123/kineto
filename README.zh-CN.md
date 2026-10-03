@@ -130,7 +130,7 @@ kernel        视频目录 · 素材库 · 渲染 · 同步 · 检查
 |---|---|---|
 | 🗣️ `tts` | 文字 → 配音 WAV | 腾讯云语音合成 |
 | 💬 `transcribe` | 素材中的人声 → `@remotion/captions` 可用的字幕 | whisper.cpp，本机运行，免费 |
-| 🎨 `image` | 文字描述 → 图片 | 腾讯混元生图 |
+| 🎨 `image` | 文字描述 → 图片 | 腾讯混元生图 Hy-Image-3.0（TokenHub） |
 
 ```bash
 ./kineto tool tts "每一条视频，都从一行字开始。" --to hello --as voice

@@ -31,7 +31,7 @@ First stable release.
 - Plugin host: `tool list` and `tool <name>`. Plugins in `tools/<name>/` run only when enabled in `kineto.config.yaml`, and their results enter the asset library with license and provenance.
 - `tts`: text to voiceover WAV (Tencent Cloud TTS).
 - `transcribe`: speech to captions JSON for `@remotion/captions` (local whisper.cpp).
-- `image`: prompt to image (Tencent Hunyuan).
+- `image`: prompt to image (Tencent Hunyuan Hy-Image-3.0 on TokenHub).
 
 ### Agents and project
 

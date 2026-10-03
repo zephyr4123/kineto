@@ -1,93 +1,68 @@
-// AI 生图：文字描述 → 图片。目前由腾讯混元生图实现；工具按能力命名，换服务商不换命令。
+// AI 生图：文字描述 → 图片。目前由腾讯云 TokenHub 上的混元生图 Hy-Image-3.0 实现；
+// 工具按能力命名，换服务商、换模型都不换命令。
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
-import { setTimeout as sleep } from "node:timers/promises";
 import { z } from "zod";
 import { KinetoError } from "../../kernel/errors.ts";
 import { defineTool } from "../../kernel/tools/define.ts";
-import { callTencentCloud } from "../_shared/tencentcloud.ts";
-
-const RESOLUTIONS = ["768:768", "768:1024", "1024:768", "1024:1024", "720:1280", "1280:720", "768:1280", "1280:768"] as const;
+import { checkSize, generateImage } from "./tokenhub.ts";
 
 const Config = z
   .object({
-    secretId: z.string().min(1),
-    secretKey: z.string().min(1),
-    // 混元生图目前只在广州地域提供
-    region: z.string().default("ap-guangzhou"),
-    resolution: z.enum(RESOLUTIONS).default("1280:720"),
-    // 服务商默认在图上加「AI 生成」标识（国内 AIGC 内容标识要求）；视频里另有标注时可以关掉
-    logo: z.boolean().default(true),
+    // TokenHub 控制台「API Key 管理」里创建的 key
+    apiKey: z.string().min(1),
+    // 宽x高，各在 512..2048、面积不超过 1024×1024；默认 16:9 适合当视频画面
+    size: z.string().default("1280x720").transform(checkSize),
     // 让服务商先扩写提示词，出图通常更好；要严格按原文出图时关掉
     revise: z.boolean().default(true),
+    // 图上的文字水印（最多 16 个字符），比如「AI 生成」
+    footnote: z.string().min(1).max(16).optional(),
   })
   .strict();
 
-const POLL_MS = 3000;
-const TIMEOUT_MS = 5 * 60_000;
-
 export default defineTool({
   name: "image",
-  summary: "Generate an image from a text prompt (Tencent Hunyuan)",
+  summary: "Generate an image from a text prompt (Tencent Hunyuan Hy-Image-3.0 on TokenHub)",
   config: Config,
-  args: [{ name: "prompt", description: "What to draw (Chinese works best)" }],
+  args: [{ name: "prompt", description: "What to draw (Chinese and English both work)" }],
   options: {
-    size: { type: "string", value: "w:h", description: `One of ${RESOLUTIONS.join(", ")}` },
-    negative: { type: "string", value: "text", description: "What to avoid in the image" },
-    style: { type: "string", value: "code", description: "Provider style code" },
+    size: { type: "string", value: "WxH", description: "e.g. 1280x720, 1024x1024 (each side 512..2048, at most 1024×1024 pixels)" },
     seed: { type: "string", value: "n", description: "Fix the seed to reproduce an image" },
   },
   async run(ctx) {
-    const prompt = ctx.args[0]!;
-    const resolution = z.enum(RESOLUTIONS).parse(ctx.flags.size ?? ctx.config.resolution);
-    const seed = ctx.flags.seed === undefined ? undefined : z.coerce.number().int().parse(ctx.flags.seed);
-    const call = <T>(action: string, params: Record<string, unknown>) =>
-      callTencentCloud<T>({ credentials: ctx.config, service: "hunyuan", version: "2023-09-01", action, region: ctx.config.region, params });
+    const prompt = ctx.args[0]!.trim();
+    if (prompt === "") throw new KinetoError("INVALID_ARGUMENT", "The prompt is empty", { hint: "Describe the image to draw." });
+    const size = checkSize(String(ctx.flags.size ?? ctx.config.size));
+    const seed = ctx.flags.seed === undefined ? undefined : z.coerce.number().int().min(1).max(4294967295).parse(ctx.flags.seed);
 
-    const { JobId } = await call<{ JobId: string }>("SubmitHunyuanImageJob", {
-      Prompt: prompt,
-      Resolution: resolution,
-      LogoAdd: ctx.config.logo ? 1 : 0,
-      Revise: ctx.config.revise ? 1 : 0,
-      ...(typeof ctx.flags.negative === "string" ? { NegativePrompt: ctx.flags.negative } : {}),
-      ...(typeof ctx.flags.style === "string" ? { Style: ctx.flags.style } : {}),
-      ...(seed === undefined ? {} : { Seed: seed }),
+    ctx.progress("generating image…");
+    const result = await generateImage({
+      apiKey: ctx.config.apiKey,
+      prompt,
+      size,
+      revise: ctx.config.revise,
+      seed,
+      footnote: ctx.config.footnote,
     });
 
-    // 异步任务：1 排队、2 处理中、4 失败、5 完成
-    const deadline = Date.now() + TIMEOUT_MS;
-    let job: { JobStatusCode: string; JobErrorCode?: string; JobErrorMsg?: string; ResultImage?: string[]; RevisedPrompt?: string[] };
-    for (;;) {
-      job = await call("QueryHunyuanImageJob", { JobId });
-      if (job.JobStatusCode === "5" || job.JobStatusCode === "4") break;
-      if (Date.now() > deadline) {
-        throw new KinetoError("TOOL_FAILED", `Hunyuan job ${JobId} did not finish in ${TIMEOUT_MS / 60_000} minutes`, { hint: "Retry later." });
-      }
-      ctx.progress(`generating image (job ${JobId}, status ${job.JobStatusCode})…`);
-      await sleep(POLL_MS);
-    }
-    const url = job.ResultImage?.[0];
-    if (job.JobStatusCode === "4" || !url) {
-      throw new KinetoError("TOOL_FAILED", `Hunyuan job ${JobId} failed: ${job.JobErrorCode ?? "?"} ${job.JobErrorMsg ?? ""}`.trim(), {
-        hint: "Rephrase the prompt (content moderation rejects some prompts) and retry.",
-      });
-    }
-
-    // 结果链接只保留 1 小时，立刻下载进素材库
-    const res = await fetch(url);
+    // 结果是 12 小时有效的临时链接，立刻下载进素材库
+    const res = await fetch(result.url, { signal: AbortSignal.timeout(60_000) }).catch((err: unknown) => {
+      throw new KinetoError("TOOL_FAILED", `Cannot download the generated image: ${(err as Error).message}`, { hint: "Retry.", cause: err });
+    });
     if (!res.ok) throw new KinetoError("TOOL_FAILED", `Cannot download the generated image: HTTP ${res.status}`, { hint: "Retry." });
     const type = res.headers.get("content-type") ?? "";
-    const ext = type.includes("png") ? ".png" : type.includes("webp") ? ".webp" : ".jpg";
+    const ext = type.includes("jpeg") || type.includes("jpg") ? ".jpg" : type.includes("webp") ? ".webp" : ".png";
     const file = path.join(ctx.workDir, `image${ext}`);
     await writeFile(file, Buffer.from(await res.arrayBuffer()));
-    const revised = job.RevisedPrompt?.[0];
+
+    const revised = result.revisedPrompt && result.revisedPrompt !== prompt ? `; revised prompt: "${result.revisedPrompt.slice(0, 300)}"` : "";
     return {
       file,
       license: "LicenseRef-TencentCloud-Hunyuan",
-      author: "Tencent Hunyuan image generation",
+      author: "Tencent Hunyuan Hy-Image-3.0 (TokenHub)",
       description:
-        `Generated by Tencent Hunyuan (${resolution}${seed === undefined ? "" : `, seed ${seed}`}${ctx.config.logo ? ", AI mark on" : ""}) ` +
-        `from prompt: "${prompt}"${revised && revised !== prompt ? `; revised prompt: "${revised.slice(0, 300)}"` : ""}`,
+        `Generated by Tencent Hunyuan Hy-Image-3.0 on TokenHub (${size}${seed === undefined ? "" : `, seed ${seed}`}, ` +
+        `request ${result.requestId ?? "?"}) from prompt: "${prompt}"${revised}`,
     };
   },
 });
