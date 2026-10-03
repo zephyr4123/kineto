@@ -1,0 +1,14 @@
+{
+  "id": "corner-hit",
+  "title": "终于撞到角落了",
+  "description": "弹跳徽章能不能正好撞进屏幕角落？一个困扰了人类二十年的问题。",
+  "status": "draft",
+  "tags": [],
+  "createdAt": "2026-10-03T03:42:23.386Z",
+  "updatedAt": "2026-10-03T03:45:47.704Z",
+  "assets": {
+    "boop": "sha256:c1adf2fe942b9df7afea315dc45b38d2539c0b18faea180ded98737919851125",
+    "fanfare": "sha256:286c6ef2b14fc05545d10887d5feab29bb2ff3b82eea2a62acc49578cda32c42",
+    "font": "sha256:812a6fc1fe54b6d73a419245c32dfeba8aa33104d5be90d1cf6af082007cb71d"
+  }
+}

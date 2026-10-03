@@ -21,6 +21,7 @@
   "dependencies": {
     "@remotion/bundler": "4.0.532",
     "@remotion/cli": "4.0.532",
+    "@remotion/fonts": "4.0.532",
     "@remotion/google-fonts": "4.0.532",
     "@remotion/media": "4.0.532",
     "@remotion/renderer": "4.0.532",
