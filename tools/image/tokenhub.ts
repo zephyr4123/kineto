@@ -25,10 +25,14 @@ export interface GenerateOutput {
 }
 
 // 宽高各在 [512, 2048]，面积不超过 1024×1024
-export function checkSize(size: string): string {
+export function isValidSize(size: string): boolean {
   const m = /^(\d+)x(\d+)$/.exec(size);
   const [w, h] = m ? [Number(m[1]), Number(m[2])] : [0, 0];
-  if (!m || w < 512 || h < 512 || w > 2048 || h > 2048 || w * h > 1024 * 1024) {
+  return m !== null && w >= 512 && h >= 512 && w <= 2048 && h <= 2048 && w * h <= 1024 * 1024;
+}
+
+export function checkSize(size: string): string {
+  if (!isValidSize(size)) {
     throw new KinetoError("INVALID_ARGUMENT", `Invalid image size "${size}"`, {
       hint: "Use WIDTHxHEIGHT with each side in 512..2048 and at most 1048576 pixels, e.g. 1280x720 or 1024x1024.",
     });
@@ -56,7 +60,12 @@ export async function generateImage(input: GenerateInput, fetchImpl: typeof fetc
       cause: err,
     });
   });
-  const text = await res.text();
+  const text = await res.text().catch((err: unknown) => {
+    throw new KinetoError("TOOL_FAILED", `TokenHub image response was cut off: ${(err as Error).message}`, {
+      hint: "Retry. The provider may still bill this request; check usage in the TokenHub console.",
+      cause: err,
+    });
+  });
   let json: { data?: { url?: string; revised_prompt?: string }[]; request_id?: string; error?: { message?: string } } | undefined;
   try {
     json = JSON.parse(text);
@@ -87,4 +96,12 @@ function httpError(status: number, detail: string): KinetoError {
   return new KinetoError("TOOL_FAILED", message, {
     hint: status >= 500 ? "The provider failed; retry later." : "Rephrase the prompt (content moderation rejects some prompts) or check the options.",
   });
+}
+
+// 按文件头判断格式：Content-Type 可能是 application/octet-stream，不能信
+export function sniffImageExt(bytes: Buffer): ".png" | ".jpg" | ".webp" {
+  if (bytes.subarray(0, 4).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47]))) return ".png";
+  if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return ".jpg";
+  if (bytes.toString("latin1", 0, 4) === "RIFF" && bytes.toString("latin1", 8, 12) === "WEBP") return ".webp";
+  throw new KinetoError("TOOL_FAILED", "The generated file is not a PNG, JPEG or WebP image", { hint: "Retry." });
 }

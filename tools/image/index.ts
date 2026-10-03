@@ -5,14 +5,14 @@ import path from "node:path";
 import { z } from "zod";
 import { KinetoError } from "../../kernel/errors.ts";
 import { defineTool } from "../../kernel/tools/define.ts";
-import { checkSize, generateImage } from "./tokenhub.ts";
+import { checkSize, generateImage, isValidSize, sniffImageExt } from "./tokenhub.ts";
 
 const Config = z
   .object({
     // TokenHub 控制台「API Key 管理」里创建的 key
     apiKey: z.string().min(1),
     // 宽x高，各在 512..2048、面积不超过 1024×1024；默认 16:9 适合当视频画面
-    size: z.string().default("1280x720").transform(checkSize),
+    size: z.string().default("1280x720").refine(isValidSize, { message: "size must be WIDTHxHEIGHT, each side 512..2048, at most 1048576 pixels" }),
     // 让服务商先扩写提示词，出图通常更好；要严格按原文出图时关掉
     revise: z.boolean().default(true),
     // 图上的文字水印（最多 16 个字符），比如「AI 生成」
@@ -50,10 +50,16 @@ export default defineTool({
       throw new KinetoError("TOOL_FAILED", `Cannot download the generated image: ${(err as Error).message}`, { hint: "Retry.", cause: err });
     });
     if (!res.ok) throw new KinetoError("TOOL_FAILED", `Cannot download the generated image: HTTP ${res.status}`, { hint: "Retry." });
-    const type = res.headers.get("content-type") ?? "";
-    const ext = type.includes("jpeg") || type.includes("jpg") ? ".jpg" : type.includes("webp") ? ".webp" : ".png";
-    const file = path.join(ctx.workDir, `image${ext}`);
-    await writeFile(file, Buffer.from(await res.arrayBuffer()));
+    const bytes = Buffer.from(
+      await res.arrayBuffer().catch((err: unknown) => {
+        throw new KinetoError("TOOL_FAILED", `Downloading the generated image was cut off: ${(err as Error).message}`, {
+          hint: `Retry; the link stays valid for 12 hours: ${result.url}`,
+          cause: err,
+        });
+      }),
+    );
+    const file = path.join(ctx.workDir, `image${sniffImageExt(bytes)}`);
+    await writeFile(file, bytes);
 
     const revised = result.revisedPrompt && result.revisedPrompt !== prompt ? `; revised prompt: "${result.revisedPrompt.slice(0, 300)}"` : "";
     return {

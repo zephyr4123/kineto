@@ -246,3 +246,48 @@ test("插件返回相对路径按 workDir 解析；返回 workDir 之外的文�
     await fx.cleanup();
   }
 });
+
+const plugin = (name: string, body: string) =>
+  `import { z } from "zod";\nimport { writeFile, rm } from "node:fs/promises";\nimport path from "node:path";\n` +
+  `export default { name: "${name}", summary: "s", config: z.object({}).strict(), async run(ctx) {\n${body}\n} };\n`;
+
+test("插件返回的文件不存在时保留原错误码、不留空的 unsaved 目录；以 .. 开头的文件名不算越界", async () => {
+  const { fx, store } = await setup("tools:\n  ghost:\n  dots:\n");
+  try {
+    await mkdir(path.join(fx.root, "tools/ghost"), { recursive: true });
+    await writeFile(path.join(fx.root, "tools/ghost/index.ts"), plugin("ghost", `return { file: "nope.txt", license: "CC0-1.0", author: "a", description: "d" };`));
+    await mkdir(path.join(fx.root, "tools/dots"), { recursive: true });
+    await writeFile(
+      path.join(fx.root, "tools/dots/index.ts"),
+      plugin("dots", `await writeFile(path.join(ctx.workDir, "..out.txt"), "dots");\nreturn { file: "..out.txt", license: "CC0-1.0", author: "a", description: "d" };`),
+    );
+    const config = await loadConfig(fx.paths, {});
+    await assert.rejects(runTool(fx.paths, store, config, await loadTool(fx.paths, "ghost"), { args: [], flags: {} }), { code: "ASSET_SOURCE_NOT_FOUND" });
+    await assert.rejects(readdir(path.join(fx.root, ".kineto/tools/ghost/unsaved")), { code: "ENOENT" });
+    const dots = await runTool(fx.paths, store, config, await loadTool(fx.paths, "dots"), { args: [], flags: {} });
+    assert.equal(dots.asset.ext, ".txt");
+  } finally {
+    await fx.cleanup();
+  }
+});
+
+test("入库后挂接失败时，错误里带上已入库的素材 id 与改用 asset link 的提示，免得重跑工具再付一次钱", async () => {
+  const { fx, store } = await setup("tools:\n  sabotage:\n");
+  try {
+    await createVideo(fx.paths, { id: "demo", title: "Demo", now: FIXED_NOW });
+    await mkdir(path.join(fx.root, "tools/sabotage"), { recursive: true });
+    // 运行期间把目标视频删掉：校验时它还在，挂接时已经没了
+    await writeFile(
+      path.join(fx.root, "tools/sabotage/index.ts"),
+      plugin("sabotage", `await rm(path.join(ctx.workDir, "..", "..", "..", "videos", "demo"), { recursive: true });\nawait writeFile(path.join(ctx.workDir, "o.txt"), "x");\nreturn { file: "o.txt", license: "CC0-1.0", author: "a", description: "d" };`),
+    );
+    const config = await loadConfig(fx.paths, {});
+    await assert.rejects(runTool(fx.paths, store, config, await loadTool(fx.paths, "sabotage"), { args: [], flags: {}, to: "demo", as: "out" }), (err: Error & { hint?: string }) => {
+      assert.match(err.message, /sha256:[0-9a-f]{64}/);
+      assert.match(err.hint ?? "", /asset link sha256:/);
+      return true;
+    });
+  } finally {
+    await fx.cleanup();
+  }
+});

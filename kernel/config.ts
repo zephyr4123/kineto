@@ -89,13 +89,18 @@ export async function loadConfig(paths: KinetoPaths, env: NodeJS.ProcessEnv = pr
       });
     }
   }
+  if (raw !== null && (typeof raw !== "object" || Array.isArray(raw))) {
+    throw new KinetoError("CONFIG_INVALID", "Invalid kineto.config.yaml: the top level must be a mapping (key: value)", {
+      hint: "Compare with kineto.config.example.yaml.",
+    });
+  }
   const envFile = envFilePath(paths, raw, env);
   // 空字符串等于没设：不让一个空的环境变量把 envFile 里的值盖掉
   const setEnv = Object.fromEntries(Object.entries(env).filter(([, v]) => v !== undefined && v !== ""));
   const vars = envFile ? { ...(await readEnvFile(envFile)), ...setEnv } : setEnv;
   const { tools, envFile: _envFile, ...rest } = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
   const parsed = ConfigSchema.safeParse({
-    ...(expandEnv(withoutUnusedStorage(rest), vars) as object),
+    ...(expandEnv(withoutUnusedStorage(rest, vars), vars) as object),
     ...(envFile ? { envFile } : {}),
     ...(tools == null ? {} : { tools }),
   });
@@ -108,11 +113,13 @@ export async function loadConfig(paths: KinetoPaths, env: NodeJS.ProcessEnv = pr
 }
 
 // 没选用的存储后端段落不展开也不校验：留着 s3 段切回 local 的人，不该因为缺 s3 的密钥而什么都跑不了
-function withoutUnusedStorage(rest: Record<string, unknown>): Record<string, unknown> {
+function withoutUnusedStorage(rest: Record<string, unknown>, vars: NodeJS.ProcessEnv): Record<string, unknown> {
   const storage = rest.storage;
   if (!storage || typeof storage !== "object") return rest;
   const { s3, ...others } = storage as Record<string, unknown>;
-  return (storage as Record<string, unknown>).backend === "s3" || s3 === undefined ? rest : { ...rest, storage: others };
+  // backend 本身也可能是 ${ENV}：先展开它再判断用没用 s3
+  const backend = expandEnv((storage as Record<string, unknown>).backend, vars);
+  return backend === "s3" || s3 === undefined ? rest : { ...rest, storage: others };
 }
 
 function envFilePath(paths: KinetoPaths, raw: unknown, env: NodeJS.ProcessEnv): string | undefined {

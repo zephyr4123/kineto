@@ -160,3 +160,18 @@ test("envFile 的边角：空的进程环境变量不覆盖文件里的值；路
     await fx.cleanup();
   }
 });
+
+test("存储后端可以用 ${ENV} 选择；顶层不是映射的 YAML 报 CONFIG_INVALID", async () => {
+  const fx = await makeRepo();
+  try {
+    await writeFile(path.join(fx.root, "kineto.config.yaml"), S3_CONFIG.replace("backend: s3", "backend: ${KINETO_TEST_BACKEND}"));
+    const { config } = await loadConfig(fx.paths, { KINETO_TEST_BACKEND: "s3", KINETO_TEST_KEY_ID: "id", KINETO_TEST_SECRET: "s" });
+    assert.equal(config.storage.backend, "s3");
+    assert.equal(config.storage.s3?.bucket, "demo-1250000000");
+
+    await writeFile(path.join(fx.root, "kineto.config.yaml"), "42\n");
+    await assert.rejects(loadConfig(fx.paths, {}), { code: "CONFIG_INVALID" });
+  } finally {
+    await fx.cleanup();
+  }
+});

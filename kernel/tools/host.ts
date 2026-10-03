@@ -1,7 +1,7 @@
 // 工具插件宿主：发现 tools/<name>/index.ts，按配置启用，运行，把产物带着许可证与来历收进素材库。
 // 热插拔：插件目录放进来就能被发现，kineto.config.yaml 里写了 tools.<name> 才会运行；
 // 核心命令从不导入插件，一个插件坏了只影响它自己。
-import { copyFile, mkdir, readdir, rm } from "node:fs/promises";
+import { copyFile, mkdir, readdir, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { z } from "zod";
@@ -129,7 +129,8 @@ export async function runTool(
       progress: input.onProgress ?? (() => {}),
     });
     const file = path.resolve(workDir, output.file);
-    if (path.relative(workDir, file).startsWith("..") || path.isAbsolute(path.relative(workDir, file))) {
+    const rel = path.relative(workDir, file);
+    if (rel === ".." || rel.startsWith(`..${path.sep}`) || path.isAbsolute(rel)) {
       throw new KinetoError("TOOL_INVALID", `tools/${spec.name} returned ${output.file}, which is outside its workDir`, {
         hint: "A plugin must write its result inside ctx.workDir.",
       });
@@ -151,6 +152,11 @@ export async function runTool(
     await withRepoLock(paths, async () => {
       await linkAsset(paths, video.id, alias, asset.id);
       await syncAll(paths, storage);
+    }).catch((err: unknown) => {
+      // 产物已经入库：告诉对方去挂接它，别为了挂接重跑一次（可能付费的）工具
+      const hint = `The result is already registered as ${asset.id}; link it with \`./kineto asset link ${asset.id} --to ${video.id} --as ${alias}\` instead of running the tool again.`;
+      if (err instanceof KinetoError) throw new KinetoError(err.code, `${err.message} (result registered as ${asset.id})`, { hint, cause: err });
+      throw new KinetoError("TOOL_RESULT_UNLINKED", `${(err as Error).message} (result registered as ${asset.id})`, { hint, cause: err });
     });
     return { tool: spec.name, asset, linked: { video: video.id, alias, staticFile: `${video.id}/${alias}${asset.ext}` } };
   } finally {
@@ -159,9 +165,15 @@ export async function runTool(
 }
 
 async function keepResult(err: unknown, file: string, dataDir: string): Promise<unknown> {
+  // 没有可保留的产物（插件返回了不存在的路径等）：原样报原来的错，不留空目录
+  if (!(await stat(file).then((s) => s.isFile(), () => false))) return err;
   const kept = path.join(dataDir, "unsaved", `${new Date().toISOString().replace(/[:.]/g, "-")}-${path.basename(file)}`);
-  await mkdir(path.dirname(kept), { recursive: true });
-  await copyFile(file, kept);
+  try {
+    await mkdir(path.dirname(kept), { recursive: true });
+    await copyFile(file, kept);
+  } catch {
+    return err;
+  }
   const hint = `The result was kept at ${kept}; fix the problem, then register it with \`./kineto asset add\`.`;
   if (err instanceof KinetoError) {
     return new KinetoError(err.code, `${err.message} (result kept at ${kept})`, { hint: err.hint ? `${err.hint} ${hint}` : hint, cause: err });

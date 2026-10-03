@@ -39,3 +39,26 @@ test("尺寸校验：宽高各在 512 到 2048 之间、面积不超过 1024×10
   assert.throws(() => checkSize("400x400"), { code: "INVALID_ARGUMENT" });
   assert.throws(() => checkSize("1280:720"), { code: "INVALID_ARGUMENT" });
 });
+
+test("读响应体时断流报 TOOL_FAILED，而不是原生错误（付费调用已经发生）", async () => {
+  const broken = new Response(
+    new ReadableStream({
+      start(controller) {
+        controller.error(new Error("socket hang up"));
+      },
+    }),
+    { status: 200 },
+  );
+  await assert.rejects(
+    generateImage({ apiKey: "k", prompt: "p", size: "1024x1024", revise: false }, (async () => broken) as unknown as typeof fetch),
+    { code: "TOOL_FAILED" },
+  );
+});
+
+test("按文件头判断图片格式，不信 Content-Type", async () => {
+  const { sniffImageExt } = await import("./tokenhub.ts");
+  assert.equal(sniffImageExt(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a])), ".png");
+  assert.equal(sniffImageExt(Buffer.from([0xff, 0xd8, 0xff, 0xe0])), ".jpg");
+  assert.equal(sniffImageExt(Buffer.from("RIFF\0\0\0\0WEBPVP8 ")), ".webp");
+  assert.throws(() => sniffImageExt(Buffer.from("<html>")), { code: "TOOL_FAILED" });
+});
