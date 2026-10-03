@@ -29,7 +29,7 @@ const COMMON_OPTIONS: Record<string, OptionSpec> = {
 };
 
 export function toolCommand(spec: ToolSpec): CommandSpec<Awaited<ReturnType<typeof runTool>>> {
-  const reserved = Object.keys(spec.options ?? {}).find((k) => k in COMMON_OPTIONS || k === "json" || k === "help");
+  const reserved = Object.keys(spec.options ?? {}).find((k) => k in COMMON_OPTIONS || ["json", "help", "version"].includes(k));
   if (reserved) {
     throw new KinetoError("TOOL_INVALID", `tools/${spec.name} declares option --${reserved}, which kineto reserves`, {
       hint: "Rename the option in the plugin.",

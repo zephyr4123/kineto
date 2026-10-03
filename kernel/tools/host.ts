@@ -1,7 +1,7 @@
 // 工具插件宿主：发现 tools/<name>/index.ts，按配置启用，运行，把产物带着许可证与来历收进素材库。
 // 热插拔：插件目录放进来就能被发现，kineto.config.yaml 里写了 tools.<name> 才会运行；
 // 核心命令从不导入插件，一个插件坏了只影响它自己。
-import { mkdir, readdir, rm } from "node:fs/promises";
+import { copyFile, mkdir, readdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { z } from "zod";
@@ -103,6 +103,14 @@ export async function runTool(
   }
   const video = to ? await readVideo(paths, to) : undefined;
   if (video && alias) assertAliasAvailable(video, alias);
+  const licenseOverride = input.flags.license;
+  if (licenseOverride !== undefined && (typeof licenseOverride !== "string" || licenseOverride.trim() === "")) {
+    throw new KinetoError("LICENSE_REQUIRED", "--license must not be empty", {
+      hint: "Pass an SPDX id or the exact terms, or leave --license out to keep the license the tool records.",
+    });
+  }
+  // 产物最后要进存储：存储不可用就别先花钱生成
+  await storage.probe();
 
   await removeOrphanedWorkDirs(paths);
   const workDir = path.join(paths.tmpDir, `tool-${process.pid}-${Date.now()}`);
@@ -118,14 +126,25 @@ export async function runTool(
       input: (ref) => resolveInput(paths, storage, video, ref),
       progress: input.onProgress ?? (() => {}),
     });
-    const license = typeof input.flags.license === "string" ? input.flags.license : output.license;
-    const asset = await ingestAsset(paths, storage, {
-      source: output.file,
-      license,
-      author: output.author,
-      description: output.description,
-      sourceUrl: output.sourceUrl,
-    });
+    const file = path.resolve(workDir, output.file);
+    if (path.relative(workDir, file).startsWith("..") || path.isAbsolute(path.relative(workDir, file))) {
+      throw new KinetoError("TOOL_INVALID", `tools/${spec.name} returned ${output.file}, which is outside its workDir`, {
+        hint: "A plugin must write its result inside ctx.workDir.",
+      });
+    }
+    let asset: AssetRecord;
+    try {
+      asset = await ingestAsset(paths, storage, {
+        source: file,
+        license: typeof licenseOverride === "string" ? licenseOverride : output.license,
+        author: output.author,
+        description: output.description,
+        sourceUrl: output.sourceUrl,
+      });
+    } catch (err) {
+      // 工具可能刚花了钱：入库失败也不能让产物随 workDir 一起删掉
+      throw await keepResult(err, file, dataDir);
+    }
     if (!video || !alias) return { tool: spec.name, asset, linked: null };
     await withRepoLock(paths, async () => {
       await linkAsset(paths, video.id, alias, asset.id);
@@ -135,6 +154,17 @@ export async function runTool(
   } finally {
     await rm(workDir, { recursive: true, force: true });
   }
+}
+
+async function keepResult(err: unknown, file: string, dataDir: string): Promise<unknown> {
+  const kept = path.join(dataDir, "unsaved", `${new Date().toISOString().replace(/[:.]/g, "-")}-${path.basename(file)}`);
+  await mkdir(path.dirname(kept), { recursive: true });
+  await copyFile(file, kept);
+  const hint = `The result was kept at ${kept}; fix the problem, then register it with \`./kineto asset add\`.`;
+  if (err instanceof KinetoError) {
+    return new KinetoError(err.code, `${err.message} (result kept at ${kept})`, { hint: err.hint ? `${err.hint} ${hint}` : hint, cause: err });
+  }
+  return new KinetoError("TOOL_RESULT_UNSAVED", `${(err as Error).message} (result kept at ${kept})`, { hint, cause: err });
 }
 
 // 输入只收素材库里的东西：来历和许可证已知，产物才能继承它们

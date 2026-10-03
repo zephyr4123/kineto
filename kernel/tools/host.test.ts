@@ -186,3 +186,63 @@ test("工具配置段引用的密钥没设：只有运行这个工具时报 CONF
     await fx.cleanup();
   }
 });
+
+test("--license 为空、存储后端不可用：都在运行工具之前拒绝", async () => {
+  const { fx, store } = await setup("tools:\n  echo:\n");
+  try {
+    const config = await loadConfig(fx.paths, {});
+    const spec = await loadTool(fx.paths, "echo");
+    await assert.rejects(runTool(fx.paths, store, config, spec, { args: ["x"], flags: { license: "  " } }), { code: "LICENSE_REQUIRED" });
+    const { KinetoError } = await import("../errors.ts");
+    const down = Object.assign(Object.create(store) as LocalStorage, {
+      probe: async () => {
+        throw new KinetoError("STORAGE_UNAVAILABLE", "bucket not found");
+      },
+    });
+    await assert.rejects(runTool(fx.paths, down, config, spec, { args: ["x"], flags: {} }), { code: "STORAGE_UNAVAILABLE" });
+    assert.equal(await ran(fx), 0);
+  } finally {
+    await fx.cleanup();
+  }
+});
+
+test("产物入库失败时保留下来、报错里给出路径：付费调用的结果不能跟着工作目录一起删掉", async () => {
+  const { fx, store } = await setup("tools:\n  echo:\n");
+  try {
+    const config = await loadConfig(fx.paths, {});
+    const spec = await loadTool(fx.paths, "echo");
+    await runTool(fx.paths, store, config, spec, { args: ["same"], flags: {} });
+    // 同样的内容换一个许可证再登记：素材库拒绝悄悄改写许可证
+    let kept = "";
+    await assert.rejects(runTool(fx.paths, store, config, spec, { args: ["same"], flags: { license: "MIT" } }), (err: Error) => {
+      kept = /kept at (\S+?)\)?$/m.exec(err.message)?.[1] ?? "";
+      return true;
+    });
+    assert.ok(kept.startsWith(path.join(fx.root, ".kineto/tools/echo/unsaved")), kept);
+    assert.equal(await readFile(kept, "utf8"), "same");
+  } finally {
+    await fx.cleanup();
+  }
+});
+
+test("插件返回相对路径按 workDir 解析；返回 workDir 之外的文件报 TOOL_INVALID", async () => {
+  const { fx, store } = await setup("tools:\n  rel:\n  escape:\n");
+  try {
+    for (const [name, file] of [["rel", '"out.txt"'], ["escape", 'path.join(ctx.workDir, "..", "..", "..", "kineto.config.yaml")']] as const) {
+      await mkdir(path.join(fx.root, "tools", name), { recursive: true });
+      await writeFile(
+        path.join(fx.root, "tools", name, "index.ts"),
+        `import { z } from "zod";\nimport { writeFile } from "node:fs/promises";\nimport path from "node:path";\n` +
+          `export default { name: "${name}", summary: "s", config: z.object({}).strict(), async run(ctx) {\n` +
+          `  await writeFile(path.join(ctx.workDir, "out.txt"), "rel");\n` +
+          `  return { file: ${file}, license: "CC0-1.0", author: "a", description: "d" };\n} };\n`,
+      );
+    }
+    const config = await loadConfig(fx.paths, {});
+    const rel = await runTool(fx.paths, store, config, await loadTool(fx.paths, "rel"), { args: [], flags: {} });
+    assert.equal(rel.asset.ext, ".txt");
+    await assert.rejects(runTool(fx.paths, store, config, await loadTool(fx.paths, "escape"), { args: [], flags: {} }), { code: "TOOL_INVALID" });
+  } finally {
+    await fx.cleanup();
+  }
+});

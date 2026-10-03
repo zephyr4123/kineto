@@ -26,8 +26,9 @@ in isolation: a broken plugin or a missing dependency only affects that tool.
 
 ## What every run guarantees
 
-- **Checks before spending.** The tool must be enabled, its settings valid, `--to`/`--as` usable,
-  before the plugin runs. Paid APIs are not called for a run that would fail anyway.
+- **Checks before spending.** The tool must be enabled, its settings valid, `--to`/`--as` and `--license` usable
+  and the storage backend reachable before the plugin runs. If registering the result still fails (for example,
+  the same content is already registered under another license), the result file is kept and the error says where.
 - **Results are assets.** The output goes through the same path as `./kineto asset add`: content-addressed into
   storage, appended to `assets/manifest.jsonl` with a license, an author and a description of how it was made.
   `--license` overrides the license the tool records.
