@@ -52,7 +52,8 @@ const ConfigSchema = z
         path: ["s3"],
       })
       .prefault({}),
-    // 工具插件的配置：写了 tools.<name> 才算启用（值可以为空），每段由插件自己的 schema 校验
+    // 工具插件的配置：写了 tools.<name> 才算启用（值可以为空），每段由插件自己的 schema 校验。
+    // 这里存的是未展开的原文：${ENV} 等到运行该工具时才由 LoadedConfig.expand 展开
     tools: z.record(z.string(), z.unknown()).default({}),
     remotion: z
       .object({
@@ -70,6 +71,9 @@ export interface LoadedConfig {
   source: "defaults" | "kineto.config.yaml";
   // 解析后的 envFile 绝对路径（doctor 用它检查文件权限）
   envFile?: string;
+  // 用同一套环境变量（进程 + envFile）展开 ${ENV}。工具段延后展开：缺某个工具的密钥，
+  // 只有运行这个工具时才报错，不拖垮其他命令
+  expand(value: unknown): unknown;
 }
 
 export async function loadConfig(paths: KinetoPaths, env: NodeJS.ProcessEnv = process.env): Promise<LoadedConfig> {
@@ -87,13 +91,14 @@ export async function loadConfig(paths: KinetoPaths, env: NodeJS.ProcessEnv = pr
   }
   const envFile = envFilePath(paths, raw);
   const vars = envFile ? { ...(await readEnvFile(envFile)), ...env } : env;
-  const parsed = ConfigSchema.safeParse(expandEnv(raw, vars));
+  const { tools, ...rest } = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  const parsed = ConfigSchema.safeParse({ ...(expandEnv(rest, vars) as object), ...(tools == null ? {} : { tools }) });
   if (!parsed.success) {
     throw new KinetoError("CONFIG_INVALID", `Invalid kineto.config.yaml: ${z.prettifyError(parsed.error)}`, {
       hint: "Compare with kineto.config.example.yaml.",
     });
   }
-  return { config: parsed.data, source, ...(envFile ? { envFile } : {}) };
+  return { config: parsed.data, source, ...(envFile ? { envFile } : {}), expand: (value) => expandEnv(value, vars) };
 }
 
 function envFilePath(paths: KinetoPaths, raw: unknown): string | undefined {

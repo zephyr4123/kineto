@@ -8,7 +8,7 @@ import { z } from "zod";
 import { assetStorageKey, ingestAsset, readManifest, type AssetRecord } from "../assets/assets.ts";
 import { ASSET_ID_RE } from "../catalog/schema.ts";
 import { assertAliasAvailable, linkAsset, readVideo } from "../catalog/catalog.ts";
-import type { KinetoConfig } from "../config.ts";
+import type { LoadedConfig } from "../config.ts";
 import { isNodeError, KinetoError } from "../errors.ts";
 import { withRepoLock } from "../lock.ts";
 import type { KinetoPaths } from "../paths.ts";
@@ -27,10 +27,10 @@ export interface ToolListing {
   error?: string;
 }
 
-export async function listTools(paths: KinetoPaths, config: KinetoConfig): Promise<ToolListing[]> {
+export async function listTools(paths: KinetoPaths, loaded: LoadedConfig): Promise<ToolListing[]> {
   const listing: ToolListing[] = [];
   for (const name of await toolNames(paths)) {
-    const enabled = Object.hasOwn(config.tools, name);
+    const enabled = Object.hasOwn(loaded.config.tools, name);
     try {
       listing.push({ name, summary: (await loadTool(paths, name)).summary, enabled });
     } catch (err) {
@@ -80,18 +80,19 @@ export interface RunToolResult {
 export async function runTool(
   paths: KinetoPaths,
   storage: StorageBackend,
-  config: KinetoConfig,
+  loaded: LoadedConfig,
   spec: ToolSpec,
   input: RunToolInput,
 ): Promise<RunToolResult> {
+  const { tools } = loaded.config;
   const { to, as: alias } = input;
   // 先把一切能提前发现的错误拦下，再运行：工具可能按次计费，也可能跑很久
-  if (!Object.hasOwn(config.tools, spec.name)) {
+  if (!Object.hasOwn(tools, spec.name)) {
     throw new KinetoError("TOOL_NOT_ENABLED", `Tool "${spec.name}" is not enabled`, {
       hint: `Add it to kineto.config.yaml (see kineto.config.example.yaml for its settings):\ntools:\n  ${spec.name}:`,
     });
   }
-  const parsed = spec.config.safeParse(config.tools[spec.name] ?? {});
+  const parsed = spec.config.safeParse(loaded.expand(tools[spec.name] ?? {}));
   if (!parsed.success) {
     throw new KinetoError("CONFIG_INVALID", `Invalid tools.${spec.name} in kineto.config.yaml: ${z.prettifyError(parsed.error)}`, {
       hint: "Compare with kineto.config.example.yaml.",

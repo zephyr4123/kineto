@@ -112,3 +112,21 @@ test("选了 s3 后端却没有 s3 配置段，或 prefix 越界，报 CONFIG_IN
     await fx.cleanup();
   }
 });
+
+test("工具配置段的 ${ENV} 延后到运行该工具时才展开：缺某个工具的密钥不拖垮别的命令；存储段照常立即展开", async () => {
+  const fx = await makeRepo();
+  try {
+    await writeFile(path.join(fx.root, "kineto.config.yaml"), "tools:\n  tts:\n    secretId: ${KINETO_TEST_MISSING}\n  transcribe: {}\n");
+    const loaded = await loadConfig(fx.paths, {});
+    assert.deepEqual(Object.keys(loaded.config.tools), ["tts", "transcribe"]);
+    assert.throws(() => loaded.expand(loaded.config.tools.tts), { code: "CONFIG_ENV_MISSING" });
+    assert.deepEqual(loaded.expand(loaded.config.tools.transcribe), {});
+    const withEnv = await loadConfig(fx.paths, { KINETO_TEST_MISSING: "id" });
+    assert.deepEqual(withEnv.expand(withEnv.config.tools.tts), { secretId: "id" });
+
+    await writeFile(path.join(fx.root, "kineto.config.yaml"), "storage:\n  local:\n    root: ${KINETO_TEST_MISSING}\n");
+    await assert.rejects(loadConfig(fx.paths, {}), { code: "CONFIG_ENV_MISSING" });
+  } finally {
+    await fx.cleanup();
+  }
+});

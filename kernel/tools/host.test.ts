@@ -56,7 +56,7 @@ const ran = async (fx: Fixture) =>
 test("tool list：列出插件与是否启用；导入失败的插件单独报错，不影响别的", async () => {
   const { fx } = await setup("tools:\n  echo:\n    prefix: '> '\n");
   try {
-    const { config } = await loadConfig(fx.paths, {});
+    const config = await loadConfig(fx.paths, {});
     const tools = await listTools(fx.paths, config);
     assert.deepEqual(
       tools.map((t) => ({ name: t.name, enabled: t.enabled, ok: t.error === undefined })),
@@ -77,7 +77,7 @@ test("tool list：列出插件与是否启用；导入失败的插件单独报�
 test("没在配置里启用的工具拒绝运行，提示怎么启用", async () => {
   const { fx, store } = await setup("{}\n");
   try {
-    const { config } = await loadConfig(fx.paths, {});
+    const config = await loadConfig(fx.paths, {});
     const spec = await loadTool(fx.paths, "echo");
     await assert.rejects(runTool(fx.paths, store, config, spec, { args: ["hi"], flags: {} }), {
       code: "TOOL_NOT_ENABLED",
@@ -93,7 +93,7 @@ test("运行工具：产物带插件给的许可证与来历进素材库，挂�
   const { fx, store } = await setup("tools:\n  echo:\n    prefix: '> '\n");
   try {
     await createVideo(fx.paths, { id: "demo", title: "Demo", now: FIXED_NOW });
-    const { config } = await loadConfig(fx.paths, {});
+    const config = await loadConfig(fx.paths, {});
     const spec = await loadTool(fx.paths, "echo");
     const result = await runTool(fx.paths, store, config, spec, { args: ["hello"], flags: {}, to: "demo", as: "note" });
 
@@ -118,7 +118,7 @@ test("--license 覆盖插件给的许可证；输入可以是视频上的别名�
     await writeFile(src, "IN:");
     const input = await ingestAsset(fx.paths, store, { source: src, license: "CC-BY-4.0", now: FIXED_NOW });
     await linkAsset(fx.paths, "demo", "source", input.id);
-    const { config } = await loadConfig(fx.paths, {});
+    const config = await loadConfig(fx.paths, {});
     const spec = await loadTool(fx.paths, "echo");
     const result = await runTool(fx.paths, store, config, spec, {
       args: ["x"],
@@ -143,11 +143,11 @@ test("别名只差大小写、--to/--as 不成对、配置段不合法：都在�
   try {
     await createVideo(fx.paths, { id: "demo", title: "Demo", now: FIXED_NOW });
     const spec = await loadTool(fx.paths, "echo");
-    const bad = (await loadConfig(fx.paths, {})).config;
+    const bad = await loadConfig(fx.paths, {});
     await assert.rejects(runTool(fx.paths, store, bad, spec, { args: ["x"], flags: {} }), { code: "CONFIG_INVALID" });
 
     await writeFile(path.join(fx.root, "kineto.config.yaml"), "tools:\n  echo:\n");
-    const { config } = await loadConfig(fx.paths, {});
+    const config = await loadConfig(fx.paths, {});
     const first = await runTool(fx.paths, store, config, spec, { args: ["a"], flags: {}, to: "demo", as: "note" });
     assert.equal(await ran(fx), 1);
     await assert.rejects(runTool(fx.paths, store, config, spec, { args: ["b"], flags: {}, to: "demo", as: "nOTE" }), {
@@ -166,6 +166,22 @@ test("别名只差大小写、--to/--as 不成对、配置段不合法：都在�
     const redo = await runTool(fx.paths, store, config, spec, { args: ["d"], flags: {}, to: "demo", as: "note" });
     assert.equal((await readVideo(fx.paths, "demo")).assets.note, redo.asset.id);
     await access(fx.paths.assetsManifest);
+  } finally {
+    await fx.cleanup();
+  }
+});
+
+test("工具配置段引用的密钥没设：只有运行这个工具时报 CONFIG_ENV_MISSING，tool list 照常", async () => {
+  const { fx, store } = await setup("tools:\n  echo:\n    prefix: ${KINETO_TEST_NOT_SET}\n");
+  try {
+    const config = await loadConfig(fx.paths, {});
+    assert.deepEqual(
+      (await listTools(fx.paths, config)).map((t) => [t.name, t.enabled]),
+      [["broken", false], ["echo", true]],
+    );
+    const spec = await loadTool(fx.paths, "echo");
+    await assert.rejects(runTool(fx.paths, store, config, spec, { args: ["x"], flags: {} }), { code: "CONFIG_ENV_MISSING" });
+    assert.equal(await ran(fx), 0);
   } finally {
     await fx.cleanup();
   }

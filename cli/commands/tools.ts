@@ -7,8 +7,7 @@ export const toolListCommand = defineCommand({
   name: "tool list",
   summary: "List tool plugins (voiceover, captions, image generation…) and whether they are enabled",
   async run(ctx) {
-    const { config } = await ctx.config();
-    return { tools: await listTools(ctx.paths, config) };
+    return { tools: await listTools(ctx.paths, await ctx.config()) };
   },
   human: (d) =>
     d.tools.length === 0
@@ -42,8 +41,7 @@ export function toolCommand(spec: ToolSpec): CommandSpec<Awaited<ReturnType<type
     args: spec.args,
     options: { ...spec.options, ...COMMON_OPTIONS },
     async run(ctx, { args, flags }) {
-      const { config } = await ctx.config();
-      return runTool(ctx.paths, await ctx.storage(), config, spec, {
+      return runTool(ctx.paths, await ctx.storage(), await ctx.config(), spec, {
         args,
         flags: flags as Record<string, string | boolean | undefined>,
         to: str(flags, "to"),
