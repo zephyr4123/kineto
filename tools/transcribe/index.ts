@@ -1,13 +1,16 @@
 // 字幕转写：本机 whisper.cpp，免费、离线。输出 Remotion 的 Caption[] JSON，
 // 直接配合官方 captions 用法（@remotion/captions 的 createTikTokStyleCaptions 等）。
+// 英文等用空格分词的语言逐词出时间戳；中日韩按短语出（逐词会把汉字劈成乱码，见 captions.ts）。
 // whisper.cpp 与模型在第一次用时才下载编译进 .kineto/tools/transcribe/，不用的人零负担。
 import { execFile } from "node:child_process";
 import { access, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
+import type { Caption } from "@remotion/captions";
 import { z } from "zod";
 import { KinetoError } from "../../kernel/errors.ts";
 import { defineTool } from "../../kernel/tools/define.ts";
+import { hasSplitCharacters, phraseCaptions, wantsPhrases } from "./captions.ts";
 
 const MODELS = [
   "tiny",
@@ -32,6 +35,8 @@ const Config = z
     whisperCppVersion: z.string().default("1.5.5"),
     // whisper 的语言代码（zh、en、ja……）；auto 让它自己判断
     language: z.string().default("auto"),
+    // 提示 whisper 专有名词怎么拼（产品名、人名），如 "kineto, Claude Code"
+    hint: z.string().min(1).optional(),
   })
   .strict();
 
@@ -46,10 +51,12 @@ export default defineTool({
   options: {
     language: { type: "string", value: "code", description: "Spoken language: zh, en, ja… (default from config, auto-detect)" },
     model: { type: "string", value: "model", description: `whisper model: ${MODELS.join(", ")}` },
+    hint: { type: "string", value: "words", description: 'How proper nouns are spelled, e.g. "kineto, Claude Code"' },
   },
   async run(ctx) {
     const model = z.enum(MODELS).parse(ctx.flags.model ?? ctx.config.model);
     const language = String(ctx.flags.language ?? ctx.config.language);
+    const hint = typeof ctx.flags.hint === "string" ? ctx.flags.hint : ctx.config.hint;
     const version = ctx.config.whisperCppVersion;
     const input = await ctx.input(ctx.args[0]!);
 
@@ -109,24 +116,44 @@ export default defineTool({
       },
     );
 
-    ctx.progress(`transcribing with ${model}…`);
-    const output = await transcribe({
+    const common = {
       inputPath: wav,
       whisperPath: whisperDir,
       whisperCppVersion: version,
       model,
       modelFolder: whisperDir,
-      tokenLevelTimestamps: true,
       language: language as never,
       printOutput: false,
-      onProgress: (p) => ctx.progress(`transcribing with ${model}: ${Math.round(p * 100)}%`),
-    }).catch((err: unknown) => {
-      throw new KinetoError("TOOL_FAILED", `whisper.cpp failed on ${input.record.id}: ${(err as Error).message.split("\n").slice(-3).join(" ")}`, {
+      ...(hint ? { additionalArgs: ["--prompt", hint] } : {}),
+      onProgress: (p: number) => ctx.progress(`transcribing with ${model}: ${Math.round(p * 100)}%`),
+    };
+    const failed = (err: unknown) =>
+      new KinetoError("TOOL_FAILED", `whisper.cpp failed on ${input.record.id}: ${(err as Error).message.split("\n").slice(-3).join(" ")}`, {
         hint: `If the model file is damaged, delete ${whisperDir} and retry.`,
         cause: err,
       });
-    });
-    const { captions } = toCaptions({ whisperCppOutput: output });
+
+    ctx.progress(`transcribing with ${model}…`);
+    let granularity: "word" | "phrase" = "word";
+    let detected = language;
+    let captions: Caption[] = [];
+    if (!wantsPhrases(language)) {
+      const words = await transcribe({ ...common, tokenLevelTimestamps: true }).catch((err: unknown) => {
+        throw failed(err);
+      });
+      captions = toCaptions({ whisperCppOutput: words }).captions;
+      detected = words.result.language;
+    }
+    // 中日韩，或自动识别后发现逐词结果把字劈坏了：按短语重转。
+    // tokensPerItem 传 0 才能去掉每段 1 个 token 的限制（传 null 会被包内改回 1）
+    if (wantsPhrases(language) || hasSplitCharacters(captions)) {
+      granularity = "phrase";
+      const phrases = await transcribe({ ...common, tokenLevelTimestamps: false, tokensPerItem: 0 }).catch((err: unknown) => {
+        throw failed(err);
+      });
+      captions = phraseCaptions(phrases.transcription);
+      detected = phrases.result.language;
+    }
     if (captions.length === 0) {
       throw new KinetoError("TOOL_FAILED", `No speech found in ${input.record.id}`, { hint: "Check that the input actually contains speech." });
     }
@@ -138,7 +165,9 @@ export default defineTool({
       file,
       license: input.record.license,
       author: input.record.author ?? "see source asset",
-      description: `Captions of ${input.record.id} transcribed with whisper.cpp ${version} (model ${model}, language ${output.result.language}); Remotion Caption[] JSON`,
+      description:
+        `Captions of ${input.record.id} transcribed with whisper.cpp ${version} (model ${model}, language ${detected}, ` +
+        `${granularity}-level${hint ? `, hint "${hint}"` : ""}); Remotion Caption[] JSON`,
     };
   },
 });
