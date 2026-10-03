@@ -1,8 +1,9 @@
 // sync：把受控区的记录（video.json、assets/manifest.jsonl）投影成 Remotion 能直接用的形态：
 // - src/registry.gen.tsx：把每条视频的 <Compositions /> 挂进同名 <Folder>
 // - videos/<id>/assets.gen.ts：素材别名 → staticFile 路径的类型化常量
-// - .kineto/public/<id>/<alias><ext>：指向存储副本的符号链接（Remotion 每次运行只认一个 public dir）
-import { mkdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
+// - .kineto/public/<id>/<alias><ext>：存储副本的硬链接（Remotion 每次运行只认一个 public dir）。
+//   不能用符号链接：Remotion 的静态服务对 symlink 一律回 404（renderer/dist/serve-handler 里 lstat 判定）
+import { copyFile, link, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { listVideos } from "../catalog/catalog.ts";
 import type { VideoManifest } from "../catalog/schema.ts";
@@ -110,7 +111,7 @@ export async function syncAll(
         }
         throw err;
       }
-      await symlink(local, path.join(dir, `${alias}${record.ext}`));
+      await hardlinkOrCopy(local, path.join(dir, `${alias}${record.ext}`));
       staged++;
     }
   }
@@ -130,6 +131,16 @@ function resolveAssets(video: VideoManifest, manifest: Map<string, AssetRecord>,
     }
   }
   return out;
+}
+
+// 硬链接不额外占磁盘；存储目录配到了另一个卷（EXDEV）或文件系统不支持时退回复制
+async function hardlinkOrCopy(src: string, dest: string): Promise<void> {
+  try {
+    await link(src, dest);
+  } catch (err) {
+    if (!isNodeError(err, "EXDEV") && !isNodeError(err, "EPERM") && !isNodeError(err, "ENOTSUP")) throw err;
+    await copyFile(src, dest);
+  }
 }
 
 async function readOrNull(file: string): Promise<string | null> {

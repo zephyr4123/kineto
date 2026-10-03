@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { lstat, readFile, readlink, writeFile } from "node:fs/promises";
+import { lstat, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { makeRepo } from "../testing/fixture.ts";
 import { LocalStorage } from "../storage/local.ts";
@@ -28,7 +28,7 @@ test("renderAssetsModule：别名映射到 <视频 id>/<别名><扩展名>", () 
   assert.match(renderAssetsModule("x", []), /export const assets = \{\} as const;/);
 });
 
-test("syncAll 写生成文件并把素材以符号链接暂存进 public 子目录；check 模式只报漂移不写", async () => {
+test("syncAll 写生成文件并把素材以硬链接暂存进 public 子目录；check 模式只报漂移不写", async () => {
   const fx = await makeRepo();
   try {
     const store = new LocalStorage(path.join(fx.root, ".kineto/store"));
@@ -45,9 +45,13 @@ test("syncAll 写生成文件并把素材以符号链接暂存进 public 子目�
     const result = await syncAll(fx.paths, store);
     assert.deepEqual(result.written.sort(), ["src/registry.gen.tsx", "videos/demo/assets.gen.ts"]);
     assert.equal(result.staged, 1);
+    // Remotion 的静态服务对 symlink 一律回 404（serve-handler 里 lstat 判定），所以必须是普通文件；
+    // 同一 inode 说明是硬链接，不额外占磁盘
     const staged = path.join(fx.paths.publicDir, "demo", "boop.wav");
-    assert.equal((await lstat(staged)).isSymbolicLink(), true);
-    assert.equal(await readlink(staged), await store.fetch(assetStorageKey(rec)));
+    const stagedStat = await lstat(staged);
+    assert.equal(stagedStat.isSymbolicLink(), false);
+    assert.equal(stagedStat.isFile(), true);
+    assert.equal(stagedStat.ino, (await lstat(await store.fetch(assetStorageKey(rec)))).ino);
 
     assert.deepEqual((await syncAll(fx.paths, store, { check: true })).drift, []);
     assert.deepEqual((await syncAll(fx.paths, store)).written, []);
