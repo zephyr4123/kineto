@@ -5,7 +5,7 @@ import path from "node:path";
 import { z } from "zod";
 import { KinetoError } from "../../kernel/errors.ts";
 import { defineTool } from "../../kernel/tools/define.ts";
-import { callTencentCloud } from "../_shared/tencentcloud.ts";
+import { callTencentCloud } from "./tencentcloud.ts";
 import { pcmToWav, splitText } from "./text.ts";
 
 const Config = z

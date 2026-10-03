@@ -34,10 +34,6 @@ storage:
 #     secretKey: ${TENCENTCLOUD_SECRET_KEY}
 #     # voice: 101001                 # 音色 id，见 https://cloud.tencent.com/document/product/1073/92668
 #     # sampleRate: 16000             # 8000 / 16000 / 24000（部分音色支持）
-#   image:                            # AI 生图：腾讯云 TokenHub 上的混元 Hy-Image-3.0，按张计费；
-#     apiKey: ${TOKENHUB_API_KEY}     # 先开通 TokenHub、领免费体验包，在「API Key 管理」里创建 key
-#     # size: 1280x720                # 宽高各 512..2048，面积不超过 1024×1024
-#     # footnote: AI 生成              # 可选：图上的文字水印，最多 16 个字符
 
 remotion:
   # Remotion 5.0 起渲染必须传 license key。个人 / ≤3 人公司 / 非营利填 free-license，

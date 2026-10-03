@@ -5,7 +5,7 @@ import { defineCommand, str, type CommandSpec, type OptionSpec } from "../comman
 
 export const toolListCommand = defineCommand({
   name: "tool list",
-  summary: "List tool plugins (voiceover, captions, image generation…) and whether they are enabled",
+  summary: "List tool plugins (voiceover, captions…) and whether they are enabled",
   async run(ctx) {
     return { tools: await listTools(ctx.paths, await ctx.config()) };
   },

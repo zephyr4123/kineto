@@ -17,7 +17,7 @@ npm install
 ```bash
 ./kineto new <id> --title "<title>"     # scaffolds videos/<id>/ from templates/blank and registers it
 ./kineto asset add <file|url> --license <spdx> --to <id> --as <alias>   # only if you need media
-./kineto tool list                      # voiceover, captions, image generation; results become assets
+./kineto tool list                      # voiceover and captions; results become assets
 ./kineto studio <id>                    # preview just this video; keep it open while you work
 ./kineto check                          # must pass before you say you are done
 ./kineto render <id>                    # only when the user asks for the file
@@ -63,10 +63,13 @@ so running several at once is safe.
    To correct a recorded license or author, `./kineto asset update <asset-id> --license <license>` — never edit the manifest.
    To drop an asset from a video, remove its uses from the code, then `./kineto asset unlink <alias> --from <id>`
    (refused while the code still references `assets.<alias>`; the asset itself stays in the library).
-   **Generated media goes through tools:** `./kineto tool tts "<text>" --to <id> --as voice`,
-   `./kineto tool transcribe voice --to <id> --as captions`, `./kineto tool image "<prompt>" --to <id> --as bg`.
-   They record license and provenance for you. Never call a TTS / image / speech API from video code or ad-hoc scripts.
-   A tool that is not enabled fails with `TOOL_NOT_ENABLED`: tell the user, do not work around it.
+   **Voiceover and captions go through tools:** `./kineto tool tts "<text>" --to <id> --as voice`,
+   `./kineto tool transcribe voice --to <id> --as captions`. They record license and provenance for you.
+   Never call a TTS or speech API from video code or ad-hoc scripts. A tool that is not enabled fails with
+   `TOOL_NOT_ENABLED`: tell the user, do not work around it.
+   **Photos and illustrations come from stock libraries** (Pexels, Unsplash, Pixabay; use a stock image search tool
+   if you have one), added with their license, author and page: `./kineto asset add <url> --license "Pexels License"
+   --author "<name>" --source-url <page> --to <id> --as <alias>`. Do not generate images with AI.
 4. **Export via `./kineto render`, not `npx remotion render`.** Only `./kineto render` stores the file and records
    the render (git sha, codec, Remotion version) in `renders.jsonl`. A `<Still>` (cover, thumbnail) renders to PNG
    the same way: `./kineto render <id> --composition <id>-cover`.

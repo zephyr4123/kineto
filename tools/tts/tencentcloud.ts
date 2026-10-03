@@ -1,4 +1,5 @@
-// 腾讯云 API 3.0 的最小客户端：TC3-HMAC-SHA256 签名 + JSON POST。
+// 腾讯云 API 3.0 的最小客户端：TC3-HMAC-SHA256 签名 + JSON POST。目前只有 tts 用；
+// 再有第二个腾讯云工具时挪到 tools/_shared/。
 // 几十行能写清，不为它引入体积庞大的官方 Node SDK；签名与官方 Python SDK 对拍过（见测试）。
 import { createHash, createHmac } from "node:crypto";
 import { KinetoError } from "../../kernel/errors.ts";

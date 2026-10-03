@@ -47,7 +47,7 @@
 **🏷️ Provenance for every asset**
 <ul>
 <li>Content-addressed files with license, author and source; files without a license are refused</li>
-<li>Generated media also records the provider, model and prompt</li>
+<li>Generated voiceovers and captions also record how they were made</li>
 </ul>
 
 </td>
@@ -68,7 +68,7 @@
 **🔌 Pluggable**
 <ul>
 <li>Storage: local, or any S3-compatible service</li>
-<li>Tools: voiceover, captions and image generation, each enabled in <code>kineto.config.yaml</code></li>
+<li>Tools: voiceover and captions, each enabled in <code>kineto.config.yaml</code></li>
 </ul>
 
 </td>
@@ -100,7 +100,7 @@ kineto CLI    the only door: JSON output, stable exit codes, errors with hints
   ↓
 kernel        video catalog · asset library · render · sync · check
   ↓
-strategies    engine: Remotion · storage: local, S3-compatible · tools: tts, transcribe, image
+strategies    engine: Remotion · storage: local, S3-compatible · tools: tts, transcribe
 ```
 
 | | What it holds | Where |
@@ -130,7 +130,6 @@ Tools are plugins in [`tools/`](tools/README.md) that produce media outside Remo
 |---|---|---|
 | 🗣️ `tts` | Text → voiceover WAV | Tencent Cloud TTS |
 | 💬 `transcribe` | Speech in an asset → captions for `@remotion/captions` | whisper.cpp, local and free |
-| 🎨 `image` | Prompt → image | Tencent Hunyuan Hy-Image-3.0 (TokenHub) |
 
 ```bash
 ./kineto tool tts "Every video starts with a single line." --to hello --as voice

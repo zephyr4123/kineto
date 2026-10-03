@@ -1,6 +1,6 @@
 # tools/ — tool plugins
 
-A **tool** is a capability that lives outside Remotion and produces media: a voiceover, captions, an image.
+A **tool** is a capability that lives outside Remotion and produces media, such as a voiceover or captions.
 Each tool is a plugin in `tools/<name>/index.ts`, named after the capability (`tts`, not the vendor).
 The provider is an implementation detail behind it, so swapping providers never changes the command.
 
@@ -16,7 +16,6 @@ The provider is an implementation detail behind it, so swapping providers never 
 |---|---|---|---|
 | `transcribe` | Speech in an audio/video asset → captions JSON (`Caption[]` from `@remotion/captions`) | whisper.cpp, local | Free. First run builds whisper.cpp and downloads the model (needs git, make, a C compiler) |
 | `tts` | Text → voiceover WAV | Tencent Cloud TTS | Billed per character |
-| `image` | Prompt → image | Tencent Hunyuan Hy-Image-3.0 on TokenHub | Billed per image |
 
 ## Hot-pluggable by configuration
 

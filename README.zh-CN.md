@@ -47,7 +47,7 @@
 **🏷️ 素材来源可追溯**
 <ul>
 <li>按内容寻址，记录许可证、作者与出处；没有许可证的文件拒绝入库</li>
-<li>生成类素材另记录服务商、模型与提示词</li>
+<li>生成的配音与字幕另记录生成方式</li>
 </ul>
 
 </td>
@@ -68,7 +68,7 @@
 **🔌 可插拔**
 <ul>
 <li>存储：本地，或任意 S3 兼容服务</li>
-<li>工具：配音、字幕转写、AI 生图，各自在 <code>kineto.config.yaml</code> 中启用</li>
+<li>工具：配音、字幕转写，各自在 <code>kineto.config.yaml</code> 中启用</li>
 </ul>
 
 </td>
@@ -100,7 +100,7 @@ kineto CLI    唯一入口：JSON 输出、稳定的退出码、带提示的报�
   ↓
 kernel        视频目录 · 素材库 · 渲染 · 同步 · 检查
   ↓
-策略          引擎：Remotion · 存储：本地、S3 兼容 · 工具：配音、字幕转写、生图
+策略          引擎：Remotion · 存储：本地、S3 兼容 · 工具：配音、字幕转写
 ```
 
 | | 内容 | 位置 |
@@ -130,7 +130,6 @@ kernel        视频目录 · 素材库 · 渲染 · 同步 · 检查
 |---|---|---|
 | 🗣️ `tts` | 文字 → 配音 WAV | 腾讯云语音合成 |
 | 💬 `transcribe` | 素材中的人声 → `@remotion/captions` 可用的字幕 | whisper.cpp，本机运行，免费 |
-| 🎨 `image` | 文字描述 → 图片 | 腾讯混元生图 Hy-Image-3.0（TokenHub） |
 
 ```bash
 ./kineto tool tts "每一条视频，都从一行字开始。" --to hello --as voice
