@@ -179,8 +179,8 @@ const CUES = [
     .map((i) => [TAGLINE_AT + i * 2, "key", 0.35] as const),
 ] as const;
 
-export const Logo: React.FC = () => {
-  const f = useCurrentFrame();
+// 画面是帧号的纯函数：README 预告直接传帧号取画面（<Freeze> 会把帧号裁到预告自身的时长以内）
+export const LogoMain: React.FC<{ f: number }> = ({ f }) => {
   const camY = interpolate(f, [0, 70], [-700, -2600], { ...clamp, easing: easeInOut });
   const cityCamY = interpolate(f, [0, 70], [-500, -2400], { ...clamp, easing: easeInOut });
   const nib = nibAt(f);
@@ -231,6 +231,15 @@ export const Logo: React.FC = () => {
       {f >= SOLID_AT && f < SOLID_AT + 6 ? <AbsoluteFill style={{ backgroundColor: "white", opacity: 0.8 * (1 - (f - SOLID_AT) / 6) }} /> : null}
       <Tagline f={f} />
       <Crt />
+    </AbsoluteFill>
+  );
+};
+
+export const Logo: React.FC = () => {
+  const frame = useCurrentFrame();
+  return (
+    <AbsoluteFill>
+      <LogoMain f={frame} />
       <Cues cues={CUES} />
     </AbsoluteFill>
   );
