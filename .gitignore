@@ -1,0 +1,14 @@
+# 本机私有注入：scaffold 建的符号链接，指向本机绝对路径，换机器 / CI 上必然失效
+CLAUDE.local.md
+.claude/settings.local.json
+
+# 密钥与本地环境变量（示例文件照常入库）
+.env
+.env.*
+!.env.example
+
+# 系统与编辑器
+.DS_Store
+.idea/
+.vscode/
+*.swp
