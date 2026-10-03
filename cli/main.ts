@@ -4,6 +4,7 @@
 // - 退出码：0 成功；1 业务错误或结论不通过（check、sync --check）；2 用法错误
 // - 未知参数、缺必填参数、写在命令前面的参数一律报错，不猜
 // - 顶层 ok 与退出码一致：check 不通过时 ok 为 false，报告照样放在 data 里
+import { readFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
 import { z } from "zod";
 import { KinetoError } from "../kernel/errors.ts";
@@ -17,6 +18,7 @@ import { toolCommand } from "./commands/tools.ts";
 import { Context } from "./context.ts";
 
 const GLOBAL_OPTIONS = {
+  version: { type: "boolean", description: "Print the kineto version" },
   json: { type: "boolean", description: "Force JSON output (default when stdout is not a terminal)" },
   help: { type: "boolean", description: "Show help for the command" },
 } as const;
@@ -28,11 +30,14 @@ async function main(argv: string[]): Promise<number> {
     // 命令前只允许全局开关；其它参数放在命令前会被静默忽略（例如 `./kineto --check sync` 会真的去写），所以直接报错
     const first = argv.findIndex((a) => !a.startsWith("-"));
     const leading = first === -1 ? argv : argv.slice(0, first);
-    const misplaced = leading.find((a) => !["--json", "--help", "-h"].includes(a));
+    const misplaced = leading.find((a) => !["--json", "--help", "-h", "--version"].includes(a));
     if (misplaced) {
       throw new UsageError(`Option ${misplaced} must come after the command`, "Usage: kineto <command> [options]");
     }
     const words = argv.filter((a) => !a.startsWith("-"));
+    if (words.length === 0 && argv.includes("--version")) {
+      return print(json, "version", { version: await kinetoVersion() }, (d: { version: string }) => `kineto ${d.version}`);
+    }
     if (words.length === 0 || words[0] === "help") {
       const target = words[0] === "help" ? (resolve(words.slice(1)) ?? (await resolveTool(words.slice(1)))) : undefined;
       return print(json, "help", target ? commandHelp(target.spec) : globalHelp());
@@ -56,6 +61,12 @@ async function main(argv: string[]): Promise<number> {
     if (interactive) process.stderr.write("\r\x1b[2K");
     return fail(json, err);
   }
+}
+
+// 版本只有 package.json 一个真相源；发版工作流校验 tag 与它一致
+async function kinetoVersion(): Promise<string> {
+  const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8")) as { version: string };
+  return pkg.version;
 }
 
 function resolve(words: string[]): { spec: CommandSpec<any>; depth: number } | undefined {

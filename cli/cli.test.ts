@@ -294,3 +294,16 @@ export default {
     await fx.cleanup();
   }
 });
+
+test("--version 输出 package.json 里的版本", async () => {
+  const fx = await makeRepo();
+  try {
+    const { readFile } = await import("node:fs/promises");
+    const { version } = JSON.parse(await readFile(path.resolve(path.dirname(BIN), "package.json"), "utf8"));
+    const r = kineto(fx.root, "--version");
+    assert.equal(r.status, 0);
+    assert.equal(r.out.data.version, version);
+  } finally {
+    await fx.cleanup();
+  }
+});
