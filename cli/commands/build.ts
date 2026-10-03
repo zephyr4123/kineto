@@ -63,6 +63,7 @@ export const renderCommand = defineCommand({
       value: "codec",
       description: "Videos: h264 (default), h265, vp8, vp9, prores, gif. Stills (<Still>): png (default), jpeg, webp",
     },
+    "every-nth-frame": { type: "string", value: "n", description: "GIF only: keep every nth frame (GIFs above 50 fps play slowly)" },
   },
   async run(ctx, { args, flags }) {
     const { config } = await ctx.config();
@@ -70,6 +71,7 @@ export const renderCommand = defineCommand({
       id: args[0]!,
       composition: str(flags, "composition"),
       codec: str(flags, "codec"),
+      everyNthFrame: str(flags, "every-nth-frame") === undefined ? undefined : Number(str(flags, "every-nth-frame")),
       onProgress: ({ stage, progress }) => ctx.progress(`${stage} ${Math.round(progress * 100)}%`),
     });
   },

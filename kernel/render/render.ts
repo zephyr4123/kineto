@@ -50,6 +50,8 @@ export interface RenderOptions {
   id: string;
   composition?: string;
   codec?: string;
+  // 只给 GIF：每 n 帧取一帧
+  everyNthFrame?: number;
   onProgress?: (p: RenderProgress) => void;
 }
 
@@ -69,6 +71,12 @@ export async function renderVideo(
   if (compositionOwner(compositionId, await listVideoIds(paths)) !== video.id) {
     throw new KinetoError("COMPOSITION_NOT_IN_VIDEO", `Composition "${compositionId}" does not belong to video "${video.id}"`, {
       hint: `Composition ids of this video are "${video.id}" or start with "${video.id}-".`,
+    });
+  }
+  const nth = options.everyNthFrame;
+  if (nth !== undefined && (!Number.isInteger(nth) || nth < 1 || (options.codec ?? "h264") !== "gif")) {
+    throw new KinetoError("INVALID_ARGUMENT", "--every-nth-frame takes a positive integer and only works with --codec gif", {
+      hint: "Example: --codec gif --every-nth-frame 3",
     });
   }
   // 是不是 <Still> 要打包后才知道；未知格式先在这里拦下，不白白打包一次
@@ -120,6 +128,12 @@ export async function renderVideo(
           : `Render a video as ${Object.keys(CODEC_EXTENSIONS).join(", ")} (default h264).`,
       });
     }
+    // 浏览器把帧间隔不到 20ms 的 GIF 当 100ms 放：60fps 的 GIF 会变成慢动作，不如直接拒绝
+    if (codec === "gif" && composition.fps / (nth ?? 1) > 50) {
+      throw new KinetoError("INVALID_ARGUMENT", `A ${composition.fps} fps GIF plays in slow motion in browsers`, {
+        hint: `Add --every-nth-frame ${Math.ceil(composition.fps / 30)} (≤ 30 fps plays at the right speed).`,
+      });
+    }
     const ext = isStill ? STILL_EXTENSIONS[codec as StillFormat] : CODEC_EXTENSIONS[codec as SupportedCodec];
     const tmp = path.join(workDir, `${compositionId}.${ext}`);
     if (isStill) {
@@ -139,7 +153,11 @@ export async function renderVideo(
         codec: codec as SupportedCodec,
         outputLocation: tmp,
         inputProps: {},
+        // GIF 也用 JPEG 中间帧，别改成 PNG：在 kineto-promo-teaser 上实测，PNG 帧经 Remotion 的
+        // palettegen/paletteuse 流程会静默丢掉开头的帧（126 帧只剩最后 83 帧），JPEG 帧不丢。
+        // 合成的测试画面触发不了，所以这一条没有自动化测试守着
         imageFormat: remotionSettings.videoImageFormat,
+        everyNthFrame: nth ?? 1,
         licenseKey: config.remotion.licenseKey,
         logLevel: "error",
         onProgress: ({ progress }) => report({ stage: "render", progress }),
@@ -158,6 +176,7 @@ export async function renderVideo(
         height: composition.height,
         fps: composition.fps,
         durationInFrames: composition.durationInFrames,
+        ...(nth !== undefined && nth > 1 ? { everyNthFrame: nth } : {}),
         bytes: size,
         sha256: hex,
         storage: { backend: stored.backend, key: stored.key, url: stored.url },

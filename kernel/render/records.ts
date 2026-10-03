@@ -16,6 +16,8 @@ export const RenderRecord = z
     height: z.number().int().positive(),
     fps: z.number().positive(),
     durationInFrames: z.number().int().positive(),
+    // GIF 隔帧取（只渲染每第 n 帧）；没有这个字段就是逐帧渲染
+    everyNthFrame: z.number().int().min(2).optional(),
     bytes: z.number().int().nonnegative(),
     sha256: z.string().regex(/^[0-9a-f]{64}$/),
     storage: z.object({ backend: z.string().min(1), key: z.string().min(1), url: z.string().nullable() }).strict(),
