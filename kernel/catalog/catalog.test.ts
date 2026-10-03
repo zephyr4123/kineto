@@ -1,9 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { makeRepo, FIXED_NOW } from "../testing/fixture.ts";
-import { createVideo, linkAsset, listVideos, readVideo, updateVideo } from "./catalog.ts";
+import { createVideo, linkAsset, listVideos, readVideo, unlinkAsset, updateVideo } from "./catalog.ts";
 
 const SHA = "sha256:" + "a".repeat(64);
 
@@ -156,6 +156,48 @@ test("namespace 检查按语法树扫描：字符串里的 /* 骗不过它", asy
       ),
     );
     await assert.rejects(createVideo(fx.paths, { id: "vid-a-x", title: "X" }), { code: "NAMESPACE_TAKEN" });
+  } finally {
+    await fx.cleanup();
+  }
+});
+
+test("unlinkAsset 摘掉别名并刷新 updatedAt；没挂这个别名报 ASSET_NOT_LINKED", async () => {
+  const fx = await makeRepo();
+  try {
+    await createVideo(fx.paths, { id: "a", title: "x", now: FIXED_NOW });
+    await linkAsset(fx.paths, "a", "boop", SHA, FIXED_NOW);
+    await linkAsset(fx.paths, "a", "fanfare", SHA, FIXED_NOW);
+    const later = new Date(FIXED_NOW.getTime() + 1000);
+    const { video, assetId } = await unlinkAsset(fx.paths, "a", "boop", later);
+    assert.equal(assetId, SHA);
+    assert.deepEqual(video.assets, { fanfare: SHA });
+    assert.equal(video.updatedAt, later.toISOString());
+    assert.deepEqual(await readVideo(fx.paths, "a"), video);
+    await assert.rejects(unlinkAsset(fx.paths, "a", "boop"), { code: "ASSET_NOT_LINKED", hint: /fanfare/ });
+    // 原型链上的名字不算挂着
+    await assert.rejects(unlinkAsset(fx.paths, "a", "toString"), { code: "ASSET_NOT_LINKED" });
+  } finally {
+    await fx.cleanup();
+  }
+});
+
+test("代码里还在用 assets.<alias> 时 unlinkAsset 报 ASSET_IN_USE 并点名文件，video.json 不动", async () => {
+  const fx = await makeRepo();
+  try {
+    await createVideo(fx.paths, { id: "a", title: "x" });
+    await linkAsset(fx.paths, "a", "boop", SHA);
+    await linkAsset(fx.paths, "a", "song", SHA);
+    await mkdir(path.join(fx.root, "videos/a/scenes"), { recursive: true });
+    await writeFile(path.join(fx.root, "videos/a/scenes/Hit.tsx"), "const src = staticFile(assets.boop);\nconst b = assets.boopLoud;\n");
+    await writeFile(path.join(fx.root, "videos/a/Mix.ts"), 'export const s = assets["song"];\n');
+    const before = await readVideo(fx.paths, "a");
+    await assert.rejects(unlinkAsset(fx.paths, "a", "boop"), (err: Error & { code?: string }) => err.code === "ASSET_IN_USE" && /scenes\/Hit\.tsx/.test(err.message));
+    await assert.rejects(unlinkAsset(fx.paths, "a", "song"), { code: "ASSET_IN_USE" });
+    assert.deepEqual(await readVideo(fx.paths, "a"), before);
+    // assets.boopLoud 不算在用 boop；生成文件 assets.gen.ts 本身不算引用
+    await writeFile(path.join(fx.root, "videos/a/scenes/Hit.tsx"), "const b = assets.boopLoud;\n");
+    await writeFile(path.join(fx.root, "videos/a/assets.gen.ts"), 'export const assets = { boop: "a/boop.wav" } as const;\n');
+    assert.deepEqual((await unlinkAsset(fx.paths, "a", "boop")).video.assets, { song: SHA });
   } finally {
     await fx.cleanup();
   }

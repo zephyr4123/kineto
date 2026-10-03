@@ -1,4 +1,4 @@
-import { assertAliasAvailable, linkAsset, readVideo } from "../../kernel/catalog/catalog.ts";
+import { assertAliasAvailable, linkAsset, listVideos, readVideo, unlinkAsset } from "../../kernel/catalog/catalog.ts";
 import { KinetoError } from "../../kernel/errors.ts";
 import { withRepoLock } from "../../kernel/lock.ts";
 import { ingestAsset, readManifest, updateAsset } from "../../kernel/assets/assets.ts";
@@ -78,6 +78,34 @@ export const assetLinkCommand = defineCommand({
     return { asset, linked: { video: to, alias, staticFile: `${to}/${alias}${asset.ext}` } };
   },
   human: (d) => `Linked ${d.asset.id} to ${d.linked.video} as "${d.linked.alias}": staticFile(assets.${d.linked.alias})`,
+});
+
+export const assetUnlinkCommand = defineCommand({
+  name: "asset unlink",
+  summary: "Remove an asset alias from a video (refused while its code still uses it; the asset stays in the library)",
+  args: [{ name: "alias", description: "The alias used as assets.<alias> in the video's code" }],
+  options: {
+    from: { type: "string", required: true, value: "video", description: "Video to unlink the asset from" },
+  },
+  mutates: true,
+  async run(ctx, { args, flags }) {
+    const [alias] = args as [string];
+    const from = str(flags, "from")!;
+    const { assetId } = await unlinkAsset(ctx.paths, from, alias);
+    await syncAll(ctx.paths, await ctx.storage());
+    // 同一个素材可能还挂在别的视频上，或者以别的别名挂在同一条视频上
+    const stillLinkedBy = (await listVideos(ctx.paths)).flatMap((v) =>
+      Object.entries(v.assets)
+        .filter(([, id]) => id === assetId)
+        .map(([a]) => ({ video: v.id, alias: a })),
+    );
+    return { unlinked: { video: from, alias, assetId }, stillLinkedBy };
+  },
+  human: (d) =>
+    `Unlinked "${d.unlinked.alias}" (${d.unlinked.assetId}) from ${d.unlinked.video}. ` +
+    (d.stillLinkedBy.length
+      ? `Still linked as ${d.stillLinkedBy.map((l) => `${l.video}/${l.alias}`).join(", ")}.`
+      : "No video links it any more; it stays in the asset library."),
 });
 
 export const assetUpdateCommand = defineCommand({

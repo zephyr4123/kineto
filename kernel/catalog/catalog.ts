@@ -164,6 +164,59 @@ export async function linkAsset(
   });
 }
 
+// 从视频上摘掉一个素材别名。素材本身留在素材库里（manifest 只追加，别的视频可能还挂着它）。
+// 代码里还在引用 assets.<alias> 时拒绝：摘掉后 assets.gen.ts 少了这个键，视频会直接坏掉。
+export async function unlinkAsset(
+  paths: KinetoPaths,
+  id: string,
+  alias: string,
+  now: Date = new Date(),
+): Promise<{ video: VideoManifest; assetId: string }> {
+  const current = await readVideo(paths, id);
+  const assetId = Object.hasOwn(current.assets, alias) ? current.assets[alias] : undefined;
+  if (assetId === undefined) {
+    const linked = Object.keys(current.assets);
+    throw new KinetoError("ASSET_NOT_LINKED", `videos/${id} has no asset alias "${alias}"`, {
+      hint: linked.length ? `Linked aliases: ${linked.join(", ")}.` : `videos/${id} has no linked assets.`,
+    });
+  }
+  const usages = await findAliasUsages(paths, id, alias);
+  if (usages.length > 0) {
+    throw new KinetoError("ASSET_IN_USE", `assets.${alias} is still used in ${usages.join(", ")}`, {
+      hint: "Remove those references first, then unlink.",
+    });
+  }
+  const video = await writeVideo(paths, {
+    ...current,
+    assets: Object.fromEntries(Object.entries(current.assets).filter(([a]) => a !== alias)),
+    updatedAt: now.toISOString(),
+  });
+  return { video, assetId };
+}
+
+const SOURCE_RE = /\.(tsx|ts|jsx|js|mjs|cjs|mts|cts)$/;
+const GENERATED = "assets.gen.ts";
+
+// 视频目录里引用 assets.<alias> / assets["<alias>"] 的源码文件（相对仓库根）。
+// 注释里的提及也算——宁可多拦一次，也不让视频在渲染时才坏。
+async function findAliasUsages(paths: KinetoPaths, id: string, alias: string): Promise<string[]> {
+  assertAlias(alias);
+  const pattern = new RegExp(`\\bassets\\s*(?:\\.\\s*${alias}\\b|\\[\\s*["'\`]${alias}["'\`]\\s*\\])`);
+  const dir = videoDir(paths, id);
+  const found: string[] = [];
+  const walk = async (d: string): Promise<void> => {
+    for (const entry of await readdir(d, { withFileTypes: true })) {
+      const full = path.join(d, entry.name);
+      if (entry.isDirectory()) await walk(full);
+      else if (entry.isFile() && SOURCE_RE.test(entry.name) && !(d === dir && entry.name === GENERATED)) {
+        if (pattern.test(await readFile(full, "utf8"))) found.push(path.relative(paths.root, full));
+      }
+    }
+  };
+  await walk(dir);
+  return found.sort();
+}
+
 // 别名会成为暂存文件名；大小写不敏感的文件系统（macOS 默认）上只差大小写的两个别名会撞成同一个文件
 export function assertAliasAvailable(video: VideoManifest, alias: string): void {
   assertAlias(alias);

@@ -74,6 +74,7 @@ Each render bundles only the video it renders, so one broken video never blocks 
 | `list` / `show <id>` / `update <id>` | Browse and edit the catalog |
 | `asset add <file\|url> --license <spdx>` | Register an asset (optionally `--to <video> --as <alias>`) |
 | `asset link <asset-id> --to <video> --as <alias>` | Reuse a registered asset in another video |
+| `asset unlink <alias> --from <video>` | Drop an asset from a video once its code no longer uses it |
 | `asset update <asset-id> --license <spdx>` | Correct a registered asset's license or author |
 | `asset list` | List assets, or those of one video |
 | `studio [id]` | Open Remotion Studio with every video, or only one |

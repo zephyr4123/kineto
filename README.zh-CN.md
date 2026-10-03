@@ -73,6 +73,7 @@ kineto CLI    唯一的门：稳定的 JSON 输出、稳定的退出码、带下
 | `list` / `show <id>` / `update <id>` | 浏览、修改视频库 |
 | `asset add <file\|url> --license <spdx>` | 登记素材（可加 `--to <视频> --as <别名>` 直接挂上） |
 | `asset link <asset-id> --to <视频> --as <别名>` | 把已登记的素材复用到另一条视频 |
+| `asset unlink <别名> --from <视频>` | 代码不再引用后，把素材从视频上摘掉 |
 | `asset update <asset-id> --license <spdx>` | 修正已登记素材的许可证或作者 |
 | `asset list` | 列出素材，或某条视频用到的素材 |
 | `studio [id]` | 打开 Remotion Studio：全部视频，或只看一条 |

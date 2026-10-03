@@ -163,6 +163,33 @@ test("asset add 别名非法时什么都不落盘；asset link 把已登记素�
   }
 });
 
+test("asset unlink 把别名从视频上摘掉，素材留在库里；别的视频还挂着时如实报出", async () => {
+  const fx = await makeRepo();
+  try {
+    kineto(fx.root, "new", "a", "--title", "A");
+    kineto(fx.root, "new", "b", "--title", "B");
+    const file = path.join(fx.root, "pic.png");
+    await writeFile(file, "hello");
+    const added = kineto(fx.root, "asset", "add", file, "--license", "MIT", "--to", "a", "--as", "pic");
+    kineto(fx.root, "asset", "link", added.out.data.asset.id, "--to", "b", "--as", "photo");
+
+    const r = kineto(fx.root, "asset", "unlink", "pic", "--from", "a");
+    assert.equal(r.status, 0, JSON.stringify(r.err));
+    assert.deepEqual(r.out.data.unlinked, { video: "a", alias: "pic", assetId: added.out.data.asset.id });
+    assert.deepEqual(r.out.data.stillLinkedBy, [{ video: "b", alias: "photo" }]);
+    assert.deepEqual(kineto(fx.root, "show", "a").out.data.assets, []);
+    assert.equal(kineto(fx.root, "asset", "list").out.data.assets.length, 1);
+    assert.equal(kineto(fx.root, "check").status, 0);
+
+    const again = kineto(fx.root, "asset", "unlink", "pic", "--from", "a");
+    assert.equal(again.status, 1);
+    assert.equal(again.err.error.code, "ASSET_NOT_LINKED");
+    assert.equal(kineto(fx.root, "asset", "unlink", "photo").status, 2);
+  } finally {
+    await fx.cleanup();
+  }
+});
+
 test("并发的 asset add 被仓库锁串行化：每条都成功、都真的挂上了", async () => {
   const fx = await makeRepo();
   try {

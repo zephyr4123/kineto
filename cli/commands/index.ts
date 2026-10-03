@@ -1,5 +1,5 @@
 import type { CommandSpec } from "../command.ts";
-import { assetAddCommand, assetLinkCommand, assetListCommand, assetUpdateCommand } from "./assets.ts";
+import { assetAddCommand, assetLinkCommand, assetListCommand, assetUnlinkCommand, assetUpdateCommand } from "./assets.ts";
 import { checkCommand, renderCommand, studioCommand, syncCommand } from "./build.ts";
 import { doctorCommand, setupCommand } from "./env.ts";
 import { listCommand, newCommand, showCommand, updateCommand } from "./videos.ts";
@@ -14,6 +14,7 @@ export const COMMANDS: CommandSpec<any>[] = [
   updateCommand,
   assetAddCommand,
   assetLinkCommand,
+  assetUnlinkCommand,
   assetUpdateCommand,
   assetListCommand,
   studioCommand,

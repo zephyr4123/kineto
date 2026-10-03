@@ -59,6 +59,8 @@ so running several at once is safe.
    No license, unknown provenance → it does not go in. Prefer generating media yourself (record how in `--description`).
    To reuse an asset in another video, `./kineto asset link <asset-id> --to <id> --as <alias>` (ids: `./kineto asset list`).
    To correct a recorded license or author, `./kineto asset update <asset-id> --license <license>` — never edit the manifest.
+   To drop an asset from a video, remove its uses from the code, then `./kineto asset unlink <alias> --from <id>`
+   (refused while the code still references `assets.<alias>`; the asset itself stays in the library).
 4. **Export via `./kineto render`, not `npx remotion render`.** Only `./kineto render` stores the file and records
    the render (git sha, codec, Remotion version) in `renders.jsonl`.
 5. **Remotion packages share one exact version** (see `package.json`). Add new ones with
