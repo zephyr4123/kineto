@@ -12,10 +12,11 @@ export const TEASER_H = 360;
 export const TEASER_FPS = 15;
 
 // 原片里截的片段（60fps 帧号）。step 是每个预告帧前进几个原片帧：4 = 原速；
-// 写字那段原速要近 4 秒、又最占 GIF 体积，按 1.5 倍速（6）播，结尾多留一点让彩屑散完再循环
+// 写字那段原速要近 4 秒、又最占 GIF 体积，按 1.5 倍速（6）播；停在标语开始打字（第 358 帧）之前，
+// 否则循环前最后一帧会冒出一个孤零零的「G」
 const SEGMENTS = [
   { scene: "speedrun", from: 226, to: 400, step: 4 },
-  { scene: "logo", from: 30, to: 372, step: 6 },
+  { scene: "logo", from: 30, to: 358, step: 6 },
 ] as const;
 
 const lengthOf = (s: (typeof SEGMENTS)[number]) => Math.ceil((s.to - s.from) / s.step);
