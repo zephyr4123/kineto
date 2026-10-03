@@ -15,21 +15,28 @@ import { remotionSettings } from "../render/settings.ts";
 import type { StorageBackend } from "../storage/types.ts";
 import { stageVideoAssets } from "../sync/sync.ts";
 import { removeOrphanedWorkDirs } from "../workdirs.ts";
+import { KinetoError } from "../errors.ts";
 import type { Problem } from "./check.ts";
 
-export async function deepCheck(paths: KinetoPaths, storage: StorageBackend): Promise<Problem[]> {
+// 逐个核对视频挂着的素材：存储里的内容哈希必须等于素材 id
+export async function verifyStoredAssets(paths: KinetoPaths, storage: StorageBackend): Promise<Problem[]> {
   const problems: Problem[] = [];
-  const ids = await listVideoIds(paths);
   const manifest = await readManifest(paths);
-  await removeOrphanedWorkDirs(paths);
-
-  for (const id of ids) {
+  for (const id of await listVideoIds(paths)) {
     const video = await readVideo(paths, id);
-
     for (const [alias, assetId] of Object.entries(video.assets)) {
       const record = manifest.get(assetId);
       if (!record || (await storage.size(assetStorageKey(record))) === null) continue;
-      const actual = `sha256:${await sha256File(await storage.fetch(assetStorageKey(record)))}`;
+      let file: string;
+      try {
+        file = await storage.fetch(assetStorageKey(record));
+      } catch (err) {
+        // 远端后端下载时就验了哈希：坏对象记一条问题，继续查别的
+        if (!(err instanceof KinetoError) || err.code !== "STORAGE_OBJECT_CORRUPT") throw err;
+        problems.push({ level: "error", code: "ASSET_CORRUPT", message: `videos/${id} asset "${alias}": ${err.message}`, ...(err.hint ? { hint: err.hint } : {}) });
+        continue;
+      }
+      const actual = `sha256:${await sha256File(file)}`;
       if (actual !== record.id) {
         problems.push({
           level: "error",
@@ -39,6 +46,18 @@ export async function deepCheck(paths: KinetoPaths, storage: StorageBackend): Pr
         });
       }
     }
+  }
+  return problems;
+}
+
+export async function deepCheck(paths: KinetoPaths, storage: StorageBackend): Promise<Problem[]> {
+  const problems: Problem[] = await verifyStoredAssets(paths, storage);
+  const ids = await listVideoIds(paths);
+  const manifest = await readManifest(paths);
+  await removeOrphanedWorkDirs(paths);
+
+  for (const id of ids) {
+    const video = await readVideo(paths, id);
 
     // 悬空引用已由静态 check 报 ASSET_NOT_FOUND；这条视频没法加载，跳过而不是让整份报告作废
     const dangling = Object.entries(video.assets).filter(([, assetId]) => !manifest.has(assetId));

@@ -19,7 +19,7 @@ test("put 把文件存到 key 下，has / fetch 能取回同样内容", async ()
     const src = path.join(dir, "a.txt");
     await writeFile(src, "hello");
     const obj = await store.put(src, "assets/ab/abc.txt");
-    assert.deepEqual(obj, { backend: "local", key: "assets/ab/abc.txt", url: null });
+    assert.deepEqual(obj, { backend: "local", key: "assets/ab/abc.txt", url: null, written: true });
     assert.equal(await store.has("assets/ab/abc.txt"), true);
     assert.equal(await readFile(await store.fetch("assets/ab/abc.txt"), "utf8"), "hello");
   });
@@ -60,5 +60,14 @@ test("存进去的对象是只读的；已存在但大小不符（被改坏）�
     assert.equal(await readFile(await store.fetch("k/a.txt"), "utf8"), "hello");
     assert.equal(await store.size("k/a.txt"), 5);
     assert.equal(await store.size("k/none.txt"), null);
+  });
+});
+
+test("put 返回这次是否真的写入", async () => {
+  await withStore(async (store, dir) => {
+    const src = path.join(dir, "a.txt");
+    await writeFile(src, "hello");
+    assert.equal((await store.put(src, "k/a.txt")).written, true);
+    assert.equal((await store.put(src, "k/a.txt")).written, false);
   });
 });

@@ -171,3 +171,20 @@ test("compositions.tsx 里用展开属性登记时静态 check 直接报错（CI
     await fx.cleanup();
   }
 });
+
+test("存储后端本身不可用（桶名写错、凭据无效）时 check 报错不通过，而不是只剩一堆素材缺失的警告", async () => {
+  const { fx, store } = await cleanRepo();
+  try {
+    const { KinetoError } = await import("../errors.ts");
+    const broken = Object.assign(Object.create(store) as LocalStorage, {
+      probe: async () => {
+        throw new KinetoError("STORAGE_UNAVAILABLE", "HEAD bucket nope: bucket not found", { hint: "Check storage.s3.bucket." });
+      },
+    });
+    const report = await checkRepo(fx.paths, broken);
+    assert.equal(report.ok, false);
+    assert.deepEqual(codes(report), ["STORAGE_UNAVAILABLE"]);
+  } finally {
+    await fx.cleanup();
+  }
+});

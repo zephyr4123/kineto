@@ -36,9 +36,8 @@ export async function pushObjects(
       objects.push({ key, kind, status: (await to.has(key)) ? "present" : "missing", url: null });
       continue;
     }
-    const before = await to.size(key);
     const stored = await to.put(await from.fetch(key), key, { sha256 });
-    objects.push({ key, kind, status: before === localSize ? "present" : "uploaded", url: stored.url });
+    objects.push({ key, kind, status: stored.written ? "uploaded" : "present", url: stored.url });
   }
   return { objects };
 }

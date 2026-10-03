@@ -37,6 +37,16 @@ export async function checkRepo(
     problems.push({ level, code: err.code, message: err.message, ...(err.hint ? { hint: err.hint } : {}) });
   };
 
+  // 存储后端本身不可用（桶名写错、凭据无效）时，后面每个素材都会显示「不在存储里」：
+  // 先把根因作为错误报出来，素材可用性与 deep 检查跳过，免得一堆警告淹没它
+  let storageReady = true;
+  try {
+    await storage.probe();
+  } catch (err) {
+    report(err);
+    storageReady = false;
+  }
+
   // 记录本身读不出来时没法推算生成文件该长什么样，漂移检查要等它们修好
   let recordsReadable = true;
   let manifest = new Map<string, AssetRecord>();
@@ -90,7 +100,7 @@ export async function checkRepo(
           message: `videos/${video.id} references unknown asset ${assetId} as "${alias}"`,
           hint: "Register the file with `./kineto asset add`.",
         });
-      } else {
+      } else if (storageReady) {
         const size = await storage.size(assetStorageKey(record));
         if (size === null) {
           // 别人 clone 下来、没接共享存储时属于正常情况，所以只是警告
@@ -127,7 +137,7 @@ export async function checkRepo(
   }
 
   // deep 依赖记录可读；import 放在这里，普通 check 不加载打包器
-  if (options.deep && recordsReadable) {
+  if (options.deep && recordsReadable && storageReady) {
     const { deepCheck } = await import("./deep.ts");
     problems.push(...(await deepCheck(paths, storage)));
   }

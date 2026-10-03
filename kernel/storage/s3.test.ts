@@ -1,4 +1,5 @@
 import { test } from "node:test";
+import { createHash } from "node:crypto";
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -14,12 +15,12 @@ class FakeTransport implements S3Transport {
     const o = this.objects.get(key);
     return o ? { size: o.body.length, sha256: o.sha256 } : null;
   }
-  async download(key: string, dest: string): Promise<boolean> {
+  async download(key: string, dest: string): Promise<{ sha256: string | undefined } | null> {
     const o = this.objects.get(key);
-    if (!o) return false;
+    if (!o) return null;
     this.downloads.push(key);
     await writeFile(dest, o.body);
-    return true;
+    return { sha256: o.sha256 };
   }
   async upload(file: string, key: string, meta: { contentType: string; sha256: string }): Promise<void> {
     this.uploads.push(key);
@@ -59,6 +60,7 @@ test("put 带前缀上传、按扩展名设 Content-Type、记下 sha256；返�
       backend: "s3",
       key: "renders/demo/demo-abc.mp4",
       url: "https://cdn.example.com/team/renders/demo/demo-abc.mp4",
+      written: true,
     });
     assert.deepEqual(fake.uploads, ["team/renders/demo/demo-abc.mp4"]);
     const stored = fake.objects.get("team/renders/demo/demo-abc.mp4");
@@ -95,7 +97,8 @@ test("远端已有同大小同哈希的对象时 put 不重复上传；哈希对
 
 test("fetch 下载进本机缓存只下一次，缓存文件只读；put 过的对象直接命中缓存不下载", async () => {
   await withS3(async (store, fake, dir) => {
-    fake.objects.set("team/assets/aa/y.png", { body: Buffer.from("png!"), contentType: "image/png", sha256: "s" });
+    const pngSha = createHash("sha256").update("png!").digest("hex");
+    fake.objects.set("team/assets/aa/y.png", { body: Buffer.from("png!"), contentType: "image/png", sha256: pngSha });
     const first = await store.fetch("assets/aa/y.png");
     const second = await store.fetch("assets/aa/y.png");
     assert.equal(first, second);
@@ -132,4 +135,72 @@ test("describe 不含密钥", async () => {
     assert.equal(info.bucket, "demo-1250000000");
     assert.ok(!JSON.stringify(info).includes("secret"));
   });
+});
+
+test("源文件与登记的 sha256 对不上时拒绝上传：坏内容不能带着正确的哈希混进共享存储", async () => {
+  await withS3(async (store, fake, dir) => {
+    const src = path.join(dir, "a.wav");
+    await writeFile(src, "HELLO");
+    await assert.rejects(store.put(src, "assets/2c/x.wav", { sha256: HELLO_SHA }), { code: "STORAGE_SOURCE_CORRUPT" });
+    assert.deepEqual(fake.uploads, []);
+    await assert.rejects(store.fetch("assets/2c/x.wav"), { code: "STORAGE_OBJECT_MISSING" });
+  });
+});
+
+test("下载内容与远端记录的 sha256 对不上时报 STORAGE_OBJECT_CORRUPT，不留缓存", async () => {
+  await withS3(async (store, fake) => {
+    fake.objects.set("team/assets/2c/x.wav", { body: Buffer.from("HELLO"), contentType: "audio/wav", sha256: HELLO_SHA });
+    await assert.rejects(store.fetch("assets/2c/x.wav"), { code: "STORAGE_OBJECT_CORRUPT" });
+    fake.objects.set("team/assets/2c/x.wav", { body: Buffer.from("hello"), contentType: "audio/wav", sha256: HELLO_SHA });
+    assert.equal(await readFile(await store.fetch("assets/2c/x.wav"), "utf8"), "hello");
+  });
+});
+
+test("put 返回这次是否真的写入；本机缓存被改坏时 put 一份完好的文件能修好它", async () => {
+  await withS3(async (store, fake, dir) => {
+    const src = path.join(dir, "a.wav");
+    await writeFile(src, "hello");
+    assert.equal((await store.put(src, "assets/2c/x.wav", { sha256: HELLO_SHA })).written, true);
+    assert.equal((await store.put(src, "assets/2c/x.wav", { sha256: HELLO_SHA })).written, false);
+    // 远端被改坏（大小相同、哈希不同）：重新上传并如实报告
+    fake.objects.set("team/assets/2c/x.wav", { body: Buffer.from("HELLO"), contentType: "audio/wav", sha256: "bad" });
+    assert.equal((await store.put(src, "assets/2c/x.wav", { sha256: HELLO_SHA })).written, true);
+
+    const cached = await store.fetch("assets/2c/x.wav");
+    const { chmod } = await import("node:fs/promises");
+    await chmod(cached, 0o644);
+    await writeFile(cached, "HELLO");
+    await store.put(src, "assets/2c/x.wav", { sha256: HELLO_SHA });
+    assert.equal(await readFile(await store.fetch("assets/2c/x.wav"), "utf8"), "hello");
+  });
+});
+
+test("桶不存在时 GET 报 STORAGE_UNAVAILABLE，而不是当成对象不存在", async () => {
+  const { createServer } = await import("node:http");
+  const { awsTransport } = await import("./s3.ts");
+  const server = createServer((req, res) => {
+    res.writeHead(404, { "Content-Type": "application/xml" });
+    res.end(req.method === "HEAD" ? undefined : "<?xml version='1.0'?><Error><Code>NoSuchBucket</Code><Message>The specified bucket does not exist.</Message></Error>");
+  });
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const port = (server.address() as { port: number }).port;
+  const dir = await mkdtemp(path.join(tmpdir(), "kineto-s3-nsb-"));
+  try {
+    const config = {
+      endpoint: `http://127.0.0.1:${port}`,
+      region: "us-east-1",
+      bucket: "nope",
+      prefix: "",
+      publicUrl: undefined,
+      accessKeyId: "id",
+      secretAccessKey: "secret",
+      forcePathStyle: true,
+    };
+    const store = new S3Storage(config, path.join(dir, "cache"), awsTransport(config));
+    await assert.rejects(store.fetch("assets/aa/x.wav"), { code: "STORAGE_UNAVAILABLE" });
+    await assert.rejects(store.probe(), { code: "STORAGE_UNAVAILABLE" });
+  } finally {
+    server.close();
+    await rm(dir, { recursive: true, force: true });
+  }
 });

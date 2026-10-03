@@ -4,6 +4,8 @@ export interface StoredObject {
   key: string;
   // 能公开访问时给出 URL（如对象存储 + CDN）；纯本地为 null
   url: string | null;
+  // 这次 put 是否真的写入（缺失或损坏被修复）；已有完好副本时为 false
+  written: boolean;
 }
 
 export interface StorageBackend {

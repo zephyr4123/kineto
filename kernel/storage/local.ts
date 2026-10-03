@@ -45,7 +45,7 @@ export class LocalStorage implements StorageBackend {
         throw err;
       }
     }
-    return { backend: this.name, key, url: null };
+    return { backend: this.name, key, url: null, written: !intact };
   }
 
   async has(key: string): Promise<boolean> {

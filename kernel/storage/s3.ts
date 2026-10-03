@@ -22,8 +22,8 @@ export interface ObjectHead {
 // 和网络打交道的最薄一层：S3Storage 的逻辑（缓存、幂等、URL）不依赖 SDK，测试时换成内存实现
 export interface S3Transport {
   head(objectKey: string): Promise<ObjectHead | null>;
-  // 对象不存在时返回 false
-  download(objectKey: string, dest: string): Promise<boolean>;
+  // 对象不存在时返回 null；存在时返回上传时写进元数据的 sha256（可能没有）
+  download(objectKey: string, dest: string): Promise<{ sha256: string | undefined } | null>;
   upload(file: string, objectKey: string, meta: { contentType: string; sha256: string }): Promise<void>;
   probe(): Promise<void>;
 }
@@ -46,13 +46,19 @@ export class S3Storage implements StorageBackend {
   async put(localFile: string, key: string, options: { sha256?: string } = {}): Promise<StoredObject> {
     assertSafeKey(key);
     const objectKey = this.#objectKey(key);
-    const [{ size }, hex] = await Promise.all([stat(localFile), options.sha256 ?? sha256File(localFile)]);
+    // 永远自己算源文件的哈希：远端元数据里的 sha256 是日后判断「完好」的依据，不能照抄调用方给的值
+    const [{ size }, hex] = await Promise.all([stat(localFile), sha256File(localFile)]);
+    if (options.sha256 !== undefined && options.sha256 !== hex) {
+      throw new KinetoError("STORAGE_SOURCE_CORRUPT", `${localFile} hashes to ${hex}, but ${key} is recorded as ${options.sha256}`, {
+        hint: "This copy was modified. Re-add the original file with `./kineto asset add`, or push from a machine with an intact copy.",
+      });
+    }
     const head = await this.#transport.head(objectKey);
     // 同 key 必同内容；远端对不上（大小或哈希）说明被改坏或传了一半，覆盖修复
     const intact = head !== null && head.size === size && (head.sha256 === undefined || head.sha256 === hex);
     if (!intact) await this.#transport.upload(localFile, objectKey, { contentType: contentTypeFor(key), sha256: hex });
-    await this.#cacheCopy(localFile, key);
-    return { backend: this.name, key, url: this.#url(key) };
+    await this.#cacheCopy(localFile, key, hex);
+    return { backend: this.name, key, url: this.#url(key), written: !intact };
   }
 
   async has(key: string): Promise<boolean> {
@@ -70,9 +76,17 @@ export class S3Storage implements StorageBackend {
     await mkdir(path.dirname(file), { recursive: true });
     const partial = `${file}.partial-${process.pid}`;
     try {
-      if (!(await this.#transport.download(this.#objectKey(key), partial))) {
+      const meta = await this.#transport.download(this.#objectKey(key), partial);
+      if (!meta) {
         throw new KinetoError("STORAGE_OBJECT_MISSING", `Object not found in s3://${this.#settings.bucket}/${this.#objectKey(key)}`, {
           hint: "Upload it from the machine that has it with `./kineto storage push`, or re-add the asset.",
+        });
+      }
+      // 进缓存前验内容：缓存之后就被当作可信副本，坏内容进去了就不会再被替换
+      const expected = meta.sha256 ?? hashInKey(key);
+      if (expected !== undefined && (await sha256File(partial)) !== expected) {
+        throw new KinetoError("STORAGE_OBJECT_CORRUPT", `s3://${this.#settings.bucket}/${this.#objectKey(key)} does not match its sha256 ${expected}`, {
+          hint: "Re-upload it with `./kineto storage push` (or `./kineto asset add` with the original file) from a machine with an intact copy.",
         });
       }
       await chmod(partial, 0o444);
@@ -107,11 +121,15 @@ export class S3Storage implements StorageBackend {
     return base ? `${base}/${this.#objectKey(key).split("/").map(encodeURIComponent).join("/")}` : null;
   }
 
-  // 刚上传的文件顺手放进缓存，紧接着的 fetch（如渲染完返回路径）不用再下载一遍。
+  // 刚上传的文件顺手放进缓存，紧接着的 fetch（如渲染完返回路径）不用再下载一遍；
+  // 已有缓存但内容不对（被改坏）时用这份完好的替换掉——这也是修复坏缓存的途径。
   // 复制而不是硬链接：缓存要改成只读，硬链接会把调用方自己的文件也改成只读
-  async #cacheCopy(localFile: string, key: string): Promise<void> {
+  async #cacheCopy(localFile: string, key: string, hex: string): Promise<void> {
     const file = this.#cachePath(key);
-    if (await exists(file)) return;
+    if (await exists(file)) {
+      if ((await sha256File(file)) === hex) return;
+      await rm(file, { force: true });
+    }
     await mkdir(path.dirname(file), { recursive: true });
     const partial = `${file}.partial-${process.pid}`;
     try {
@@ -125,6 +143,9 @@ export class S3Storage implements StorageBackend {
     }
   }
 }
+
+// 素材的 key 本身就带完整哈希（assets/ab/<64 位>.ext）：远端元数据缺失时用它验内容
+const hashInKey = (key: string): string | undefined => /^assets\/[0-9a-f]{2}\/([0-9a-f]{64})\.[a-z0-9]+$/.exec(key)?.[1];
 
 const exists = (file: string) =>
   access(file).then(
@@ -154,17 +175,18 @@ export function awsTransport(config: S3Config): S3Transport {
       }
     },
     async download(Key, dest) {
-      let body: Readable;
+      let res;
       try {
-        body = (await client.send(new GetObjectCommand({ Bucket, Key }))).Body as Readable;
+        res = await client.send(new GetObjectCommand({ Bucket, Key }));
       } catch (err) {
-        if (statusOf(err) === 404) return false;
+        // 桶不存在也是 404：那是配置错了，不是对象缺失
+        if (statusOf(err) === 404 && (err as { name?: string }).name !== "NoSuchBucket") return null;
         throw storageError(err, `GET ${Key}`);
       }
-      await pipeline(body, createWriteStream(dest)).catch((err: unknown) => {
+      await pipeline(res.Body as Readable, createWriteStream(dest)).catch((err: unknown) => {
         throw storageError(err, `GET ${Key}`);
       });
-      return true;
+      return { sha256: res.Metadata?.sha256 };
     },
     async upload(file, Key, meta) {
       // 大文件自动分片上传（默认 5MB 一片、4 片并行），小文件一次 PUT
