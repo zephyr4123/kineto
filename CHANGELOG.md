@@ -1,7 +1,8 @@
 # Changelog
 
 All notable changes to kineto are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
-and versions follow [Semantic Versioning](https://semver.org/). Pushing a `v*` tag publishes the matching section as a GitHub release.
+and versions follow [Semantic Versioning](https://semver.org/). Pushing a version tag such as `v1.0.0` publishes the matching section
+as a GitHub release; tags with a hyphen (`v1.1.0-rc.1`) become prereleases.
 
 ## [Unreleased]
 

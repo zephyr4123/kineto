@@ -47,4 +47,8 @@ jobs:
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" --title "kineto $GITHUB_REF_NAME" --notes-file notes.md --verify-tag
+        run: |
+          # v1.1.0-rc.1 这类带连字符的版本发成预发布
+          prerelease=()
+          if [[ "$GITHUB_REF_NAME" == *-* ]]; then prerelease=(--prerelease); fi
+          gh release create "$GITHUB_REF_NAME" --title "kineto $GITHUB_REF_NAME" --notes-file notes.md --verify-tag "${prerelease[@]}"

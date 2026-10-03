@@ -20,15 +20,15 @@ storage:
   #   bucket: <bucket-name>                              # COS 桶名带 APPID 后缀，如 kineto-1250000000
   #   prefix: ""                                         # 可选：对象都放在这个前缀下
   #   publicUrl: https://<your-cdn-domain>               # 可选：桶的公开访问根地址，渲染记录会给出可分享链接
-  #   accessKeyId: ${KINETO_S3_ACCESS_KEY_ID}
-  #   secretAccessKey: ${KINETO_S3_SECRET_ACCESS_KEY}
+  #   accessKeyId: ${KINETO_S3_ACCESS_KEY_ID}      # 只需读写对象（不需要删除）；AWS S3 还要 s3:ListBucket，
+  #   secretAccessKey: ${KINETO_S3_SECRET_ACCESS_KEY}  # 否则对不存在的对象返回 403 而不是 404
   #   forcePathStyle: false                              # MinIO 等自建服务通常要设 true
 
 # 工具插件（tools/<name>/）：写了 tools.<name> 才启用，没启用的不会被执行。`./kineto tool list` 查看全部。
 # tools:
-#   transcribe: {}                    # 字幕转写：本机 whisper.cpp，免费离线；首次使用会下载编译（需要 git / make / C 编译器）
-#     # model: small                  # tiny / base / small / medium / large-v3…，带 .en 的是纯英文模型
-#     # language: auto                # zh / en / ja…
+#   transcribe:                       # 字幕转写：本机 whisper.cpp，免费离线；首次使用会下载编译（需要 git / make / C 编译器）
+#     model: small                    # 可选：tiny / base / small / medium / large-v3…，带 .en 的是纯英文模型
+#     language: auto                  # 可选：zh / en / ja…
 #   tts:                              # 配音：腾讯云语音合成，按字数计费；先在控制台开通「语音合成」
 #     secretId: ${TENCENTCLOUD_SECRET_ID}
 #     secretKey: ${TENCENTCLOUD_SECRET_KEY}

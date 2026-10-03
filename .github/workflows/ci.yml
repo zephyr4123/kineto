@@ -11,10 +11,11 @@ on:
 permissions:
   contents: read
 
-# 同一分支 / PR 的新推送取消旧的运行；main 与发版不取消，每次都要完整的结论
+# 同一分支 / PR 的新推送取消旧的运行；main 与发版不取消，每次都要完整的结论。
+# 被 release.yml 以 workflow_call 调用时上下文是调用方的（push + refs/tags/…），所以只对 refs/heads/ 生效
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref != 'refs/heads/main') }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/') && github.ref != 'refs/heads/main') }}
 
 jobs:
   verify:

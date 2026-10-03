@@ -113,7 +113,7 @@ kernel        视频目录 · 素材库 · 渲染 · 同步 · 检查
 
 ## ☁️ 存储
 
-二进制文件不进入 git，统一存放在 `kineto.config.yaml` 指定的存储后端（可参考 [`kineto.config.example.yaml`](kineto.config.example.yaml)）。
+素材与渲染产物不进入 git，统一存放在 `kineto.config.yaml` 指定的存储后端（可参考 [`kineto.config.example.yaml`](kineto.config.example.yaml)）。
 
 - `local` 为默认后端，即仓库内的一个目录，无需配置。
 - `s3` 支持腾讯云 COS、AWS S3、Cloudflare R2、阿里云 OSS 与 MinIO，各服务之间只有 endpoint 不同。
@@ -176,7 +176,7 @@ npm run verify    # 类型检查、lint、测试与 ./kineto check --deep（即 
 ```
 
 - CLI 与 kernel 使用 TypeScript 编写，由 Node 原生类型剥离直接运行，没有构建步骤。
-- 推送 `v*` 标签即发布新版本，变更记录见 [`CHANGELOG.md`](CHANGELOG.md)。
+- 推送 `v1.0.0` 这样的版本标签即发布新版本，变更记录见 [`CHANGELOG.md`](CHANGELOG.md)。
 
 ## 📄 许可证
 

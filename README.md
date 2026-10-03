@@ -113,7 +113,7 @@ Each render bundles only its own video, so a broken video cannot block the other
 
 ## ☁️ Storage
 
-Binaries stay out of git. They go to the backend set in `kineto.config.yaml` (start from [`kineto.config.example.yaml`](kineto.config.example.yaml)).
+Assets and renders stay out of git. They go to the backend set in `kineto.config.yaml` (start from [`kineto.config.example.yaml`](kineto.config.example.yaml)).
 
 - `local` is the default: a directory inside the repository, no setup required.
 - `s3` works with Tencent COS, AWS S3, Cloudflare R2, Alibaba OSS and MinIO. Only the endpoint changes.
@@ -176,7 +176,7 @@ npm run verify    # typecheck, lint, tests and ./kineto check --deep (the CI gat
 ```
 
 - The CLI and kernel are TypeScript run directly by Node's type stripping. There is no build step.
-- Releases are published by pushing a `v*` tag. See [`CHANGELOG.md`](CHANGELOG.md).
+- Releases are published by pushing a version tag such as `v1.0.0`. See [`CHANGELOG.md`](CHANGELOG.md).
 
 ## 📄 License
 
