@@ -71,7 +71,8 @@ export const renderCommand = defineCommand({
   },
   human: (d) =>
     `Rendered ${d.record.composition} (${d.record.width}x${d.record.height}, ${d.record.durationInFrames}f @ ${d.record.fps}fps, ` +
-    `${(d.record.bytes / 1e6).toFixed(1)} MB) in ${(d.record.elapsedMs / 1000).toFixed(1)}s\n${d.file}`,
+    `${(d.record.bytes / 1e6).toFixed(1)} MB) in ${(d.record.elapsedMs / 1000).toFixed(1)}s\n${d.file}` +
+    (d.record.storage.url ? `\n${d.record.storage.url}` : ""),
 });
 
 export const studioCommand = defineCommand({

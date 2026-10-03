@@ -1,6 +1,5 @@
 import { spawn } from "node:child_process";
-import { constants } from "node:fs";
-import { access, mkdir, readFile } from "node:fs/promises";
+import { access, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { KinetoError } from "../../kernel/errors.ts";
 import { syncAll } from "../../kernel/sync/sync.ts";
@@ -61,15 +60,15 @@ export const doctorCommand = defineCommand({
     });
 
     try {
-      const { source } = await ctx.config();
+      const { source, envFile } = await ctx.config();
       add({ name: "config", status: "ok", detail: source });
-      const storage = await ctx.storage();
-      const info = storage.describe();
-      if (typeof info.root === "string") {
-        await mkdir(info.root, { recursive: true });
-        await access(info.root, constants.W_OK);
+      // 密钥文件别人能读就等于泄露了一半
+      if (envFile && ((await stat(envFile)).mode & 0o077) !== 0) {
+        add({ name: "envFile", status: "warn", detail: `${envFile} is readable by other users`, hint: `Run \`chmod 600 ${envFile}\`.` });
       }
-      add({ name: "storage", status: "ok", detail: JSON.stringify(info) });
+      const storage = await ctx.storage();
+      await storage.probe();
+      add({ name: "storage", status: "ok", detail: JSON.stringify(storage.describe()) });
     } catch (err) {
       if (!(err instanceof KinetoError) && !(err instanceof Error)) throw err;
       add({

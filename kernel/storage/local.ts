@@ -1,9 +1,9 @@
-import { createHash } from "node:crypto";
-import { createReadStream } from "node:fs";
-import { chmod, copyFile, mkdir, rename, rm, stat } from "node:fs/promises";
+import { constants } from "node:fs";
+import { access, chmod, copyFile, mkdir, rename, rm, stat } from "node:fs/promises";
 import path from "node:path";
-import { pipeline } from "node:stream/promises";
 import { KinetoError } from "../errors.ts";
+import { sha256File } from "../hash.ts";
+import { assertSafeKey } from "./keys.ts";
 import type { StorageBackend, StoredObject } from "./types.ts";
 
 // 本地目录当存储：零配置的默认后端，clone 下来不配任何东西也能跑通全链路。
@@ -16,10 +16,7 @@ export class LocalStorage implements StorageBackend {
   }
 
   private resolve(key: string): string {
-    const normalized = path.posix.normalize(key);
-    if (path.posix.isAbsolute(key) || normalized.startsWith("..") || normalized !== key) {
-      throw new KinetoError("INVALID_STORAGE_KEY", `Unsafe storage key: ${key}`);
-    }
+    assertSafeKey(key);
     return path.join(this.root, ...key.split("/"));
   }
 
@@ -30,7 +27,7 @@ export class LocalStorage implements StorageBackend {
     const intact =
       existing !== null &&
       existing.size === src.size &&
-      (options.sha256 === undefined || (await sha256(dest)) === options.sha256);
+      (options.sha256 === undefined || (await sha256File(dest)) === options.sha256);
     if (intact) {
       // 早期写入或被人改过权限的对象，顺手恢复只读
       if (existing.mode & 0o222) await chmod(dest, 0o444);
@@ -72,13 +69,14 @@ export class LocalStorage implements StorageBackend {
     return file;
   }
 
+  // doctor 用：存储目录能建、能写
+  async probe(): Promise<void> {
+    await mkdir(this.root, { recursive: true });
+    await access(this.root, constants.W_OK);
+  }
+
   describe() {
     return { backend: this.name, root: this.root };
   }
 }
 
-async function sha256(file: string): Promise<string> {
-  const hash = createHash("sha256");
-  await pipeline(createReadStream(file), hash);
-  return hash.digest("hex");
-}

@@ -16,5 +16,7 @@ export interface StorageBackend {
   size(key: string): Promise<number | null>;
   // 保证本机有一份可读副本并返回其路径（远端后端在这里下载进缓存）
   fetch(key: string): Promise<string>;
+  // doctor 用：后端可用（本地目录可写 / 远端凭据有效、桶存在），不可用时抛带 hint 的错误
+  probe(): Promise<void>;
   describe(): Record<string, unknown>;
 }

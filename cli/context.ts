@@ -27,6 +27,6 @@ export class Context {
   }
 
   async storage(): Promise<StorageBackend> {
-    return (this.#storage ??= createStorage((await this.config()).config, this.paths));
+    return (this.#storage ??= await createStorage((await this.config()).config, this.paths));
   }
 }

@@ -5,8 +5,8 @@ import type { KinetoPaths } from "../paths.ts";
 import { LocalStorage } from "./local.ts";
 import type { StorageBackend } from "./types.ts";
 
-// 按配置选存储策略；新增后端（如 s3 兼容的 COS）只需在这里加一个分支
-export function createStorage(config: KinetoConfig, paths: KinetoPaths): StorageBackend {
+// 按配置选存储策略；新增后端只需在这里加一个分支
+export async function createStorage(config: KinetoConfig, paths: KinetoPaths): Promise<StorageBackend> {
   switch (config.storage.backend) {
     case "local": {
       const root = path.resolve(paths.root, config.storage.local.root);
@@ -22,6 +22,12 @@ export function createStorage(config: KinetoConfig, paths: KinetoPaths): Storage
         }
       }
       return new LocalStorage(root);
+    }
+    case "s3": {
+      // schema 已保证选了 s3 就有这一段；AWS SDK 只在真用 s3 时才加载
+      const s3 = config.storage.s3!;
+      const { S3Storage, awsTransport } = await import("./s3.ts");
+      return new S3Storage(s3, paths.cacheDir, awsTransport(s3));
     }
   }
 }

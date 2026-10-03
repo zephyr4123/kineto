@@ -14,7 +14,7 @@ import { compositionOwner } from "../catalog/compositions.ts";
 import type { KinetoConfig } from "../config.ts";
 import { KinetoError } from "../errors.ts";
 import type { KinetoPaths } from "../paths.ts";
-import { sha256File } from "../assets/assets.ts";
+import { sha256File } from "../hash.ts";
 import type { StorageBackend } from "../storage/types.ts";
 import { withRepoLock } from "../lock.ts";
 import { removeOrphanedWorkDirs } from "../workdirs.ts";

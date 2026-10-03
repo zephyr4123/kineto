@@ -117,7 +117,7 @@ export const showCommand = defineCommand({
       `compositions: ${d.compositions.join(", ") || "(none)"}`,
       `assets: ${d.assets.map((a) => `${a.alias} → ${a.staticFile ?? "MISSING"}`).join(", ") || "(none)"}`,
       `renders: ${d.renders.length}`,
-      ...d.renders.slice(-5).map((r) => `  ${r.renderedAt}  ${r.composition}  ${r.codec}  ${r.storage.key}`),
+      ...d.renders.slice(-5).map((r) => `  ${r.renderedAt}  ${r.composition}  ${r.codec}  ${r.storage.url ?? r.storage.key}`),
     ]
       .filter(Boolean)
       .join("\n"),

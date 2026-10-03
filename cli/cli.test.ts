@@ -226,3 +226,23 @@ test("另一条视频坏了时 new 先报错、不留下半成品目录；空标
     await fx.cleanup();
   }
 });
+
+test("storage push 在本地存储后端下报 STORAGE_PUSH_NOOP，退出码 1", async () => {
+  const fx = await makeRepo();
+  try {
+    const r = kineto(fx.root, "storage", "push");
+    assert.equal(r.status, 1);
+    assert.equal(r.err.error.code, "STORAGE_PUSH_NOOP");
+  } finally {
+    await fx.cleanup();
+  }
+});
+
+test("storage push 的判定：缺素材才算不通过（退出码 1），历史渲染文件已删除只作提示", async () => {
+  // 真推需要网络上的 S3，这里直接验证命令的判定规则
+  const { storagePushCommand } = await import("./commands/storage.ts");
+  const base = { to: {}, uploaded: 0, present: 1, objects: [] };
+  assert.equal(storagePushCommand.exitCode!({ ...base, missingAssets: [], missingRenders: ["renders/a/a-1.mp4"] }), 0);
+  assert.equal(storagePushCommand.exitCode!({ ...base, missingAssets: ["assets/aa/x.wav"], missingRenders: [] }), 1);
+  assert.match(storagePushCommand.human!({ ...base, missingAssets: [], missingRenders: ["renders/a/a-1.mp4"] }), /no longer stored/);
+});

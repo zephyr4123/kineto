@@ -19,6 +19,8 @@ export interface KinetoPaths {
   stateDir: string;
   publicDir: string;
   tmpDir: string;
+  // 远端存储后端在本机的只读缓存
+  cacheDir: string;
 }
 
 export function pathsFor(root: string): KinetoPaths {
@@ -35,6 +37,7 @@ export function pathsFor(root: string): KinetoPaths {
     stateDir: at(".kineto"),
     publicDir: at(remotionSettings.publicDir),
     tmpDir: at(".kineto", "tmp"),
+    cacheDir: at(".kineto", "cache"),
   };
 }
 

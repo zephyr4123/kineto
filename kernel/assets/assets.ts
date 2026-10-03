@@ -1,7 +1,6 @@
 // 资产库：二进制按内容寻址进存储后端，元数据追加到 assets/manifest.jsonl（入库）。
 // 只追加、同 id 后写者生效——历史可追溯，git diff 永远只有新增行。
-import { createHash } from "node:crypto";
-import { createReadStream, createWriteStream } from "node:fs";
+import { createWriteStream } from "node:fs";
 import { mkdir, readFile, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { Readable } from "node:stream";
@@ -9,6 +8,7 @@ import { pipeline } from "node:stream/promises";
 import { z } from "zod";
 import { ASSET_ID_RE } from "../catalog/schema.ts";
 import { isNodeError, KinetoError } from "../errors.ts";
+import { sha256File } from "../hash.ts";
 import { appendJsonLine } from "../jsonl.ts";
 import { withRepoLock } from "../lock.ts";
 import type { KinetoPaths } from "../paths.ts";
@@ -187,12 +187,6 @@ const sameMetadata = (a: AssetRecord, b: AssetRecord) => {
   const strip = ({ addedAt: _, ...rest }: AssetRecord) => JSON.stringify(rest);
   return strip(a) === strip(b);
 };
-
-export async function sha256File(file: string): Promise<string> {
-  const hash = createHash("sha256");
-  await pipeline(createReadStream(file), hash);
-  return hash.digest("hex");
-}
 
 async function download(paths: KinetoPaths, url: string, ext: string): Promise<string> {
   const res = await fetch(url).catch((err: unknown) => {
