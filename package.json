@@ -13,7 +13,7 @@
   },
   "scripts": {
     "studio": "./kineto studio",
-    "test": "node --test \"kernel/**/*.test.ts\" \"cli/**/*.test.ts\"",
+    "test": "node --test \"kernel/**/*.test.ts\" \"cli/**/*.test.ts\" \"tools/**/*.test.ts\"",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json",
     "lint": "eslint --no-error-on-unmatched-pattern src engine videos templates",
     "verify": "npm run typecheck && npm run lint && npm test && ./kineto check --deep"
@@ -25,6 +25,7 @@
     "@remotion/cli": "4.0.532",
     "@remotion/fonts": "4.0.532",
     "@remotion/google-fonts": "4.0.532",
+    "@remotion/install-whisper-cpp": "4.0.532",
     "@remotion/media": "4.0.532",
     "@remotion/renderer": "4.0.532",
     "@remotion/transitions": "4.0.532",

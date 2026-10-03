@@ -24,6 +24,22 @@ storage:
   #   secretAccessKey: ${KINETO_S3_SECRET_ACCESS_KEY}
   #   forcePathStyle: false                              # MinIO 等自建服务通常要设 true
 
+# 工具插件（tools/<name>/）：写了 tools.<name> 才启用，没启用的不会被执行。`./kineto tool list` 查看全部。
+# tools:
+#   transcribe: {}                    # 字幕转写：本机 whisper.cpp，免费离线；首次使用会下载编译（需要 git / make / C 编译器）
+#     # model: small                  # tiny / base / small / medium / large-v3…，带 .en 的是纯英文模型
+#     # language: auto                # zh / en / ja…
+#   tts:                              # 配音：腾讯云语音合成，按字数计费；先在控制台开通「语音合成」
+#     secretId: ${TENCENTCLOUD_SECRET_ID}
+#     secretKey: ${TENCENTCLOUD_SECRET_KEY}
+#     # voice: 101001                 # 音色 id，见 https://cloud.tencent.com/document/product/1073/92668
+#     # sampleRate: 16000             # 8000 / 16000 / 24000（部分音色支持）
+#   image:                            # AI 生图：腾讯混元生图，按张计费；先在控制台开通「混元生图」
+#     secretId: ${TENCENTCLOUD_SECRET_ID}
+#     secretKey: ${TENCENTCLOUD_SECRET_KEY}
+#     # resolution: "1280:720"
+#     # logo: true                    # 服务商默认在图上加「AI 生成」标识
+
 remotion:
   # Remotion 5.0 起渲染必须传 license key。个人 / ≤3 人公司 / 非营利填 free-license，
   # 其余见 https://remotion.pro/license
