@@ -152,7 +152,7 @@ function assertCompatible(existing: AssetRecord | undefined, license: string, ex
   }
   if (existing.ext !== ext) {
     throw new KinetoError("ASSET_EXT_CONFLICT", `This exact file is already registered as ${existing.id} with extension ${existing.ext}`, {
-      hint: `Rename the file to ${existing.ext}, or reuse it with: kineto asset link ${existing.id} --to <video> --as <alias>`,
+      hint: `Rename the file to ${existing.ext}, or reuse it with: ./kineto asset link ${existing.id} --to <video> --as <alias>`,
     });
   }
 }

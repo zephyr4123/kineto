@@ -152,7 +152,10 @@ test("同一内容再次登记：许可证或扩展名不一致直接报错，�
     await assert.rejects(ingestAsset(fx.paths, store, { source: png, license: "CC0-1.0" }), { code: "ASSET_LICENSE_CONFLICT" });
     const jpg = path.join(fx.root, "p.jpg");
     await writeFile(jpg, "hello");
-    await assert.rejects(ingestAsset(fx.paths, store, { source: jpg, license: "CC-BY-4.0" }), { code: "ASSET_EXT_CONFLICT" });
+    await assert.rejects(ingestAsset(fx.paths, store, { source: jpg, license: "CC-BY-4.0" }), {
+      code: "ASSET_EXT_CONFLICT",
+      hint: /\.\/kineto asset link sha256:/,
+    });
     assert.equal((await readManifest(fx.paths)).get(`sha256:${HELLO_SHA}`)?.license, "CC-BY-4.0");
   } finally {
     await fx.cleanup();

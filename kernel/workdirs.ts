@@ -2,6 +2,7 @@
 // 进程被杀（Ctrl-C、kill -9）时 finally 来不及执行，下次开工前清掉已不存在的进程留下的目录。
 import { readdir, rm } from "node:fs/promises";
 import path from "node:path";
+import { isNodeError } from "./errors.ts";
 import type { KinetoPaths } from "./paths.ts";
 
 export async function removeOrphanedWorkDirs(paths: KinetoPaths): Promise<void> {
@@ -11,7 +12,9 @@ export async function removeOrphanedWorkDirs(paths: KinetoPaths): Promise<void> 
     if (!pid || pid === process.pid) continue;
     try {
       process.kill(pid, 0);
-    } catch {
+    } catch (err) {
+      // 只有 ESRCH 才说明进程不在了；EPERM 是别的用户的活进程，和 lock.ts 的判据一致
+      if (!isNodeError(err, "ESRCH")) continue;
       await rm(path.join(paths.tmpDir, name), { recursive: true, force: true });
     }
   }

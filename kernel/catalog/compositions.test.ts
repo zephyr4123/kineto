@@ -50,3 +50,12 @@ export const X = () => (
   );
   assert.equal(registersComposition('export const Y = () => <Composition id="z" />;', "Extra.js"), true);
 });
+
+test("Remotion 的打包器对 .ts 也开了 JSX，所以 .ts/.mts/.cts 里的登记同样要认出来", () => {
+  const src = 'import { Composition } from "remotion";\nexport const E = () => <Composition id="promo" />;';
+  for (const file of ["register.ts", "register.mts", "register.cts"]) {
+    assert.deepEqual(ids(src, file), ["promo"], file);
+  }
+  // 普通 TS 的类型断言与泛型不能因为按 TSX 解析而误报
+  assert.equal(registersComposition("const n = <number>(x as unknown);\nexport const f = <T,>(v: T) => v;", "util.ts"), false);
+});

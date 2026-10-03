@@ -19,12 +19,9 @@ export interface Registration {
 }
 
 export function scanRegistrations(source: string, fileName: string): Registration[] {
-  // .ts 里写不了 JSX；.js/.jsx/.mjs/.cjs 按 JSX 解析——Remotion 的打包器对 .js 也开了 JSX
-  const kind = fileName.endsWith(".tsx")
-    ? ts.ScriptKind.TSX
-    : /\.(jsx|js|mjs|cjs)$/.test(fileName)
-      ? ts.ScriptKind.JSX
-      : ts.ScriptKind.TS;
+  // 跟 Remotion 的打包器保持一致：它对 .ts 也按 tsx 解析、对 .js 也开了 JSX，
+  // 所以 tsc 不认的 .ts 里的 JSX 照样能打包进 Studio，这里不能按 tsc 的规矩放过
+  const kind = /\.(tsx|ts|mts|cts)$/.test(fileName) ? ts.ScriptKind.TSX : ts.ScriptKind.JSX;
   const file = ts.createSourceFile(fileName, source, ts.ScriptTarget.Latest, false, kind);
 
   const names = new Set(TAGS);
