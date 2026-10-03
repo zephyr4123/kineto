@@ -14,15 +14,16 @@ import { CLAWD, CREAM, FONT_BODY, FONT_MONO } from "../theme";
 
 // 落名：一支羽毛笔从夜空里飞进来，行书一笔连写出 kineto，回头补上 t 的横；
 // 笔尖点向 i 的上方，Clawd 拖着彩虹从城市里冲上来，落在那儿当点。墨迹一闪变成实心立体字。
+// SOLID_AT 落在配乐（Stage 1，140 BPM）第 21 小节的重拍上，见 Video.tsx
 const FLY_IN = [0, 36] as const;
-const WRITE = [36, 250] as const;
-const TO_CROSS = [250, 262] as const;
-const CROSS = [262, 280] as const;
-const TO_DOT = [280, 298] as const;
-const CLAWD_UP = [292, 316] as const;
-const FLY_OUT = [312, 344] as const;
-export const SOLID_AT = 322;
-const TAGLINE_AT = 344;
+const WRITE = [36, 264] as const;
+const TO_CROSS = [264, 276] as const;
+const CROSS = [276, 294] as const;
+const TO_DOT = [294, 312] as const;
+const CLAWD_UP = [306, 330] as const;
+const FLY_OUT = [326, 358] as const;
+export const SOLID_AT = 336;
+const TAGLINE_AT = 358;
 export const TAGLINE = "Give your agent a path.";
 export const SUBLINE = "an agent-first video studio · built on Remotion";
 

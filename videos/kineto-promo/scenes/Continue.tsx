@@ -15,10 +15,10 @@ const ZOOM = [4, 50] as const;
 const COIN_UP = 70;
 const SLOT_IN = [92, 114] as const;
 const THROW = [126, 170] as const;
-const INSERT = 170;
+export const INSERT = 170;
 const WIPE = [188, 222] as const;
 const READY = 222;
-const GO = 246;
+export const GO = 246;
 const SLOT = { x: 1480, y: 560 };
 
 const CUES = [
@@ -31,7 +31,7 @@ const CUES = [
   [INSERT + 2, "powerup"],
   [WIPE[0], "whoosh"],
   [READY, "ready"],
-  [GO, "go"],
+  [GO, "go", 0.7],
 ] as const;
 
 export const Continue: React.FC = () => {

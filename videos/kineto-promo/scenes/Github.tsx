@@ -27,7 +27,8 @@ const HOP_DOWN = [66, 96] as const;
 const STOMP = HOP_DOWN[1];
 const STAR_FLY = [STOMP + 2, STOMP + 56] as const;
 const HOP_UP = [150, 178] as const;
-const CARD = 176;
+// 片尾卡片落在配乐循环回开头的那一拍上，见 Video.tsx
+export const CARD = 195;
 
 const LOGO_SCALE = 0.36;
 const LOGO_TO_Y = 135;

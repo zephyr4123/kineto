@@ -51,6 +51,9 @@ const COMMANDS = [
   return { ...c, zoomIn: [c.at + 6, c.at + 18] as const, zoomOut: [c.at + 6 + len, c.at + 18 + len] as const };
 });
 
+// 推镜进电脑的区间：配乐在这几段压低，让打字、回车、打勾听得清
+export const MUSIC_DUCK = COMMANDS.map((c) => [c.zoomIn[0], c.zoomOut[1]] as const);
+
 const STUDIO_AT = 200;
 const CRATES_AT = 508;
 const BILLBOARD_AT = 848;
@@ -417,7 +420,7 @@ const CUES = [
   ...commandCues,
   [STUDIO_AT + 14, "build"],
   [B_RUN[1] - 4, "whoosh", 0.6],
-  [B_FIRE, "cannon"],
+  [B_FIRE, "cannon", 0.7],
   ...RINGS.map((p) => [B_FLY[0] + p * 100, "ring"] as const),
   [B_FLY[1], "thud", 0.6],
   [B_SKID[0], "skid"],

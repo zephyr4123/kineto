@@ -1,7 +1,7 @@
 // 宣传片的音效都在这里用代码合成（方波 / 三角波 / 噪声，8-bit 风格），没有任何外部音源，按 CC0 入库。
 // 配乐另找，不在这里做。
 // 用法：node videos/kineto-promo/audio/synth.ts <输出目录>
-// 产出 sfx.wav（所有音效拼成一条），并重写 sfx-map.ts（每个音效的起止秒数）。
+// 产出 sfx.wav（所有音效拼成一条）与 rain.wav（雨声环境音），并重写 sfx-map.ts（每个音效的起止秒数）。
 // 改了这里要重新生成并用 `./kineto asset add <输出目录>/sfx.wav --license CC0-1.0 --to kineto-promo --as sfx` 重新登记。
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -282,4 +282,19 @@ writeFileSync(
     .map(([k, [a, b]]) => `  ${k}: [${a}, ${b}],`)
     .join("\n")}\n} as const;\n\nexport type SfxName = keyof typeof SFX_MAP;\n`,
 );
-console.log(`wrote ${Object.keys(map).length} sfx to ${outDir}`);
+
+// 雨声环境音：第一幕变天之后一直下，单独一条（放在音效之后生成，不影响 sfx.wav 的内容）
+function rain() {
+  const len = 18;
+  const tr = new Track(len);
+  tr.tone(0, len, 11000, { wave: "noise", vol: 0.35, a: 0.5, d: 0.1, s: 1, r: 0.01, seed: 51 });
+  tr.lowpass(2200);
+  for (let i = 0; i < 260; i++) {
+    const t = ((i * 7919) % 1000) / 1000 * (len - 0.1);
+    tr.tone(t, 0.01, 3000 + ((i * 131) % 5) * 600, { wave: "noise", vol: 0.12, a: 0.001, d: 0.01, s: 0, r: 0.005, seed: 60 + (i % 9) });
+  }
+  return tr;
+}
+writeWav("rain.wav", rain());
+
+console.log(`wrote ${Object.keys(map).length} sfx + rain to ${outDir}`);

@@ -2,6 +2,7 @@
 // 用法：<Img src={staticFile(assets.logo)} />
 
 export const assets = {
+  ambRain: "kineto-promo/ambRain.wav",
   cornerHit: "kineto-promo/cornerHit.mp4",
   fontArcade: "kineto-promo/fontArcade.ttf",
   fontMono: "kineto-promo/fontMono.woff2",
@@ -10,7 +11,9 @@ export const assets = {
   musicChaos: "kineto-promo/musicChaos.wav",
   musicCont: "kineto-promo/musicCont.wav",
   musicLogo: "kineto-promo/musicLogo.wav",
+  musicOpening: "kineto-promo/musicOpening.wav",
   musicPrompt: "kineto-promo/musicPrompt.wav",
   musicSpeedrun: "kineto-promo/musicSpeedrun.wav",
+  musicStage1: "kineto-promo/musicStage1.wav",
   sfx: "kineto-promo/sfx.wav",
 } as const;

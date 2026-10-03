@@ -333,6 +333,7 @@ const CUTS = [
 ] as const;
 
 export const FINAL = 784;
+export const RAIN_START = 50;
 const SCREEN_LEN = ZOOM_OUT[1] - ZOOM_IN[0];
 const CUES = [
   [100, "pop", 0.6],
