@@ -4,7 +4,7 @@
 // 只改这里，两条路径就不会出现两套行为。
 export const remotionSettings = {
   entryPoint: "src/index.ts",
-  // 每次运行只能有一个 public dir（Remotion 硬限制），由 `kineto sync` 按视频分子目录暂存
+  // 每次运行只能有一个 public dir（Remotion 硬限制），由 `./kineto sync` 按视频分子目录暂存
   publicDir: ".kineto/public",
   rspack: true,
   videoImageFormat: "jpeg",

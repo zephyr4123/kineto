@@ -7,19 +7,20 @@ import { bundle } from "@remotion/bundler";
 import { getCompositions } from "@remotion/renderer";
 import { listVideoIds, readVideo } from "../catalog/catalog.ts";
 import { compositionOwner } from "../catalog/compositions.ts";
-import { KinetoError } from "../errors.ts";
 import type { KinetoPaths } from "../paths.ts";
 import { assetStorageKey, readManifest, sha256File } from "../assets/assets.ts";
 import { writeVideoEntry } from "../render/render.ts";
 import { remotionSettings } from "../render/settings.ts";
 import type { StorageBackend } from "../storage/types.ts";
 import { stageVideoAssets } from "../sync/sync.ts";
+import { removeOrphanedWorkDirs } from "../workdirs.ts";
 import type { Problem } from "./check.ts";
 
 export async function deepCheck(paths: KinetoPaths, storage: StorageBackend): Promise<Problem[]> {
   const problems: Problem[] = [];
   const ids = await listVideoIds(paths);
   const manifest = await readManifest(paths);
+  await removeOrphanedWorkDirs(paths);
 
   for (const id of ids) {
     const video = await readVideo(paths, id);
@@ -33,9 +34,20 @@ export async function deepCheck(paths: KinetoPaths, storage: StorageBackend): Pr
           level: "error",
           code: "ASSET_CORRUPT",
           message: `videos/${id} asset "${alias}": stored content hashes to ${actual}, expected ${record.id}`,
-          hint: "The stored copy was modified. Re-run `kineto asset add` with the original file to repair it.",
+          hint: "The stored copy was modified. Re-run `./kineto asset add` with the original file to repair it.",
         });
       }
+    }
+
+    // 悬空引用已由静态 check 报 ASSET_NOT_FOUND；这条视频没法加载，跳过而不是让整份报告作废
+    const dangling = Object.entries(video.assets).filter(([, assetId]) => !manifest.has(assetId));
+    if (dangling.length > 0) {
+      problems.push({
+        level: "warn",
+        code: "DEEP_CHECK_SKIPPED",
+        message: `videos/${id} not loaded: it references unregistered assets (${dangling.map(([a]) => a).join(", ")})`,
+      });
+      continue;
     }
 
     const workDir = path.join(paths.tmpDir, `check-${process.pid}-${id}`);
@@ -69,12 +81,12 @@ export async function deepCheck(paths: KinetoPaths, storage: StorageBackend): Pr
         }
       }
     } catch (err) {
-      if (err instanceof KinetoError && err.code !== "STORAGE_OBJECT_MISSING") throw err;
+      // 一条视频加载失败只记一条问题，其它视频照查，报告完整返回
       problems.push({
         level: "error",
         code: "VIDEO_LOAD_FAILED",
         message: `videos/${id} failed to bundle or load: ${(err as Error).message.split("\n")[0]}`,
-        hint: `Open it with \`kineto studio ${id}\` to see the full error.`,
+        hint: `Open it with \`./kineto studio ${id}\` to see the full error.`,
       });
     } finally {
       if (serveUrl) await rm(serveUrl, { recursive: true, force: true });

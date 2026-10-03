@@ -1,19 +1,70 @@
-// 静态扫描 compositions.tsx 里登记的 composition id（不执行代码，CI 里也能跑）。
-// 官方 skill 要求 id 写成 JSX 字符串字面量，所以字面量扫描是可靠的；非字面量返回 null 交给 check 报错。
+// 静态扫描 composition 登记（不执行代码，CI 里没有素材二进制时也能跑）。
+// 用 TypeScript 的语法树而不是正则：注释交给词法分析器处理（字符串里的 /* 骗不过它），
+// import 别名（Composition as C）与命名空间写法（R.Composition）都能认出；
+// 展开属性、非字面量 id 无法静态确定归属，一律报出来——官方 skill 也要求 id 写成字符串字面量。
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import ts from "typescript";
 import { videoDir, type KinetoPaths } from "../paths.ts";
 
 export const COMPOSITIONS_FILE = "compositions.tsx";
 
-// 先剔除注释：注释里写到 <Composition> / id= 是说明，不是登记（粗粒度，字符串里的 // 可能误伤，漏网的由 check --deep 兜底）
-const stripComments = (source: string) => source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'`])\/\/.*$/gm, "$1");
+const TAGS = new Set(["Composition", "Still"]);
 
-export function scanCompositionIds(source: string): (string | null)[] {
-  return [...stripComments(source).matchAll(/\bid\s*=\s*(?:"([^"]*)"|'([^']*)'|\{)/g)].map((m) => m[1] ?? m[2] ?? null);
+export type RegistrationProblem = "spread" | "non-literal" | "missing";
+
+export interface Registration {
+  id: string | null;
+  problem?: RegistrationProblem;
 }
 
-export const registersComposition = (source: string): boolean => /<(Composition|Still)\b/.test(stripComments(source));
+export function scanRegistrations(source: string, fileName: string): Registration[] {
+  // .ts 里写不了 JSX；.js/.jsx/.mjs/.cjs 按 JSX 解析——Remotion 的打包器对 .js 也开了 JSX
+  const kind = fileName.endsWith(".tsx")
+    ? ts.ScriptKind.TSX
+    : /\.(jsx|js|mjs|cjs)$/.test(fileName)
+      ? ts.ScriptKind.JSX
+      : ts.ScriptKind.TS;
+  const file = ts.createSourceFile(fileName, source, ts.ScriptTarget.Latest, false, kind);
+
+  const names = new Set(TAGS);
+  for (const statement of file.statements) {
+    if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) continue;
+    if (statement.moduleSpecifier.text !== "remotion") continue;
+    const bindings = statement.importClause?.namedBindings;
+    if (bindings && ts.isNamedImports(bindings)) {
+      for (const el of bindings.elements) {
+        if (TAGS.has((el.propertyName ?? el.name).text)) names.add(el.name.text);
+      }
+    }
+  }
+
+  const isRegistrationTag = (tag: ts.JsxTagNameExpression) =>
+    ts.isIdentifier(tag) ? names.has(tag.text) : ts.isPropertyAccessExpression(tag) && TAGS.has(tag.name.text);
+
+  const found: Registration[] = [];
+  const visit = (node: ts.Node): void => {
+    if ((ts.isJsxSelfClosingElement(node) || ts.isJsxOpeningElement(node)) && isRegistrationTag(node.tagName)) {
+      found.push(inspect(node.attributes));
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(file);
+  return found;
+}
+
+function inspect(attributes: ts.JsxAttributes): Registration {
+  if (attributes.properties.some(ts.isJsxSpreadAttribute)) return { id: null, problem: "spread" };
+  const idAttr = attributes.properties.find(
+    (p): p is ts.JsxAttribute => ts.isJsxAttribute(p) && ts.isIdentifier(p.name) && p.name.text === "id",
+  );
+  if (!idAttr) return { id: null, problem: "missing" };
+  if (idAttr.initializer && ts.isStringLiteral(idAttr.initializer)) return { id: idAttr.initializer.text };
+  return { id: null, problem: "non-literal" };
+}
+
+export const registersComposition = (source: string, fileName: string): boolean =>
+  scanRegistrations(source, fileName).length > 0;
 
 // composition id 归属哪条视频：取最长的匹配视频 id。
 // 视频 w 与 w-x 同时存在时，w-x-intro 属于 w-x——w 不能注册它，也不能渲染它。
@@ -24,5 +75,6 @@ export function compositionOwner(compositionId: string, videoIds: string[]): str
 }
 
 export async function readCompositionIds(paths: KinetoPaths, id: string): Promise<(string | null)[]> {
-  return scanCompositionIds(await readFile(path.join(videoDir(paths, id), COMPOSITIONS_FILE), "utf8"));
+  const file = path.join(videoDir(paths, id), COMPOSITIONS_FILE);
+  return scanRegistrations(await readFile(file, "utf8"), file).map((r) => r.id);
 }

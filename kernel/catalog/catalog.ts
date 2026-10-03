@@ -27,7 +27,7 @@ export async function readVideo(paths: KinetoPaths, id: string): Promise<VideoMa
   } catch (err) {
     if (isNodeError(err, "ENOENT")) {
       throw new KinetoError("VIDEO_NOT_FOUND", `Video "${id}" does not exist`, {
-        hint: "Run `kineto list` to see existing videos, or `kineto new` to create one.",
+        hint: "Run `./kineto list` to see existing videos, or `./kineto new` to create one.",
       });
     }
     throw err;
@@ -41,7 +41,7 @@ export async function readVideo(paths: KinetoPaths, id: string): Promise<VideoMa
   const parsed = VideoManifest.safeParse(json);
   if (!parsed.success) {
     throw new KinetoError("VIDEO_INVALID", `videos/${id}/${MANIFEST_FILE}: ${z.prettifyError(parsed.error)}`, {
-      hint: "video.json is managed by the kineto CLI; restore it with git and change it via `kineto update`.",
+      hint: "video.json is managed by the kineto CLI; restore it with git and change it via `./kineto update`.",
     });
   }
   if (parsed.data.id !== id) {

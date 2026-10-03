@@ -60,7 +60,7 @@ export async function readManifest(paths: KinetoPaths): Promise<Map<string, Asse
 
 const manifestError = (line: number, why: string) =>
   new KinetoError("MANIFEST_INVALID", `assets/manifest.jsonl line ${line}: ${why}`, {
-    hint: "The manifest is append-only and written by `kineto asset add`; restore it with git.",
+    hint: "The manifest is append-only and written by `./kineto asset add`; restore it with git.",
   });
 
 export interface IngestInput {
@@ -143,7 +143,11 @@ function assertCompatible(existing: AssetRecord | undefined, license: string, ex
     throw new KinetoError(
       "ASSET_LICENSE_CONFLICT",
       `This exact file is already registered as ${existing.id} under license "${existing.license}", not "${license}"`,
-      { hint: `To use it in another video: kineto asset link ${existing.id} --to <video> --as <alias>` },
+      {
+        hint:
+          `To use it in another video: ./kineto asset link ${existing.id} --to <video> --as <alias>. ` +
+          `To correct the recorded license: ./kineto asset update ${existing.id} --license <license>`,
+      },
     );
   }
   if (existing.ext !== ext) {
@@ -151,6 +155,32 @@ function assertCompatible(existing: AssetRecord | undefined, license: string, ex
       hint: `Rename the file to ${existing.ext}, or reuse it with: kineto asset link ${existing.id} --to <video> --as <alias>`,
     });
   }
+}
+
+export interface AssetPatch {
+  license?: string;
+  author?: string;
+  sourceUrl?: string;
+  description?: string;
+}
+
+// 显式修正已登记素材的元数据（例如许可证登错了）：追加一行新记录，后写者生效，历史留在 manifest 里
+export async function updateAsset(paths: KinetoPaths, id: string, patch: AssetPatch): Promise<AssetRecord> {
+  return withRepoLock(paths, async () => {
+    const existing = (await readManifest(paths)).get(id);
+    if (!existing) {
+      throw new KinetoError("ASSET_NOT_FOUND", `No asset ${id} in the library`, {
+        hint: "Run `./kineto asset list` for ids.",
+      });
+    }
+    const given = Object.fromEntries(
+      Object.entries({ ...patch, license: patch.license?.trim() }).filter(([, v]) => v !== undefined),
+    );
+    const record = AssetRecord.parse({ ...existing, ...given });
+    if (sameMetadata(existing, record)) return existing;
+    await appendJsonLine(paths.assetsManifest, record);
+    return record;
+  });
 }
 
 const sameMetadata = (a: AssetRecord, b: AssetRecord) => {

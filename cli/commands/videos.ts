@@ -47,8 +47,8 @@ export const newCommand = defineCommand({
       files,
       next: [
         `Write the video in videos/${video.id}/ (Video.tsx timeline, scenes/, compositions.tsx registrations)`,
-        "Preview with `kineto studio`",
-        `Render with \`kineto render ${video.id}\``,
+        `Preview with \`./kineto studio ${video.id}\``,
+        `Render with \`./kineto render ${video.id}\``,
       ],
     };
   },
@@ -89,7 +89,7 @@ export const listCommand = defineCommand({
   },
   human: (d) =>
     d.videos.length === 0
-      ? "No videos yet. Create one with `kineto new <id> --title <text>`."
+      ? "No videos yet. Create one with `./kineto new <id> --title <text>`."
       : d.videos.map((v) => `${v.id.padEnd(24)} ${v.status.padEnd(9)} renders:${v.renders}  ${v.title}`).join("\n"),
 });
 

@@ -23,12 +23,12 @@ export const syncCommand = defineCommand({
     d.check
       ? d.drift.length === 0
         ? "Generated files are up to date."
-        : `Out of date: ${d.drift.join(", ")}\nRun \`kineto sync\`.`
+        : `Out of date: ${d.drift.join(", ")}\nRun \`./kineto sync\`.`
       : [
           d.written.length ? `Wrote ${d.written.join(", ")}` : "Generated files already up to date.",
           `Staged ${d.staged} asset(s).`,
           ...d.missing.map((m) => `warning: ${m.video}/${m.alias} is not in storage (${m.key})`),
-          ...d.unresolved.map((u) => `warning: ${u.video}/${u.alias} references unknown asset ${u.asset} (run \`kineto check\`)`),
+          ...d.unresolved.map((u) => `warning: ${u.video}/${u.alias} references unknown asset ${u.asset} (run \`./kineto check\`)`),
         ].join("\n"),
 });
 

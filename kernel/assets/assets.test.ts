@@ -177,3 +177,21 @@ test("已存在对象被同尺寸篡改：再次登记时按 sha256 发现并修
     await fx.cleanup();
   }
 });
+
+test("updateAsset 显式修正许可证等元数据：追加一行，后写者生效；未知 id 报 ASSET_NOT_FOUND", async () => {
+  const fx = await makeRepo();
+  try {
+    const { updateAsset } = await import("./assets.ts");
+    const store = new LocalStorage(path.join(fx.root, ".kineto/store"));
+    const file = path.join(fx.root, "a.png");
+    await writeFile(file, "hello");
+    const rec = await ingestAsset(fx.paths, store, { source: file, license: "CC0-1.0", author: "Al" });
+    const fixed = await updateAsset(fx.paths, rec.id, { license: "CC-BY-4.0" });
+    assert.equal(fixed.license, "CC-BY-4.0");
+    assert.equal(fixed.author, "Al");
+    assert.equal((await readManifest(fx.paths)).get(rec.id)?.license, "CC-BY-4.0");
+    await assert.rejects(updateAsset(fx.paths, "sha256:" + "e".repeat(64), { license: "MIT" }), { code: "ASSET_NOT_FOUND" });
+  } finally {
+    await fx.cleanup();
+  }
+});

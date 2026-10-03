@@ -1,7 +1,7 @@
 import { assertAliasAvailable, linkAsset, readVideo } from "../../kernel/catalog/catalog.ts";
 import { KinetoError } from "../../kernel/errors.ts";
 import { withRepoLock } from "../../kernel/lock.ts";
-import { ingestAsset, readManifest } from "../../kernel/assets/assets.ts";
+import { ingestAsset, readManifest, updateAsset } from "../../kernel/assets/assets.ts";
 import { syncAll } from "../../kernel/sync/sync.ts";
 import { defineCommand, str, UsageError } from "../command.ts";
 
@@ -56,7 +56,7 @@ export const assetAddCommand = defineCommand({
 export const assetLinkCommand = defineCommand({
   name: "asset link",
   summary: "Link an already registered asset to a video (no re-upload, metadata untouched)",
-  args: [{ name: "asset-id", description: "sha256:… id from `kineto asset list`" }],
+  args: [{ name: "asset-id", description: "sha256:… id from `./kineto asset list`" }],
   options: {
     to: { type: "string", required: true, value: "video", description: "Video to link the asset to" },
     as: { type: "string", required: true, value: "alias", description: "camelCase alias, becomes assets.<alias> in code" },
@@ -70,7 +70,7 @@ export const assetLinkCommand = defineCommand({
     const asset = (await readManifest(ctx.paths)).get(assetId);
     if (!asset) {
       throw new KinetoError("ASSET_NOT_FOUND", `No asset ${assetId} in the library`, {
-        hint: "Run `kineto asset list` for ids, or register the file with `kineto asset add`.",
+        hint: "Run `./kineto asset list` for ids, or register the file with `./kineto asset add`.",
       });
     }
     await linkAsset(ctx.paths, to, alias, asset.id);
@@ -78,6 +78,31 @@ export const assetLinkCommand = defineCommand({
     return { asset, linked: { video: to, alias, staticFile: `${to}/${alias}${asset.ext}` } };
   },
   human: (d) => `Linked ${d.asset.id} to ${d.linked.video} as "${d.linked.alias}": staticFile(assets.${d.linked.alias})`,
+});
+
+export const assetUpdateCommand = defineCommand({
+  name: "asset update",
+  summary: "Correct a registered asset's license, author, source or description (appends a new record)",
+  args: [{ name: "asset-id", description: "sha256:… id from `./kineto asset list`" }],
+  options: {
+    license: { type: "string", value: "license", description: "Corrected license" },
+    author: { type: "string", value: "name", description: "Corrected creator / copyright holder" },
+    "source-url": { type: "string", value: "url", description: "Corrected source URL" },
+    description: { type: "string", value: "text", description: "Corrected description" },
+  },
+  async run(ctx, { args, flags }) {
+    const patch = {
+      license: str(flags, "license"),
+      author: str(flags, "author"),
+      sourceUrl: str(flags, "source-url"),
+      description: str(flags, "description"),
+    };
+    if (Object.values(patch).every((v) => v === undefined)) {
+      throw new UsageError("Nothing to update", "Pass at least one of --license, --author, --source-url, --description.");
+    }
+    return { asset: await updateAsset(ctx.paths, args[0]!, patch) };
+  },
+  human: (d) => `Updated ${d.asset.id}: ${d.asset.license}${d.asset.author ? `, by ${d.asset.author}` : ""}`,
 });
 
 export const assetListCommand = defineCommand({

@@ -84,14 +84,14 @@ export const doctorCommand = defineCommand({
     const skillVersion = skill?.match(/^version:\s*(\S+)/m)?.[1];
     add(
       !skill
-        ? { name: "remotion-skills", status: "warn", detail: "not installed", hint: "Run `kineto setup`." }
+        ? { name: "remotion-skills", status: "warn", detail: "not installed", hint: "Run `./kineto setup`." }
         : skillVersion === wanted
           ? { name: "remotion-skills", status: "ok", detail: `v${skillVersion}` }
           : {
               name: "remotion-skills",
               status: "warn",
               detail: `skills v${skillVersion ?? "?"} vs remotion ${wanted}`,
-              hint: "Run `kineto setup --update` so the agent skills match the Remotion version.",
+              hint: "Run `./kineto setup --update` so the agent skills match the Remotion version.",
             },
     );
 
@@ -99,12 +99,12 @@ export const doctorCommand = defineCommand({
       const { drift } = await syncAll(ctx.paths, await ctx.storage(), { check: true });
       add(
         drift.length
-          ? { name: "generated-files", status: "warn", detail: drift.join(", "), hint: "Run `kineto sync`." }
+          ? { name: "generated-files", status: "warn", detail: drift.join(", "), hint: "Run `./kineto sync`." }
           : { name: "generated-files", status: "ok", detail: "up to date" },
       );
     } catch (err) {
       if (!(err instanceof KinetoError)) throw err;
-      add({ name: "generated-files", status: "fail", detail: err.message, hint: err.hint ?? "Run `kineto check`." });
+      add({ name: "generated-files", status: "fail", detail: err.message, hint: err.hint ?? "Run `./kineto check`." });
     }
 
     // hint 只给需要处理的项，ok 项带 hint 对 agent 是噪音
@@ -153,7 +153,7 @@ function runSkills(ctx: Context, sub: "add" | "update"): Promise<void> {
       code === 0
         ? resolve()
         : reject(new KinetoError("SKILLS_INSTALL_FAILED", `\`remotion skills ${sub}\` exited with code ${code}`, {
-            hint: "Check network access to github.com, then retry `kineto setup`.",
+            hint: "Check network access to github.com, then retry `./kineto setup`.",
           })),
     );
   });

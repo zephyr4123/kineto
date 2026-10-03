@@ -29,7 +29,7 @@ export const Compositions: React.FC = () => (
 
 const codes = (r: { problems: { code: string }[] }) => r.problems.map((p) => p.code).sort();
 
-test("check --deep 报出运行时才能看到的越界 composition id 与同尺寸篡改的素材；静态 check 看不到", async () => {
+test("展开写法：静态 check 报无法确认归属，deep 按运行时确认越界；同尺寸篡改只有 deep 能按哈希发现", async () => {
   const fx = await makeRepo();
   try {
     await symlink(path.join(REPO, "node_modules"), path.join(fx.root, "node_modules"));
@@ -47,8 +47,27 @@ test("check --deep 报出运行时才能看到的越界 composition id 与同尺
     await writeFile(stored, "HELLO");
     assert.equal(await readFile(stored, "utf8"), "HELLO");
 
-    assert.deepEqual(codes(await checkRepo(fx.paths, store)), []);
-    assert.deepEqual(codes(await checkRepo(fx.paths, store, { deep: true })), ["ASSET_CORRUPT", "COMPOSITION_ID_PREFIX"]);
+    assert.deepEqual(codes(await checkRepo(fx.paths, store)), ["COMPOSITION_ID_NOT_LITERAL"]);
+    assert.deepEqual(codes(await checkRepo(fx.paths, store, { deep: true })), [
+      "ASSET_CORRUPT",
+      "COMPOSITION_ID_NOT_LITERAL",
+      "COMPOSITION_ID_PREFIX",
+    ]);
+  } finally {
+    await fx.cleanup();
+  }
+});
+
+test("check --deep 遇到悬空素材引用不丢整份报告：静态报 ASSET_NOT_FOUND，deep 对该视频给出跳过警告", async () => {
+  const fx = await makeRepo();
+  try {
+    const store = new LocalStorage(path.join(fx.root, ".kineto/store"));
+    await createVideo(fx.paths, { id: "d", title: "D" });
+    await linkAsset(fx.paths, "d", "ghost", "sha256:" + "0".repeat(64));
+    await syncAll(fx.paths, store);
+    const report = await checkRepo(fx.paths, store, { deep: true });
+    assert.equal(report.ok, false);
+    assert.deepEqual(codes(report), ["ASSET_NOT_FOUND", "DEEP_CHECK_SKIPPED"]);
   } finally {
     await fx.cleanup();
   }

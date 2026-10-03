@@ -3,7 +3,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { listVideoIds, readVideo } from "../catalog/catalog.ts";
-import { compositionOwner, COMPOSITIONS_FILE, registersComposition, scanCompositionIds } from "../catalog/compositions.ts";
+import { compositionOwner, COMPOSITIONS_FILE, registersComposition, scanRegistrations } from "../catalog/compositions.ts";
 import type { VideoManifest } from "../catalog/schema.ts";
 import { isNodeError, KinetoError } from "../errors.ts";
 import { videoDir, type KinetoPaths } from "../paths.ts";
@@ -88,7 +88,7 @@ export async function checkRepo(
           level: "error",
           code: "ASSET_NOT_FOUND",
           message: `videos/${video.id} references unknown asset ${assetId} as "${alias}"`,
-          hint: "Register the file with `kineto asset add`.",
+          hint: "Register the file with `./kineto asset add`.",
         });
       } else {
         const size = await storage.size(assetStorageKey(record));
@@ -105,7 +105,7 @@ export async function checkRepo(
             level: "error",
             code: "ASSET_CORRUPT",
             message: `videos/${video.id} asset "${alias}" is ${size} bytes in storage but ${record.bytes} in the manifest`,
-            hint: "The stored copy was modified. Re-run `kineto asset add` with the original file to repair it.",
+            hint: "The stored copy was modified. Re-run `./kineto asset add` with the original file to repair it.",
           });
         }
       }
@@ -121,7 +121,7 @@ export async function checkRepo(
         level: "error",
         code: "GENERATED_OUT_OF_DATE",
         message: `Generated files are out of date: ${drift.join(", ")}`,
-        hint: "Run `kineto sync` and commit the result. Never edit *.gen.* files by hand.",
+        hint: "Run `./kineto sync` and commit the result. Never edit *.gen.* files by hand.",
       });
     }
   }
@@ -165,13 +165,14 @@ async function checkCompositions(
     ];
   }
 
-  for (const literal of scanCompositionIds(source)) {
+  const why = { spread: "uses spread props", "non-literal": "has a non-literal id", missing: "has no id" } as const;
+  for (const { id: literal, problem } of scanRegistrations(source, path.join(dir, COMPOSITIONS_FILE))) {
     if (literal === null) {
       problems.push({
         level: "error",
         code: "COMPOSITION_ID_NOT_LITERAL",
-        message: `videos/${id}/${COMPOSITIONS_FILE}: composition id must be a string literal`,
-        hint: `Write id="${id}-scene" directly on the JSX node so Studio can edit it.`,
+        message: `videos/${id}/${COMPOSITIONS_FILE}: a composition ${why[problem ?? "non-literal"]}; its owner cannot be verified`,
+        hint: `Write id="${id}-scene" as a string literal directly on the JSX node, with no {...spread}, so Studio can edit it.`,
       });
       continue;
     }
@@ -216,7 +217,7 @@ async function strayRegistrations(paths: KinetoPaths, videoIds: string[]): Promi
       if (entry.isDirectory()) {
         if (!(dir === paths.root && SKIP_DIRS.has(entry.name))) await walk(full);
       } else if (entry.isFile() && SOURCE_RE.test(entry.name) && !allowed.has(full)) {
-        if (registersComposition(await readFile(full, "utf8"))) {
+        if (registersComposition(await readFile(full, "utf8"), full)) {
           problems.push({
             level: "error",
             code: "COMPOSITION_OUTSIDE_REGISTRY",

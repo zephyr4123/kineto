@@ -52,12 +52,13 @@ so running several at once is safe.
 ## Rules
 
 1. **New videos only via `./kineto new`.** Never run `create-video` or scaffold a new Remotion project. This repo is the project.
-2. **Composition ids** are JSX string literals equal to `<id>` or starting with `<id>-` (e.g. `corner-hit-intro`),
-   and `<Composition>` / `<Still>` appear **only** in `videos/<id>/compositions.tsx`.
+2. **Composition ids** are JSX string literals equal to `<id>` or starting with `<id>-` (e.g. `corner-hit-intro`) —
+   no `{...spread}`, no computed ids — and `<Composition>` / `<Still>` appear **only** in `videos/<id>/compositions.tsx`.
 3. **Media only via `./kineto asset add`, always with `--license`.** Then use it as `staticFile(assets.<alias>)`
    with `import { assets } from "./assets.gen"`. Do not put files in a `public/` folder or import binaries.
    No license, unknown provenance → it does not go in. Prefer generating media yourself (record how in `--description`).
    To reuse an asset in another video, `./kineto asset link <asset-id> --to <id> --as <alias>` (ids: `./kineto asset list`).
+   To correct a recorded license or author, `./kineto asset update <asset-id> --license <license>` — never edit the manifest.
 4. **Export via `./kineto render`, not `npx remotion render`.** Only `./kineto render` stores the file and records
    the render (git sha, codec, Remotion version) in `renders.jsonl`.
 5. **Remotion packages share one exact version** (see `package.json`). Add new ones with

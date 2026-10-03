@@ -12,9 +12,9 @@ import { videoDir, type KinetoPaths } from "../paths.ts";
 import { assetStorageKey, readManifest, type AssetRecord } from "../assets/assets.ts";
 import type { StorageBackend } from "../storage/types.ts";
 
-const REGISTRY_HEADER = "// 由 `kineto sync` 生成，勿手改。新增视频请用 `kineto new`。\n";
+const REGISTRY_HEADER = "// 由 `./kineto sync` 生成，勿手改。新增视频请用 `./kineto new`。\n";
 const ASSETS_HEADER =
-  "// 由 `kineto sync` 生成，勿手改。素材用 `kineto asset add <file> --to <video> --as <alias>` 登记。\n" +
+  "// 由 `./kineto sync` 生成，勿手改。素材用 `./kineto asset add <file> --to <video> --as <alias>` 登记。\n" +
   "// 用法：<Img src={staticFile(assets.logo)} />\n";
 
 const componentName = (id: string) => `V_${id.replaceAll("-", "_")}`;
@@ -156,7 +156,7 @@ async function resolveStrict(paths: KinetoPaths, video: VideoManifest) {
   const first = dangling[0];
   if (first) {
     throw new KinetoError("ASSET_NOT_FOUND", `videos/${video.id} references unknown asset ${first.asset} as "${first.alias}"`, {
-      hint: "Register the file with `kineto asset add` first; it links the alias for you with --to/--as.",
+      hint: "Register the file with `./kineto asset add` first; it links the alias for you with --to/--as.",
     });
   }
   return assets;

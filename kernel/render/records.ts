@@ -55,7 +55,7 @@ export async function readRenders(paths: KinetoPaths, id: string): Promise<Rende
 
 const rendersError = (id: string, line: number, why: string) =>
   new KinetoError("RENDERS_INVALID", `videos/${id}/renders.jsonl line ${line}: ${why}`, {
-    hint: "renders.jsonl is append-only and written by `kineto render`; restore it with git.",
+    hint: "renders.jsonl is append-only and written by `./kineto render`; restore it with git.",
   });
 
 export async function appendRender(paths: KinetoPaths, id: string, record: RenderRecord): Promise<void> {

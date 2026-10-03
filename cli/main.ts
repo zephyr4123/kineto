@@ -22,7 +22,7 @@ async function main(argv: string[]): Promise<number> {
   const json = argv.includes("--json") || !process.stdout.isTTY;
   const interactive = !json && process.stderr.isTTY;
   try {
-    // 命令前只允许全局开关；其它参数放在命令前会被静默忽略（例如 `kineto --check sync` 会真的去写），所以直接报错
+    // 命令前只允许全局开关；其它参数放在命令前会被静默忽略（例如 `./kineto --check sync` 会真的去写），所以直接报错
     const first = argv.findIndex((a) => !a.startsWith("-"));
     const leading = first === -1 ? argv : argv.slice(0, first);
     const misplaced = leading.find((a) => !["--json", "--help", "-h"].includes(a));
@@ -36,7 +36,7 @@ async function main(argv: string[]): Promise<number> {
     }
     const resolved = resolve(words);
     if (!resolved) {
-      throw new UsageError(`Unknown command "${words[0]}"`, "Run `kineto help` to list commands.");
+      throw new UsageError(`Unknown command "${words[0]}"`, "Run `./kineto help` to list commands.");
     }
     const { spec } = resolved;
     if (argv.includes("--help") || argv.includes("-h")) return print(json, "help", commandHelp(spec));
@@ -75,17 +75,17 @@ function parse(spec: CommandSpec<any>, tokens: string[]): { args: string[]; flag
   try {
     parsed = parseArgs({ args: tokens, options, allowPositionals: true, strict: true });
   } catch (err) {
-    throw new UsageError((err as Error).message, `Run \`kineto ${spec.name} --help\`.`);
+    throw new UsageError((err as Error).message, `Run \`./kineto ${spec.name} --help\`.`);
   }
   const argSpecs = spec.args ?? [];
   const required = argSpecs.filter((a) => !a.optional).length;
   if (parsed.positionals.length < required || parsed.positionals.length > argSpecs.length) {
     const expected = argSpecs.map((a) => (a.optional ? `[${a.name}]` : `<${a.name}>`)).join(" ") || "no arguments";
-    throw new UsageError(`kineto ${spec.name} expects ${expected}`, `Run \`kineto ${spec.name} --help\`.`);
+    throw new UsageError(`./kineto ${spec.name} expects ${expected}`, `Run \`./kineto ${spec.name} --help\`.`);
   }
   for (const [name, o] of Object.entries(spec.options ?? {})) {
     if (o.required && parsed.values[name] === undefined) {
-      throw new UsageError(`Missing required option --${name}`, `Run \`kineto ${spec.name} --help\`.`);
+      throw new UsageError(`Missing required option --${name}`, `Run \`./kineto ${spec.name} --help\`.`);
     }
   }
   return { args: parsed.positionals, flags: parsed.values as Flags };
@@ -134,7 +134,7 @@ function formatHelp(help: ReturnType<typeof globalHelp> | ReturnType<typeof comm
     return (
       `Usage: ${help.usage}\n\nCommands:\n` +
       help.commands.map((c) => `  ${c.name.padEnd(width)}  ${c.summary}`).join("\n") +
-      `\n\nRun \`kineto <command> --help\` for details. Output is JSON when piped; exit codes: 0 ok, 1 error, 2 usage.\n`
+      `\n\nRun \`./kineto <command> --help\` for details. Output is JSON when piped; exit codes: 0 ok, 1 error, 2 usage.\n`
     );
   }
   const lines = [`${help.summary}\n`, `Usage: ${help.usage}\n`];

@@ -160,3 +160,14 @@ test("check 报出手改出来的大小写冲突别名，以及仓库任意位�
     await fx.cleanup();
   }
 });
+
+test("compositions.tsx 里用展开属性登记时静态 check 直接报错（CI 上 deep 可能因缺素材跳过）", async () => {
+  const { fx, store } = await cleanRepo();
+  try {
+    const file = path.join(fx.root, "videos/demo/compositions.tsx");
+    await writeFile(file, (await readFile(file, "utf8")).replace('id="demo"', "{...extra}"));
+    assert.deepEqual(codes(await checkRepo(fx.paths, store)), ["COMPOSITION_ID_NOT_LITERAL"]);
+  } finally {
+    await fx.cleanup();
+  }
+});

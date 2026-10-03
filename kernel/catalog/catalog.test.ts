@@ -142,3 +142,21 @@ test("new 不能抢占已有 composition 的命名空间：w 已注册 w-x-title
     await fx.cleanup();
   }
 });
+
+test("namespace 检查按语法树扫描：字符串里的 /* 骗不过它", async () => {
+  const fx = await makeRepo();
+  try {
+    await createVideo(fx.paths, { id: "vid-a", title: "A" });
+    const file = path.join(fx.root, "videos/vid-a/compositions.tsx");
+    await writeFile(
+      file,
+      (await readFile(file, "utf8")).replace(
+        'id="vid-a"',
+        'id="vid-a" defaultProps={{ f: "frames/*.png" }} /><Composition id="vid-a-x-title" component={Video} durationInFrames={1} fps={30} width={10} height={10} />{/* x */}<Composition id="vid-a-spare"',
+      ),
+    );
+    await assert.rejects(createVideo(fx.paths, { id: "vid-a-x", title: "X" }), { code: "NAMESPACE_TAKEN" });
+  } finally {
+    await fx.cleanup();
+  }
+});

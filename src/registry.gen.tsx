@@ -1,4 +1,4 @@
-// 由 `kineto sync` 生成，勿手改。新增视频请用 `kineto new`。
+// 由 `./kineto sync` 生成，勿手改。新增视频请用 `./kineto new`。
 import { Folder } from "remotion";
 import { Compositions as V_corner_hit } from "../videos/corner-hit/compositions";
 
