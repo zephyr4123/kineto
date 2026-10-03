@@ -52,12 +52,20 @@ export interface MissingAsset {
   key: string;
 }
 
+export interface UnresolvedAsset {
+  video: string;
+  alias: string;
+  asset: string;
+}
+
 export interface SyncResult {
   // 内容需要更新的生成文件（check 模式下即漂移清单），相对仓库根
   drift: string[];
   written: string[];
   staged: number;
   missing: MissingAsset[];
+  // 引用了 manifest 里没有的素材：不让一条视频的问题拖垮全库 sync，交给 check 报错
+  unresolved: UnresolvedAsset[];
 }
 
 export async function syncAll(
@@ -66,8 +74,13 @@ export async function syncAll(
   options: { check?: boolean } = {},
 ): Promise<SyncResult> {
   const [videos, manifest] = await Promise.all([listVideos(paths), readManifest(paths)]);
-  // check 模式下跳过解析不了的素材引用（由 checkRepo 单独报 ASSET_NOT_FOUND），其余漂移照查
-  const resolved = videos.map((v) => ({ video: v, assets: resolveAssets(v, manifest, !options.check) }));
+  // 解析不了的素材引用不中断全库 sync：记入 unresolved，由 checkRepo 报 ASSET_NOT_FOUND
+  const unresolved: UnresolvedAsset[] = [];
+  const resolved = videos.map((v) => {
+    const { assets, dangling } = resolveAssets(v, manifest);
+    unresolved.push(...dangling);
+    return { video: v, assets };
+  });
 
   const expected = new Map<string, string>([
     [paths.registryFile, renderRegistry(videos.map((v) => v.id))],
@@ -87,7 +100,7 @@ export async function syncAll(
   for (const [file, content] of expected) {
     if ((await readOrNull(file)) !== content) drift.push(path.relative(paths.root, file));
   }
-  if (options.check) return { drift, written: [], staged: 0, missing: [] };
+  if (options.check) return { drift, written: [], staged: 0, missing: [], unresolved };
 
   for (const rel of drift) await writeFile(path.join(paths.root, rel), expected.get(path.join(paths.root, rel))!);
 
@@ -101,7 +114,7 @@ export async function syncAll(
     staged += result.staged;
     missing.push(...result.missing);
   }
-  return { drift, written: drift, staged, missing };
+  return { drift, written: drift, staged, missing, unresolved };
 }
 
 export const assetsModuleFile = (paths: KinetoPaths, id: string) => path.join(videoDir(paths, id), "assets.gen.ts");
@@ -114,7 +127,7 @@ export async function syncVideo(
   video: VideoManifest,
   publicDir: string,
 ): Promise<{ written: boolean; staged: number; missing: MissingAsset[] }> {
-  const assets = resolveAssets(video, await readManifest(paths), true);
+  const assets = await resolveStrict(paths, video);
   const file = assetsModuleFile(paths, video.id);
   const content = renderAssetsModule(
     video.id,
@@ -122,8 +135,31 @@ export async function syncVideo(
   );
   const written = (await readOrNull(file)) !== content;
   if (written) await writeFile(file, content);
+  return { written, ...(await stageVideoAssets(paths, storage, video, publicDir, assets)) };
+}
+
+// 只把这条视频的素材暂存进 publicDir/<id>/，不写任何受控文件（check --deep 用它，保持只读）
+export async function stageVideoAssets(
+  paths: KinetoPaths,
+  storage: StorageBackend,
+  video: VideoManifest,
+  publicDir: string,
+  resolved?: { alias: string; record: AssetRecord }[],
+): Promise<{ staged: number; missing: MissingAsset[] }> {
+  const assets = resolved ?? (await resolveStrict(paths, video));
   await rm(path.join(publicDir, video.id), { recursive: true, force: true });
-  return { written, ...(await stageAssets(storage, video.id, assets, publicDir)) };
+  return stageAssets(storage, video.id, assets, publicDir);
+}
+
+async function resolveStrict(paths: KinetoPaths, video: VideoManifest) {
+  const { assets, dangling } = resolveAssets(video, await readManifest(paths));
+  const first = dangling[0];
+  if (first) {
+    throw new KinetoError("ASSET_NOT_FOUND", `videos/${video.id} references unknown asset ${first.asset} as "${first.alias}"`, {
+      hint: "Register the file with `kineto asset add` first; it links the alias for you with --to/--as.",
+    });
+  }
+  return assets;
 }
 
 async function stageAssets(
@@ -154,19 +190,15 @@ async function stageAssets(
   return { staged, missing };
 }
 
-function resolveAssets(video: VideoManifest, manifest: Map<string, AssetRecord>, strict: boolean) {
-  const out: { alias: string; record: AssetRecord }[] = [];
+function resolveAssets(video: VideoManifest, manifest: Map<string, AssetRecord>) {
+  const assets: { alias: string; record: AssetRecord }[] = [];
+  const dangling: UnresolvedAsset[] = [];
   for (const [alias, id] of Object.entries(video.assets).sort(([a], [b]) => a.localeCompare(b))) {
     const record = manifest.get(id);
-    if (record) {
-      out.push({ alias, record });
-    } else if (strict) {
-      throw new KinetoError("ASSET_NOT_FOUND", `videos/${video.id} references unknown asset ${id} as "${alias}"`, {
-        hint: "Register the file with `kineto asset add` first; it links the alias for you with --to/--as.",
-      });
-    }
+    if (record) assets.push({ alias, record });
+    else dangling.push({ video: video.id, alias, asset: id });
   }
-  return out;
+  return { assets, dangling };
 }
 
 // 硬链接不额外占磁盘；存储目录配到了另一个卷（EXDEV）或文件系统不支持时退回复制

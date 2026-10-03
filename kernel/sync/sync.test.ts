@@ -6,7 +6,7 @@ import { makeRepo } from "../testing/fixture.ts";
 import { LocalStorage } from "../storage/local.ts";
 import { createVideo, linkAsset } from "../catalog/catalog.ts";
 import { assetStorageKey, ingestAsset } from "../assets/assets.ts";
-import { renderAssetsModule, renderRegistry, syncAll } from "./sync.ts";
+import { renderAssetsModule, renderRegistry, syncAll, syncVideo } from "./sync.ts";
 
 test("renderRegistry：每条视频一个 import + 一个同名 <Folder>，无视频时仍是合法组件", () => {
   const out = renderRegistry(["corner-hit", "a2"]);
@@ -60,13 +60,14 @@ test("syncAll 写生成文件并把素材以硬链接暂存进 public 子目录�
   }
 });
 
-test("syncAll：引用了 manifest 里没有的素材报 ASSET_NOT_FOUND；存储里缺文件记入 missing 而不中断", async () => {
+test("syncVideo：单条视频引用了 manifest 里没有的素材报 ASSET_NOT_FOUND；存储里缺文件记入 missing 而不中断", async () => {
   const fx = await makeRepo();
   try {
     const store = new LocalStorage(path.join(fx.root, ".kineto/store"));
-    await createVideo(fx.paths, { id: "demo", title: "Demo" });
-    await linkAsset(fx.paths, "demo", "ghost", "sha256:" + "b".repeat(64));
-    await assert.rejects(syncAll(fx.paths, store), { code: "ASSET_NOT_FOUND" });
+    const demo = await createVideo(fx.paths, { id: "demo", title: "Demo" });
+    const linked = await linkAsset(fx.paths, "demo", "ghost", "sha256:" + "b".repeat(64));
+    void demo;
+    await assert.rejects(syncVideo(fx.paths, store, linked, fx.paths.publicDir), { code: "ASSET_NOT_FOUND" });
 
     const fx2 = await makeRepo();
     try {
@@ -83,6 +84,21 @@ test("syncAll：引用了 manifest 里没有的素材报 ASSET_NOT_FOUND；存�
     } finally {
       await fx2.cleanup();
     }
+  } finally {
+    await fx.cleanup();
+  }
+});
+
+test("某条视频有悬空素材引用时 syncAll 不整体失败：其它视频照常同步，问题记入 unresolved", async () => {
+  const fx = await makeRepo();
+  try {
+    const store = new LocalStorage(path.join(fx.root, ".kineto/store"));
+    await createVideo(fx.paths, { id: "good", title: "Good" });
+    await createVideo(fx.paths, { id: "bad", title: "Bad" });
+    await linkAsset(fx.paths, "bad", "ghost", "sha256:" + "b".repeat(64));
+    const result = await syncAll(fx.paths, store);
+    assert.deepEqual(result.unresolved, [{ video: "bad", alias: "ghost", asset: "sha256:" + "b".repeat(64) }]);
+    assert.match(await readFile(fx.paths.registryFile, "utf8"), /V_good/);
   } finally {
     await fx.cleanup();
   }

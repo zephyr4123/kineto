@@ -139,3 +139,24 @@ test("存储里的素材大小与 manifest 不符（被改坏）报 ASSET_CORRUP
     await fx.cleanup();
   }
 });
+
+test("check 报出手改出来的大小写冲突别名，以及仓库任意位置（含 .js）里的 composition 登记", async () => {
+  const { fx, store } = await cleanRepo();
+  try {
+    const file = path.join(fx.root, "videos/demo/video.json");
+    const json = JSON.parse(await readFile(file, "utf8"));
+    json.assets = { introMusic: "sha256:" + "a".repeat(64), intromusic: "sha256:" + "a".repeat(64) };
+    await writeFile(file, JSON.stringify(json));
+    assert.ok(codes(await checkRepo(fx.paths, store)).includes("ALIAS_CONFLICT"));
+    json.assets = {};
+    await writeFile(file, JSON.stringify(json));
+
+    const { mkdir } = await import("node:fs/promises");
+    await writeFile(path.join(fx.root, "videos/demo/Extra.js"), 'export const X = () => <Composition id="demo-x" />;\n');
+    await mkdir(path.join(fx.root, "lib"));
+    await writeFile(path.join(fx.root, "lib/More.tsx"), 'export const Y = () => <Still id="demo-y" />;\n');
+    assert.deepEqual(codes(await checkRepo(fx.paths, store)), ["COMPOSITION_OUTSIDE_REGISTRY", "COMPOSITION_OUTSIDE_REGISTRY"]);
+  } finally {
+    await fx.cleanup();
+  }
+});

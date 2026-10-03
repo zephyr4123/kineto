@@ -141,3 +141,39 @@ test("源文件不存在报 ASSET_SOURCE_NOT_FOUND", async () => {
     await fx.cleanup();
   }
 });
+
+test("同一内容再次登记：许可证或扩展名不一致直接报错，不悄悄改写已登记的许可", async () => {
+  const fx = await makeRepo();
+  try {
+    const store = new LocalStorage(path.join(fx.root, ".kineto/store"));
+    const png = path.join(fx.root, "p.png");
+    await writeFile(png, "hello");
+    await ingestAsset(fx.paths, store, { source: png, license: "CC-BY-4.0", author: "Alice" });
+    await assert.rejects(ingestAsset(fx.paths, store, { source: png, license: "CC0-1.0" }), { code: "ASSET_LICENSE_CONFLICT" });
+    const jpg = path.join(fx.root, "p.jpg");
+    await writeFile(jpg, "hello");
+    await assert.rejects(ingestAsset(fx.paths, store, { source: jpg, license: "CC-BY-4.0" }), { code: "ASSET_EXT_CONFLICT" });
+    assert.equal((await readManifest(fx.paths)).get(`sha256:${HELLO_SHA}`)?.license, "CC-BY-4.0");
+  } finally {
+    await fx.cleanup();
+  }
+});
+
+test("已存在对象被同尺寸篡改：再次登记时按 sha256 发现并修复，且恢复只读", async () => {
+  const fx = await makeRepo();
+  try {
+    const store = new LocalStorage(path.join(fx.root, ".kineto/store"));
+    const file = path.join(fx.root, "a.png");
+    await writeFile(file, "hello");
+    const rec = await ingestAsset(fx.paths, store, { source: file, license: "MIT" });
+    const stored = await store.fetch(assetStorageKey(rec));
+    const { chmod, readFile, stat } = await import("node:fs/promises");
+    await chmod(stored, 0o644);
+    await writeFile(stored, "HELLO");
+    await ingestAsset(fx.paths, store, { source: file, license: "MIT" });
+    assert.equal(await readFile(stored, "utf8"), "hello");
+    assert.equal((await stat(stored)).mode & 0o222, 0);
+  } finally {
+    await fx.cleanup();
+  }
+});

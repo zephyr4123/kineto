@@ -3,7 +3,7 @@
 // 只打包目标视频是硬要求：别的视频模块顶层就加载素材（官方字体示例即如此），
 // 一条视频缺素材或写坏了，不能拖累整个仓库都渲染不了。
 import { execFile } from "node:child_process";
-import { mkdir, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import { bundle } from "@remotion/bundler";
@@ -71,28 +71,24 @@ export async function renderVideo(
   }
   const ext = CODEC_EXTENSIONS[codec as SupportedCodec];
 
-  // 本次渲染专用的 public dir：只含这条视频的素材，打包时也不怕别的命令同时重建共享暂存区
+  // 本次渲染专用的工作目录：public dir 只含这条视频的素材、入口文件也是私有的，
+  // 打包期间不怕别的命令同时重建共享暂存区或改写共享入口；无论成败最后整个删掉
+  await removeOrphanedWorkDirs(paths);
   const workDir = path.join(paths.tmpDir, `render-${process.pid}-${Date.now()}`);
   const publicDir = path.join(workDir, "public");
-  const entryPoint = videoEntryFile(paths, video.id);
-  const { missing } = await withRepoLock(paths, async () => {
-    const synced = await syncVideo(paths, storage, video, publicDir);
-    await writeVideoEntry(paths, video.id);
-    return synced;
-  });
-  if (missing.length > 0) {
-    await rm(workDir, { recursive: true, force: true });
-    throw new KinetoError(
-      "ASSET_UNAVAILABLE",
-      `Assets of "${video.id}" are not in storage: ${missing.map((m) => m.alias).join(", ")}`,
-      { hint: "Configure the storage backend that holds them, or re-add the files with `kineto asset add`." },
-    );
-  }
-
   const started = Date.now();
   const report = options.onProgress ?? (() => {});
   let serveUrl: string | undefined;
   try {
+    const { missing } = await withRepoLock(paths, () => syncVideo(paths, storage, video, publicDir));
+    if (missing.length > 0) {
+      throw new KinetoError(
+        "ASSET_UNAVAILABLE",
+        `Assets of "${video.id}" are not in storage: ${missing.map((m) => m.alias).join(", ")}`,
+        { hint: "Configure the storage backend that holds them, or re-add the files with `kineto asset add`." },
+      );
+    }
+    const entryPoint = await writeVideoEntry(paths, video.id, path.join(workDir, "entry.tsx"));
     serveUrl = await bundle({
       entryPoint,
       publicDir,
@@ -108,8 +104,7 @@ export async function renderVideo(
       },
     );
 
-    await mkdir(paths.tmpDir, { recursive: true });
-    const tmp = path.join(paths.tmpDir, `${compositionId}-${process.pid}-${Date.now()}.${ext}`);
+    const tmp = path.join(workDir, `${compositionId}.${ext}`);
     await renderMedia({
       serveUrl,
       composition,
@@ -141,7 +136,7 @@ export async function renderVideo(
         remotion: VERSION,
         elapsedMs: Date.now() - started,
       };
-      await appendRender(paths, video.id, record);
+      await withRepoLock(paths, () => appendRender(paths, video.id, record));
       return { record, file: await storage.fetch(key) };
     } finally {
       await rm(tmp, { force: true });
@@ -154,20 +149,36 @@ export async function renderVideo(
 
 export const videoEntryFile = (paths: KinetoPaths, id: string) => path.join(paths.stateDir, "entries", `${id}.tsx`);
 
-// 单视频入口：只注册这一条视频，供 render 和 `kineto studio <id>` 使用
-export async function writeVideoEntry(paths: KinetoPaths, id: string): Promise<string> {
-  const file = videoEntryFile(paths, id);
+// 单视频入口：只注册这一条视频。render 写进自己的工作目录，`kineto studio <id>` 用 .kineto/entries/<id>.tsx
+export async function writeVideoEntry(paths: KinetoPaths, id: string, file: string = videoEntryFile(paths, id)): Promise<string> {
   const compositions = path.relative(path.dirname(file), path.join(paths.videosDir, id, "compositions")).split(path.sep).join("/");
   await mkdir(path.dirname(file), { recursive: true });
+  // 先写临时文件再 rename：正在打包的进程不会读到写了一半的入口
+  const partial = `${file}.partial-${process.pid}`;
   await writeFile(
-    file,
+    partial,
     `// 由 kineto 生成：只注册视频 ${id}，其它视频的代码与素材都不参与打包\n` +
       `import { Folder, registerRoot } from "remotion";\n` +
       `import { Compositions } from "${compositions}";\n\n` +
       `const Root: React.FC = () => (\n  <Folder name="${id}">\n    <Compositions />\n  </Folder>\n);\n\n` +
       `registerRoot(Root);\n`,
   );
+  await rename(partial, file);
   return file;
+}
+
+// 进程被杀（Ctrl-C、kill -9）时 finally 来不及执行；下次渲染前清掉已不存在的进程留下的工作目录
+async function removeOrphanedWorkDirs(paths: KinetoPaths): Promise<void> {
+  const entries = await readdir(paths.tmpDir).catch(() => [] as string[]);
+  for (const name of entries) {
+    const pid = Number(/^render-(\d+)-/.exec(name)?.[1]);
+    if (!pid || pid === process.pid) continue;
+    try {
+      process.kill(pid, 0);
+    } catch {
+      await rm(path.join(paths.tmpDir, name), { recursive: true, force: true });
+    }
+  }
 }
 
 const run = promisify(execFile);

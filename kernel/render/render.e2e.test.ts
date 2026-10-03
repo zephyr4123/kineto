@@ -45,6 +45,10 @@ test("render 只打包目标视频：另一条视频模块加载即抛错、还�
     await assert.rejects(renderVideo(fx.paths, store, config, { id: "demo", codec: "toString" }), {
       code: "INVALID_ARGUMENT",
     });
+    // 失败的渲染不留下临时目录
+    await assert.rejects(renderVideo(fx.paths, store, config, { id: "broken" }), { code: "ASSET_NOT_FOUND" });
+    const { readdir } = await import("node:fs/promises");
+    assert.deepEqual(await readdir(fx.paths.tmpDir).catch(() => []), []);
   } finally {
     await fx.cleanup();
   }

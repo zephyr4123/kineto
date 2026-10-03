@@ -1,35 +1,71 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { writeFile } from "node:fs/promises";
+import { spawn } from "node:child_process";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { makeRepo } from "./testing/fixture.ts";
 import { withRepoLock } from "./lock.ts";
 
-test("withRepoLock 串行执行临界区；同进程嵌套可重入", async () => {
+const LOCK_MODULE = path.join(path.dirname(fileURLToPath(import.meta.url)), "lock.ts");
+const DEAD_PID = 2 ** 22 + 12345;
+
+test("同进程里并发的两个调用方也互斥：B 在 A 持锁期间进入时必须等待", async () => {
   const fx = await makeRepo();
   try {
     const order: string[] = [];
-    const slow = (name: string) =>
-      withRepoLock(fx.paths, async () => {
-        order.push(`${name}:start`);
-        await new Promise((r) => setTimeout(r, 30));
-        order.push(`${name}:end`);
-      });
-    await Promise.all([slow("a"), slow("b")]);
-    assert.deepEqual(order.slice(0, 2).map((s) => s.split(":")[1]), ["start", "end"]);
+    let aHolding!: () => void;
+    const aIn = new Promise<void>((r) => (aHolding = r));
+    const a = withRepoLock(fx.paths, async () => {
+      order.push("a:start");
+      aHolding();
+      await new Promise((r) => setTimeout(r, 80));
+      order.push("a:end");
+    });
+    await aIn;
+    const b = withRepoLock(fx.paths, async () => {
+      order.push("b:start");
+    });
+    await Promise.all([a, b]);
+    assert.deepEqual(order, ["a:start", "a:end", "b:start"]);
+    // 同一异步调用链内嵌套可重入，不会自己锁死自己
     assert.equal(await withRepoLock(fx.paths, () => withRepoLock(fx.paths, async () => 42)), 42);
   } finally {
     await fx.cleanup();
   }
 });
 
-test("withRepoLock 接管已死进程留下的陈旧锁", async () => {
+test("多个进程同时接管同一把陈旧锁：任何时刻最多一个持有者", async () => {
   const fx = await makeRepo();
   try {
-    const { mkdir } = await import("node:fs/promises");
-    await mkdir(fx.paths.stateDir, { recursive: true });
-    await writeFile(path.join(fx.paths.stateDir, "lock"), JSON.stringify({ pid: 2 ** 22 + 12345, at: "x" }));
-    assert.equal(await withRepoLock(fx.paths, async () => "ran"), "ran");
+    const script = path.join(fx.root, "contend.mjs");
+    await writeFile(
+      script,
+      `import { mkdir, readdir, rm, writeFile, appendFile } from "node:fs/promises";
+import { withRepoLock } from ${JSON.stringify(LOCK_MODULE)};
+import { pathsFor } from ${JSON.stringify(path.join(path.dirname(LOCK_MODULE), "paths.ts"))};
+const root = process.argv[2];
+const holders = root + "/holders";
+await withRepoLock(pathsFor(root), async () => {
+  await writeFile(holders + "/" + process.pid, "");
+  const n = (await readdir(holders)).length;
+  await appendFile(root + "/max.log", n + "\\n");
+  await new Promise((r) => setTimeout(r, 40));
+  await rm(holders + "/" + process.pid);
+});
+`,
+    );
+    await mkdir(path.join(fx.root, "holders"));
+    for (let round = 0; round < 3; round++) {
+      await mkdir(fx.paths.stateDir, { recursive: true });
+      await writeFile(path.join(fx.paths.stateDir, "lock"), JSON.stringify({ pid: DEAD_PID, token: "stale" }));
+      await Promise.all(
+        Array.from({ length: 6 }, () => new Promise((resolve) => spawn(process.execPath, [script, fx.root]).on("close", resolve))),
+      );
+    }
+    const counts = (await readFile(path.join(fx.root, "max.log"), "utf8")).trim().split("\n").map(Number);
+    assert.equal(counts.length, 18);
+    assert.equal(Math.max(...counts), 1);
   } finally {
     await fx.cleanup();
   }

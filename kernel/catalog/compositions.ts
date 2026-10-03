@@ -6,9 +6,14 @@ import { videoDir, type KinetoPaths } from "../paths.ts";
 
 export const COMPOSITIONS_FILE = "compositions.tsx";
 
+// 先剔除注释：注释里写到 <Composition> / id= 是说明，不是登记（粗粒度，字符串里的 // 可能误伤，漏网的由 check --deep 兜底）
+const stripComments = (source: string) => source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'`])\/\/.*$/gm, "$1");
+
 export function scanCompositionIds(source: string): (string | null)[] {
-  return [...source.matchAll(/\bid\s*=\s*(?:"([^"]*)"|'([^']*)'|\{)/g)].map((m) => m[1] ?? m[2] ?? null);
+  return [...stripComments(source).matchAll(/\bid\s*=\s*(?:"([^"]*)"|'([^']*)'|\{)/g)].map((m) => m[1] ?? m[2] ?? null);
 }
+
+export const registersComposition = (source: string): boolean => /<(Composition|Still)\b/.test(stripComments(source));
 
 // composition id 归属哪条视频：取最长的匹配视频 id。
 // 视频 w 与 w-x 同时存在时，w-x-intro 属于 w-x——w 不能注册它，也不能渲染它。

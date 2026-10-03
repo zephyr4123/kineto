@@ -129,3 +129,16 @@ test("同一视频里只差大小写的别名报 ALIAS_CONFLICT（大小写不�
     await fx.cleanup();
   }
 });
+
+test("new 不能抢占已有 composition 的命名空间：w 已注册 w-x-title 时不能创建视频 w-x", async () => {
+  const fx = await makeRepo();
+  try {
+    await createVideo(fx.paths, { id: "w", title: "W" });
+    const file = path.join(fx.root, "videos/w/compositions.tsx");
+    await writeFile(file, (await readFile(file, "utf8")).replace('id="w"', 'id="w-x-title"'));
+    await assert.rejects(createVideo(fx.paths, { id: "w-x", title: "WX" }), { code: "NAMESPACE_TAKEN" });
+    await assert.rejects(readVideo(fx.paths, "w-x"), { code: "VIDEO_NOT_FOUND" });
+  } finally {
+    await fx.cleanup();
+  }
+});

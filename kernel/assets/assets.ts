@@ -10,6 +10,7 @@ import { z } from "zod";
 import { ASSET_ID_RE } from "../catalog/schema.ts";
 import { isNodeError, KinetoError } from "../errors.ts";
 import { appendJsonLine } from "../jsonl.ts";
+import { withRepoLock } from "../lock.ts";
 import type { KinetoPaths } from "../paths.ts";
 import type { StorageBackend } from "../storage/types.ts";
 
@@ -96,37 +97,59 @@ export async function ingestAsset(
       hint: "Pass a path to an existing file (relative to your current directory) or an http(s) URL.",
     });
   }
+  // 下载、哈希、入存储都是幂等的内容寻址操作，放在锁外（下载可能很久）；只有读-改-写 manifest 持锁
   const local = isUrl ? await download(paths, input.source, ext) : input.source;
   try {
     const [hex, { size }] = await Promise.all([sha256File(local), stat(local)]);
     const id = `sha256:${hex}`;
-    const existing = (await readManifest(paths)).get(id);
-    // 剔除 undefined 键：保证返回值与写进 JSONL 再读回来的对象完全一致。
-    // 同一文件再次登记时，没传的字段沿用旧值——只为挂到另一条视频而重新 add 不会抹掉作者与来源
-    const given = Object.fromEntries(
-      Object.entries({
-        license,
-        author: input.author,
-        sourceUrl: input.sourceUrl ?? (isUrl ? input.source : undefined),
-        description: input.description,
-      }).filter(([, v]) => v !== undefined),
-    );
-    const record = AssetRecord.parse({
-      ...existing,
-      ...given,
-      id,
-      ext,
-      bytes: size,
-      addedAt: existing?.addedAt ?? (input.now ?? new Date()).toISOString(),
-    });
-    await storage.put(local, assetStorageKey(record));
+    assertCompatible((await readManifest(paths)).get(id), license, ext);
+    await storage.put(local, assetStorageKey({ id, ext }), { sha256: hex });
 
-    if (existing && sameMetadata(existing, record)) return existing;
-    await mkdir(path.dirname(paths.assetsManifest), { recursive: true });
-    await appendJsonLine(paths.assetsManifest, record);
-    return record;
+    return await withRepoLock(paths, async () => {
+      const existing = (await readManifest(paths)).get(id);
+      assertCompatible(existing, license, ext);
+      // 剔除 undefined 键：保证返回值与写进 JSONL 再读回来的对象完全一致。
+      // 同一文件再次登记时，没传的字段沿用旧值——只为挂到另一条视频而重新 add 不会抹掉作者与来源
+      const given = Object.fromEntries(
+        Object.entries({
+          license,
+          author: input.author,
+          sourceUrl: input.sourceUrl ?? (isUrl ? input.source : undefined),
+          description: input.description,
+        }).filter(([, v]) => v !== undefined),
+      );
+      const record = AssetRecord.parse({
+        ...existing,
+        ...given,
+        id,
+        ext,
+        bytes: size,
+        addedAt: existing?.addedAt ?? (input.now ?? new Date()).toISOString(),
+      });
+      if (existing && sameMetadata(existing, record)) return existing;
+      await mkdir(path.dirname(paths.assetsManifest), { recursive: true });
+      await appendJsonLine(paths.assetsManifest, record);
+      return record;
+    });
   } finally {
     if (isUrl) await rm(local, { force: true });
+  }
+}
+
+// 同一份内容已登记过：许可证与扩展名是素材的身份，再次登记不能悄悄改写它们
+function assertCompatible(existing: AssetRecord | undefined, license: string, ext: string): void {
+  if (!existing) return;
+  if (existing.license !== license) {
+    throw new KinetoError(
+      "ASSET_LICENSE_CONFLICT",
+      `This exact file is already registered as ${existing.id} under license "${existing.license}", not "${license}"`,
+      { hint: `To use it in another video: kineto asset link ${existing.id} --to <video> --as <alias>` },
+    );
+  }
+  if (existing.ext !== ext) {
+    throw new KinetoError("ASSET_EXT_CONFLICT", `This exact file is already registered as ${existing.id} with extension ${existing.ext}`, {
+      hint: `Rename the file to ${existing.ext}, or reuse it with: kineto asset link ${existing.id} --to <video> --as <alias>`,
+    });
   }
 }
 

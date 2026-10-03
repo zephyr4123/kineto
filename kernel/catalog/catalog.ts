@@ -5,6 +5,7 @@ import path from "node:path";
 import { z } from "zod";
 import { isNodeError, KinetoError } from "../errors.ts";
 import { videoDir, type KinetoPaths } from "../paths.ts";
+import { compositionOwner, readCompositionIds } from "./compositions.ts";
 import { ALIAS_RE, VIDEO_ID_MAX, VIDEO_ID_RE, VideoManifest, VideoStatus } from "./schema.ts";
 
 const MANIFEST_FILE = "video.json";
@@ -90,6 +91,7 @@ export async function createVideo(paths: KinetoPaths, input: CreateVideoInput): 
       hint: `Available templates: ${templates.join(", ") || "(none)"}.`,
     });
   }
+  await assertNamespaceFree(paths, input.id);
   const dir = videoDir(paths, input.id);
   try {
     await cp(templateDir, dir, { recursive: true, errorOnExist: true, force: false });
@@ -153,20 +155,40 @@ export async function linkAsset(
   assetId: string,
   now: Date = new Date(),
 ): Promise<VideoManifest> {
-  assertAlias(alias);
   const current = await readVideo(paths, id);
-  // 别名会成为暂存文件名；大小写不敏感的文件系统（macOS 默认）上只差大小写的两个别名会撞成同一个文件
-  const clash = Object.keys(current.assets).find((a) => a !== alias && a.toLowerCase() === alias.toLowerCase());
-  if (clash) {
-    throw new KinetoError("ALIAS_CONFLICT", `Alias "${alias}" differs from existing alias "${clash}" only by case`, {
-      hint: `Reuse "${clash}" or pick a clearly different alias.`,
-    });
-  }
+  assertAliasAvailable(current, alias);
   return writeVideo(paths, {
     ...current,
     assets: { ...current.assets, [alias]: assetId },
     updatedAt: now.toISOString(),
   });
+}
+
+// 别名会成为暂存文件名；大小写不敏感的文件系统（macOS 默认）上只差大小写的两个别名会撞成同一个文件
+export function assertAliasAvailable(video: VideoManifest, alias: string): void {
+  assertAlias(alias);
+  const clash = Object.keys(video.assets).find((a) => a !== alias && a.toLowerCase() === alias.toLowerCase());
+  if (clash) {
+    throw new KinetoError("ALIAS_CONFLICT", `Alias "${alias}" differs from existing alias "${clash}" of ${video.id} only by case`, {
+      hint: `Reuse "${clash}" or pick a clearly different alias.`,
+    });
+  }
+}
+
+// 新视频 id 不能「吃掉」已有视频登记过的 composition：w 注册了 w-x-title，就不能再建视频 w-x
+async function assertNamespaceFree(paths: KinetoPaths, newId: string): Promise<void> {
+  const ids = await listVideoIds(paths);
+  for (const owner of ids) {
+    const literals = await readCompositionIds(paths, owner).catch(() => [] as (string | null)[]);
+    for (const literal of literals) {
+      if (literal === null) continue;
+      if (compositionOwner(literal, [...ids, newId]) !== compositionOwner(literal, ids)) {
+        throw new KinetoError("NAMESPACE_TAKEN", `videos/${owner} already registers composition "${literal}", which would fall under "${newId}"`, {
+          hint: `Pick a video id that is not a prefix of existing composition ids, e.g. "${newId}-2" or another name.`,
+        });
+      }
+    }
+  }
 }
 
 export function assertAlias(alias: string): void {

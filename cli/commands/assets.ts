@@ -1,5 +1,6 @@
-import { assertAlias, linkAsset, listVideos, readVideo } from "../../kernel/catalog/catalog.ts";
+import { assertAliasAvailable, linkAsset, readVideo } from "../../kernel/catalog/catalog.ts";
 import { KinetoError } from "../../kernel/errors.ts";
+import { withRepoLock } from "../../kernel/lock.ts";
 import { ingestAsset, readManifest } from "../../kernel/assets/assets.ts";
 import { syncAll } from "../../kernel/sync/sync.ts";
 import { defineCommand, str, UsageError } from "../command.ts";
@@ -21,7 +22,7 @@ export const assetAddCommand = defineCommand({
     to: { type: "string", value: "video", description: "Link the asset to this video (use with --as)" },
     as: { type: "string", value: "alias", description: "camelCase alias, becomes assets.<alias> in code" },
   },
-  mutates: true,
+  // 不整体持锁：下载可能很久，入库（下载、哈希、存储）是幂等的，只有写记录和挂接需要互斥
   async run(ctx, { args, flags }) {
     const to = str(flags, "to");
     const alias = str(flags, "as");
@@ -29,11 +30,7 @@ export const assetAddCommand = defineCommand({
       throw new UsageError("--to and --as must be used together", "Example: --to corner-hit --as boop");
     }
     // 先把挂接会用到的一切校验完，再入库：避免素材已入库、挂接却失败的半成品状态
-    if (to && alias) {
-      assertAlias(alias);
-      await readVideo(ctx.paths, to);
-      await listVideos(ctx.paths);
-    }
+    if (to && alias) assertAliasAvailable(await readVideo(ctx.paths, to), alias);
     const storage = await ctx.storage();
     const asset = await ingestAsset(ctx.paths, storage, {
       source: args[0]!,
@@ -43,8 +40,10 @@ export const assetAddCommand = defineCommand({
       description: str(flags, "description"),
     });
     if (!to || !alias) return { asset, linked: null };
-    await linkAsset(ctx.paths, to, alias, asset.id);
-    await syncAll(ctx.paths, storage);
+    await withRepoLock(ctx.paths, async () => {
+      await linkAsset(ctx.paths, to, alias, asset.id);
+      await syncAll(ctx.paths, storage);
+    });
     return { asset, linked: { video: to, alias, staticFile: `${to}/${alias}${asset.ext}` } };
   },
   human: (d) =>
@@ -67,14 +66,13 @@ export const assetLinkCommand = defineCommand({
     const [assetId] = args as [string];
     const to = str(flags, "to")!;
     const alias = str(flags, "as")!;
-    assertAlias(alias);
+    assertAliasAvailable(await readVideo(ctx.paths, to), alias);
     const asset = (await readManifest(ctx.paths)).get(assetId);
     if (!asset) {
       throw new KinetoError("ASSET_NOT_FOUND", `No asset ${assetId} in the library`, {
         hint: "Run `kineto asset list` for ids, or register the file with `kineto asset add`.",
       });
     }
-    await listVideos(ctx.paths);
     await linkAsset(ctx.paths, to, alias, asset.id);
     await syncAll(ctx.paths, await ctx.storage());
     return { asset, linked: { video: to, alias, staticFile: `${to}/${alias}${asset.ext}` } };

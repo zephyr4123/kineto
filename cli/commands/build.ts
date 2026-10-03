@@ -28,14 +28,21 @@ export const syncCommand = defineCommand({
           d.written.length ? `Wrote ${d.written.join(", ")}` : "Generated files already up to date.",
           `Staged ${d.staged} asset(s).`,
           ...d.missing.map((m) => `warning: ${m.video}/${m.alias} is not in storage (${m.key})`),
+          ...d.unresolved.map((u) => `warning: ${u.video}/${u.alias} references unknown asset ${u.asset} (run \`kineto check\`)`),
         ].join("\n"),
 });
 
 export const checkCommand = defineCommand({
   name: "check",
   summary: "Validate the whole library (CI gate): records, composition ids, assets, generated files",
-  async run(ctx) {
-    return checkRepo(ctx.paths, await ctx.storage());
+  options: {
+    deep: {
+      type: "boolean",
+      description: "Also bundle each video to verify the compositions it really registers, and re-hash stored assets",
+    },
+  },
+  async run(ctx, { flags }) {
+    return checkRepo(ctx.paths, await ctx.storage(), { deep: flags.deep === true });
   },
   exitCode: (d) => (d.ok ? 0 : 1),
   human: (d) =>

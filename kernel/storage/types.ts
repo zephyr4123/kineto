@@ -8,8 +8,9 @@ export interface StoredObject {
 
 export interface StorageBackend {
   readonly name: string;
-  // key 是内容寻址的（含哈希），同 key 必同内容：已存在且完好就跳过，被改坏了就修复
-  put(localFile: string, key: string): Promise<StoredObject>;
+  // key 是内容寻址的（含哈希），同 key 必同内容：已存在且完好就跳过，被改坏了就修复。
+  // 传入 sha256 时按哈希判断「完好」，否则只能按大小判断
+  put(localFile: string, key: string, options?: { sha256?: string }): Promise<StoredObject>;
   has(key: string): Promise<boolean>;
   // 对象字节数；不存在为 null（check 用它发现被改坏的对象）
   size(key: string): Promise<number | null>;

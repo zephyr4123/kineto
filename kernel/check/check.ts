@@ -3,7 +3,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { listVideoIds, readVideo } from "../catalog/catalog.ts";
-import { compositionOwner, COMPOSITIONS_FILE, scanCompositionIds } from "../catalog/compositions.ts";
+import { compositionOwner, COMPOSITIONS_FILE, registersComposition, scanCompositionIds } from "../catalog/compositions.ts";
 import type { VideoManifest } from "../catalog/schema.ts";
 import { isNodeError, KinetoError } from "../errors.ts";
 import { videoDir, type KinetoPaths } from "../paths.ts";
@@ -26,7 +26,11 @@ export interface CheckReport {
   problems: Problem[];
 }
 
-export async function checkRepo(paths: KinetoPaths, storage: StorageBackend): Promise<CheckReport> {
+export async function checkRepo(
+  paths: KinetoPaths,
+  storage: StorageBackend,
+  options: { deep?: boolean } = {},
+): Promise<CheckReport> {
   const problems: Problem[] = [];
   const report = (err: unknown, level: Problem["level"] = "error") => {
     if (!(err instanceof KinetoError)) throw err;
@@ -63,6 +67,20 @@ export async function checkRepo(paths: KinetoPaths, storage: StorageBackend): Pr
   }
 
   for (const video of videos) {
+    const byLower = new Map<string, string[]>();
+    for (const alias of Object.keys(video.assets)) {
+      byLower.set(alias.toLowerCase(), [...(byLower.get(alias.toLowerCase()) ?? []), alias]);
+    }
+    for (const group of byLower.values()) {
+      if (group.length > 1) {
+        problems.push({
+          level: "error",
+          code: "ALIAS_CONFLICT",
+          message: `videos/${video.id} has aliases that differ only by case: ${group.join(", ")}`,
+          hint: "They collide as file names on case-insensitive file systems. Keep one.",
+        });
+      }
+    }
     for (const [alias, assetId] of Object.entries(video.assets)) {
       const record = manifest.get(assetId);
       if (!record) {
@@ -94,7 +112,7 @@ export async function checkRepo(paths: KinetoPaths, storage: StorageBackend): Pr
     }
   }
 
-  for (const p of await checkEngine(paths)) problems.push(p);
+  for (const p of await strayRegistrations(paths, ids)) problems.push(p);
 
   if (recordsReadable) {
     const { drift } = await syncAll(paths, storage, { check: true });
@@ -106,6 +124,12 @@ export async function checkRepo(paths: KinetoPaths, storage: StorageBackend): Pr
         hint: "Run `kineto sync` and commit the result. Never edit *.gen.* files by hand.",
       });
     }
+  }
+
+  // deep 依赖记录可读；import 放在这里，普通 check 不加载打包器
+  if (options.deep && recordsReadable) {
+    const { deepCheck } = await import("./deep.ts");
+    problems.push(...(await deepCheck(paths, storage)));
   }
 
   return {
@@ -174,34 +198,35 @@ async function checkCompositions(
     seen.set(literal, id);
   }
 
-  problems.push(...(await strayRegistrations(paths, dir, path.join(dir, COMPOSITIONS_FILE), `videos/${id}/${COMPOSITIONS_FILE}`)));
   return problems;
 }
 
-// engine/ 是跨视频的积木，不属于任何视频的命名空间，不能登记 composition
-async function checkEngine(paths: KinetoPaths): Promise<Problem[]> {
-  const dir = path.join(paths.root, "engine");
-  try {
-    return await strayRegistrations(paths, dir, null, "the compositions.tsx of the video that uses it");
-  } catch (err) {
-    if (isNodeError(err, "ENOENT")) return [];
-    throw err;
-  }
-}
+// <Composition>/<Still> 只能写在各视频的 compositions.tsx 里。扫描所有可能被打包进 Remotion 的源码
+// （包括 .js——Remotion 的打包器对 .js 也开了 JSX），只跳过不会进 bundle 的 Node 侧代码与依赖。
+// 静态扫描看不见的写法（如 {...props} 展开传 id）由 `check --deep` 按运行时真实注册结果兜底。
+const SKIP_DIRS = new Set(["node_modules", ".git", ".kineto", ".agents", ".claude", "kernel", "cli", "templates"]);
+const SOURCE_RE = /\.(tsx|jsx|ts|js|mjs|cjs|mts|cts)$/;
 
-async function strayRegistrations(paths: KinetoPaths, dir: string, allowed: string | null, target: string): Promise<Problem[]> {
+async function strayRegistrations(paths: KinetoPaths, videoIds: string[]): Promise<Problem[]> {
+  const allowed = new Set(videoIds.map((id) => path.join(paths.videosDir, id, COMPOSITIONS_FILE)));
   const problems: Problem[] = [];
-  for (const f of await readdir(dir, { recursive: true, withFileTypes: true })) {
-    const file = path.join(f.parentPath, f.name);
-    if (!f.isFile() || !/\.(tsx|jsx)$/.test(f.name) || file === allowed) continue;
-    if (/<(Composition|Still)\b/.test(await readFile(file, "utf8"))) {
-      problems.push({
-        level: "error",
-        code: "COMPOSITION_OUTSIDE_REGISTRY",
-        message: `${path.relative(paths.root, file)} registers a composition`,
-        hint: `Move <Composition>/<Still> into ${target}.`,
-      });
+  const walk = async (dir: string): Promise<void> => {
+    for (const entry of await readdir(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (!(dir === paths.root && SKIP_DIRS.has(entry.name))) await walk(full);
+      } else if (entry.isFile() && SOURCE_RE.test(entry.name) && !allowed.has(full)) {
+        if (registersComposition(await readFile(full, "utf8"))) {
+          problems.push({
+            level: "error",
+            code: "COMPOSITION_OUTSIDE_REGISTRY",
+            message: `${path.relative(paths.root, full)} registers a composition`,
+            hint: "Move <Composition>/<Still> into the compositions.tsx of the video it belongs to.",
+          });
+        }
+      }
     }
-  }
+  };
+  await walk(paths.root);
   return problems;
 }
