@@ -130,3 +130,33 @@ test("工具配置段的 ${ENV} 延后到运行该工具时才展开：缺某个
     await fx.cleanup();
   }
 });
+
+test("存储后端没选 s3 时，留在配置里的 s3 段不展开也不校验：缺它的密钥不拖垮本地用户", async () => {
+  const fx = await makeRepo();
+  try {
+    await writeFile(path.join(fx.root, "kineto.config.yaml"), S3_CONFIG.replace("backend: s3", "backend: local"));
+    const { config } = await loadConfig(fx.paths, {});
+    assert.equal(config.storage.backend, "local");
+    assert.equal(config.storage.s3, undefined);
+  } finally {
+    await fx.cleanup();
+  }
+});
+
+test("envFile 的边角：空的进程环境变量不覆盖文件里的值；路径里可以写 ${HOME}；读不了报 CONFIG_INVALID", async () => {
+  const fx = await makeRepo();
+  try {
+    await writeFile(path.join(fx.root, "creds.env"), "KINETO_TEST_STORE=/from/file\n");
+    await writeFile(path.join(fx.root, "kineto.config.yaml"), "envFile: ${KINETO_TEST_DIR}/creds.env\nstorage:\n  local:\n    root: ${KINETO_TEST_STORE}\n");
+    const loaded = await loadConfig(fx.paths, { KINETO_TEST_DIR: fx.root, KINETO_TEST_STORE: "" });
+    assert.equal(loaded.config.storage.local.root, "/from/file");
+    assert.equal(loaded.envFile, path.join(fx.root, "creds.env"));
+
+    const { chmod } = await import("node:fs/promises");
+    await chmod(path.join(fx.root, "creds.env"), 0o000);
+    await assert.rejects(loadConfig(fx.paths, { KINETO_TEST_DIR: fx.root }), { code: "CONFIG_INVALID" });
+    await chmod(path.join(fx.root, "creds.env"), 0o600);
+  } finally {
+    await fx.cleanup();
+  }
+});

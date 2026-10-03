@@ -89,10 +89,16 @@ export async function loadConfig(paths: KinetoPaths, env: NodeJS.ProcessEnv = pr
       });
     }
   }
-  const envFile = envFilePath(paths, raw);
-  const vars = envFile ? { ...(await readEnvFile(envFile)), ...env } : env;
-  const { tools, ...rest } = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
-  const parsed = ConfigSchema.safeParse({ ...(expandEnv(rest, vars) as object), ...(tools == null ? {} : { tools }) });
+  const envFile = envFilePath(paths, raw, env);
+  // 空字符串等于没设：不让一个空的环境变量把 envFile 里的值盖掉
+  const setEnv = Object.fromEntries(Object.entries(env).filter(([, v]) => v !== undefined && v !== ""));
+  const vars = envFile ? { ...(await readEnvFile(envFile)), ...setEnv } : setEnv;
+  const { tools, envFile: _envFile, ...rest } = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  const parsed = ConfigSchema.safeParse({
+    ...(expandEnv(withoutUnusedStorage(rest), vars) as object),
+    ...(envFile ? { envFile } : {}),
+    ...(tools == null ? {} : { tools }),
+  });
   if (!parsed.success) {
     throw new KinetoError("CONFIG_INVALID", `Invalid kineto.config.yaml: ${z.prettifyError(parsed.error)}`, {
       hint: "Compare with kineto.config.example.yaml.",
@@ -101,7 +107,15 @@ export async function loadConfig(paths: KinetoPaths, env: NodeJS.ProcessEnv = pr
   return { config: parsed.data, source, ...(envFile ? { envFile } : {}), expand: (value) => expandEnv(value, vars) };
 }
 
-function envFilePath(paths: KinetoPaths, raw: unknown): string | undefined {
+// 没选用的存储后端段落不展开也不校验：留着 s3 段切回 local 的人，不该因为缺 s3 的密钥而什么都跑不了
+function withoutUnusedStorage(rest: Record<string, unknown>): Record<string, unknown> {
+  const storage = rest.storage;
+  if (!storage || typeof storage !== "object") return rest;
+  const { s3, ...others } = storage as Record<string, unknown>;
+  return (storage as Record<string, unknown>).backend === "s3" || s3 === undefined ? rest : { ...rest, storage: others };
+}
+
+function envFilePath(paths: KinetoPaths, raw: unknown, env: NodeJS.ProcessEnv): string | undefined {
   const value = raw && typeof raw === "object" ? (raw as Record<string, unknown>).envFile : undefined;
   if (value === undefined) return undefined;
   if (typeof value !== "string" || value === "") {
@@ -109,16 +123,23 @@ function envFilePath(paths: KinetoPaths, raw: unknown): string | undefined {
       hint: "e.g. envFile: ~/.secrets/kineto.env",
     });
   }
-  return value.startsWith("~/") ? path.join(homedir(), value.slice(2)) : path.resolve(paths.root, value);
+  // 路径本身只能用进程环境变量展开（比如 ${HOME}），它还没读出来的内容帮不上忙
+  const expanded = expandEnv(value, env) as string;
+  return expanded.startsWith("~/") ? path.join(homedir(), expanded.slice(2)) : path.resolve(paths.root, expanded);
 }
 
 async function readEnvFile(file: string): Promise<Record<string, string>> {
   try {
     return parseEnv(await readFile(file, "utf8")) as Record<string, string>;
   } catch (err) {
-    if (!isNodeError(err, "ENOENT")) throw err;
-    throw new KinetoError("CONFIG_INVALID", `envFile ${file} does not exist`, {
-      hint: "Create it (chmod 600, outside the repo) or remove envFile from kineto.config.yaml.",
+    if (isNodeError(err, "ENOENT")) {
+      throw new KinetoError("CONFIG_INVALID", `envFile ${file} does not exist`, {
+        hint: "Create it (chmod 600, outside the repo) or remove envFile from kineto.config.yaml.",
+      });
+    }
+    throw new KinetoError("CONFIG_INVALID", `Cannot read envFile ${file}: ${(err as Error).message}`, {
+      hint: "Make sure you own the file and can read it (chmod 600).",
+      cause: err,
     });
   }
 }
