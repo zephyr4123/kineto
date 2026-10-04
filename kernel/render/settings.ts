@@ -8,4 +8,7 @@ export const remotionSettings = {
   publicDir: ".kineto/public",
   rspack: true,
   videoImageFormat: "jpeg",
+  // @remotion/effects 的大多数特效跑在 WebGL2 上，headless Chrome 默认拿不到 WebGL2 上下文。
+  // Remotion 推荐：有 GPU 的桌面用 angle；没有 GPU 的 Linux 服务器（CI、云渲染）用 swangle（CPU 渲染，慢一些）
+  chromiumOpenGlRenderer: process.platform === "linux" ? "swangle" : "angle",
 } as const;

@@ -152,6 +152,7 @@ export async function renderVideo(
         output: tmp,
         inputProps: {},
         imageFormat: codec as StillFormat,
+        chromiumOptions: { gl: remotionSettings.chromiumOpenGlRenderer },
         licenseKey: config.remotion.licenseKey,
         logLevel: "error",
       });
@@ -167,6 +168,7 @@ export async function renderVideo(
         // 合成的测试画面触发不了，所以这一条没有自动化测试守着
         imageFormat: remotionSettings.videoImageFormat,
         everyNthFrame: nth ?? 1,
+        chromiumOptions: { gl: remotionSettings.chromiumOpenGlRenderer },
         licenseKey: config.remotion.licenseKey,
         logLevel: "error",
         onProgress: ({ progress }) => report({ stage: "render", progress }),

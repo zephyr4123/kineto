@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { readFile, stat, symlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { inflateSync } from "node:zlib";
 import { makeRepo } from "../testing/fixture.ts";
 import { createVideo, linkAsset } from "../catalog/catalog.ts";
 import { loadConfig } from "../config.ts";
@@ -105,6 +106,50 @@ test("render 只打包目标视频：另一条视频模块加载即抛错、还�
     await assert.rejects(renderVideo(fx.paths, store, config, { id: "broken" }), { code: "ASSET_NOT_FOUND" });
     const { readdir } = await import("node:fs/promises");
     assert.deepEqual(await readdir(fx.paths.tmpDir).catch(() => []), []);
+  } finally {
+    await fx.cleanup();
+  }
+});
+
+// @remotion/effects 里大多数特效（色差、缩放模糊、颗粒、暗角、漏光……）跑在 WebGL2 上，
+// headless Chrome 默认拿不到 WebGL2 上下文，渲染直接报错。invert、tint 这类走 2D canvas 的测不出来，这里用暗角
+const EFFECTS = `import { vignette } from "@remotion/effects/vignette";
+import { Solid, Still } from "remotion";
+
+const Vignetted: React.FC = () => (
+  <Solid width={64} height={64} color="#ff0000" effects={[vignette({ amount: 1, radius: 0.1, feather: 0.1 })]} />
+);
+
+export const Compositions: React.FC = () => <Still id="fx" component={Vignetted} width={64} height={64} />;
+`;
+
+// 读 PNG 左上角第一个像素的 RGB：第一行第一个像素左边、上边都没有像素，五种行过滤器下存的都是原值
+const firstPixel = async (file: string) => {
+  const png = await readFile(file);
+  const colorType = png[25];
+  assert.ok(colorType === 2 || colorType === 6, `unexpected PNG color type ${colorType}`);
+  const idat: Buffer[] = [];
+  for (let at = 8; at < png.length; ) {
+    const length = png.readUInt32BE(at);
+    if (png.toString("ascii", at + 4, at + 8) === "IDAT") idat.push(png.subarray(at + 8, at + 8 + length));
+    at += 12 + length;
+  }
+  return [...inflateSync(Buffer.concat(idat)).subarray(1, 4)];
+};
+
+test("render 能渲染 WebGL 特效（@remotion/effects），且特效真的生效", async () => {
+  const fx = await makeRepo();
+  try {
+    await symlink(path.join(REPO, "node_modules"), path.join(fx.root, "node_modules"));
+    await createVideo(fx.paths, { id: "fx", title: "Effects" });
+    await writeFile(path.join(fx.root, "videos/fx/compositions.tsx"), EFFECTS);
+
+    const store = new LocalStorage(path.join(fx.root, ".kineto/store"));
+    const { config } = await loadConfig(fx.paths, {});
+    const { file } = await renderVideo(fx.paths, store, config, { id: "fx" });
+    const [r, g, b] = await firstPixel(file);
+    // 暗角把纯红画面的角压成黑色
+    assert.ok(r! < 40 && g! < 40 && b! < 40, `expected a dark corner, got rgb(${r}, ${g}, ${b})`);
   } finally {
     await fx.cleanup();
   }

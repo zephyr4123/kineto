@@ -9,4 +9,5 @@ Config.setEntryPoint(remotionSettings.entryPoint);
 Config.setPublicDir(remotionSettings.publicDir);
 Config.setRspack(remotionSettings.rspack);
 Config.setVideoImageFormat(remotionSettings.videoImageFormat);
+Config.setChromiumOpenGlRenderer(remotionSettings.chromiumOpenGlRenderer);
 Config.setOverwriteOutput(true);
