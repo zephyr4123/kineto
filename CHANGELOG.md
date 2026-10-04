@@ -6,6 +6,19 @@ as a GitHub release; tags with a hyphen (`v1.1.0-rc.1`) become prereleases.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-04
+
+### Added
+
+- `@remotion/effects` is installed and its effects render. Most of them (noise, vignette, light leak, chromatic aberration…) run on WebGL2, so renders now ask Chrome for a GL backend: ANGLE on macOS and Windows, SwiftShader (`swangle`) on Linux servers and CI without a GPU. The same setting applies to `./kineto render`, `npx remotion` and Studio. An end-to-end test renders a WebGL effect and checks that it took effect.
+- `mediabunny`, so a composition's `calculateMetadata` can measure media, for example to let voiceover lengths set the timeline.
+- `engine/motion.ts`: `tween`, `clamp`, easing presets and camera `shake`, shared by more than one video.
+- Sample video `coffee-life` (一杯咖啡的一生): a two-minute vertical explainer with code-drawn illustrations next to people-free stock photos, a Tencent TTS voiceover that drives the timeline, and two cover stills (16:9 and 3:4).
+
+### Fixed
+
+- Effects that need WebGL2 failed in headless renders because Chrome had no WebGL2 context.
+
 ## [1.0.0] - 2026-10-03
 
 First stable release.
@@ -40,5 +53,6 @@ First stable release.
 - Sample video `corner-hit` and the promo `kineto-promo`, both made with kineto.
 - CI on Node 22.18 and 24, release workflow on `v*` tags, Dependabot for actions and npm.
 
-[Unreleased]: https://github.com/zephyr4123/kineto/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/zephyr4123/kineto/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/zephyr4123/kineto/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/zephyr4123/kineto/releases/tag/v1.0.0
