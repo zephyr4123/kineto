@@ -2,10 +2,10 @@
   "id": "kineto-promo",
   "title": "kineto 宣传片",
   "description": "",
-  "status": "draft",
+  "status": "published",
   "tags": [],
   "createdAt": "2026-10-03T05:07:48.330Z",
-  "updatedAt": "2026-10-03T06:29:49.403Z",
+  "updatedAt": "2026-10-04T06:39:29.125Z",
   "assets": {
     "fontArcade": "sha256:034c77f1f05ec89421e4a63f0e3a4ca1ecf852cc6d2bf611f126f275728e017d",
     "fontMono": "sha256:6573eb37436b61997f1012b8a8af633f40979edc2ec9c76bcdb42fa23132c428",

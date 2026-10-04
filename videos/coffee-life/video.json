@@ -2,10 +2,10 @@
   "id": "coffee-life",
   "title": "一杯咖啡的一生",
   "description": "两分钟竖版咖啡科普：从枝头到杯中。代码插画配真实照片虚实对照，旁白娓娓道来。配乐 Scott Buckley《The Long Way Home》(CC BY 4.0)",
-  "status": "draft",
+  "status": "published",
   "tags": [],
   "createdAt": "2026-10-04T04:44:58.947Z",
-  "updatedAt": "2026-10-04T06:09:29.427Z",
+  "updatedAt": "2026-10-04T06:39:28.815Z",
   "assets": {
     "goldenDrum": "sha256:4159a7784b23742f44d82c7861435cf97ae49bd5395d601d30a99864a5efa531",
     "fontSerif": "sha256:050080d9255a86808f2945bffac582b31ef32bc36411ce29563b4961670c66f9",
