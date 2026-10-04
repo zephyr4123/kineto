@@ -1,0 +1,26 @@
+{
+  "id": "coffee-life",
+  "title": "一杯咖啡的一生",
+  "description": "60 秒竖版咖啡科普：从樱桃到杯子，图库照片 + 卡点快剪",
+  "status": "draft",
+  "tags": [],
+  "createdAt": "2026-10-04T04:44:58.947Z",
+  "updatedAt": "2026-10-04T04:50:34.619Z",
+  "assets": {
+    "greenPour": "sha256:9a51f537167cb7ae01f7d0dd19b8ffccdc264b6a4ba8b01efb19609ff75f2ff2",
+    "greenHand": "sha256:09df1031df81f74262681b657864450518fb97fc31e3f82f081a623955ca9220",
+    "greenBin": "sha256:260cebb4b017247b78a29dc16da2d5849300c2f67577ab0abd8180f41ba23a71",
+    "yellowDrum": "sha256:5f19cd26c30b9c64a6f3c8a59a7904a216ccaa6894c5b5ee7c05734d8a3b7650",
+    "goldenDrum": "sha256:4159a7784b23742f44d82c7861435cf97ae49bd5395d601d30a99864a5efa531",
+    "paddleDrum": "sha256:0bc636881921b9db0919761e09e254f346ddbe6967754f2970ee6b13fb9ef824",
+    "controlPanel": "sha256:97a4c4ca21ce4f983b75eb529a254983a68745b6d10d3d6a8eeb49cc58ec65df",
+    "smokePour": "sha256:edd67f1b7d7b6e55d743f94dec908ead176ae0a125b1f215a9b5a84af9ca8c5e",
+    "steamSpill": "sha256:dcb874732ef089d592a9f4e43d1b0afe90bcf7b2113b53ad1562364c6cfc82ae",
+    "coolingArm": "sha256:c0797f2bcc4125baf7db39a837edbd72ce7b69006a6920ea3b99c8c2e4d83322",
+    "macroBeans": "sha256:142b5d4035bc1ed3326395d2a7daa7759a92d27c93924723cba08e270adf3798",
+    "macroDark": "sha256:863ba8d148581471eeea00a1757e00b5a49989842ed4eb192924de4a50f87971",
+    "darkBowl": "sha256:36e41ea93f6972fa92bb65819ea17493d9c30c100bdf1011eb6b93e643675ccc",
+    "trayPour": "sha256:7f7c1da266496891d480d7b6c02c01e45b483c865bef913188711188dbe7b2c8",
+    "fontDisplay": "sha256:731f22973349404b15a88a99ef3b5dd4104c0965c23b7e485c1f11e84fea99e2"
+  }
+}
