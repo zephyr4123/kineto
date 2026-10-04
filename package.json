@@ -37,7 +37,7 @@
     "remotion": "4.0.532",
     "typescript": "5.9.3",
     "yaml": "2.9.1",
-    "zod": "4.5.4"
+    "zod": "4.6.5"
   },
   "devDependencies": {
     "@remotion/eslint-config-flat": "4.0.532",
