@@ -1,19 +1,6 @@
-import { Easing, interpolate, random } from "remotion";
-
-// 动效小工具：全部是帧的纯函数，渲染时每帧算一遍，结果确定。
-export const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
-
-export const tween = (
-  frame: number,
-  range: readonly [number, number],
-  to: readonly [number, number],
-  easing: (t: number) => number = Easing.linear,
-) => interpolate(frame, range, to, { ...clamp, easing });
-
-export const easeOut = Easing.out(Easing.cubic);
-export const easeIn = Easing.in(Easing.cubic);
-export const easeInOut = Easing.inOut(Easing.cubic);
-export const backOut = Easing.out(Easing.back(2.2));
+// 通用的缓动与震动已提升到 engine/motion.ts（第二条视频也要用），这里转导出，场景里的引用不用改；
+// 下面是宣传片自己的动作：跳跃、跑步、眨眼。
+export { backOut, clamp, easeIn, easeInOut, easeOut, shake, sumShakes, tween } from "../../engine/motion";
 
 // 抛物线跳跃：返回向上的位移（像素，>= 0），t 在 [0, duration] 之外为 0
 export const jumpArc = (t: number, duration: number, height: number) => {
@@ -21,17 +8,6 @@ export const jumpArc = (t: number, duration: number, height: number) => {
   const p = t / duration;
   return 4 * height * p * (1 - p);
 };
-
-// 屏幕震动：start 起 duration 帧内线性衰减；每帧取一个确定的随机偏移
-export const shake = (frame: number, start: number, duration: number, amplitude: number, seed = "shake") => {
-  const t = frame - start;
-  if (t < 0 || t >= duration) return { x: 0, y: 0 };
-  const k = amplitude * (1 - t / duration);
-  return { x: (random(`${seed}-x-${frame}`) * 2 - 1) * k, y: (random(`${seed}-y-${frame}`) * 2 - 1) * k };
-};
-
-export const sumShakes = (...shakes: { x: number; y: number }[]) =>
-  shakes.reduce((acc, s) => ({ x: acc.x + s.x, y: acc.y + s.y }), { x: 0, y: 0 });
 
 // 跑步腿：每 period 帧换一次
 export const runLegs = (frame: number, period = 6) => (Math.floor(frame / period) % 2 === 0 ? "runA" : "runB");
