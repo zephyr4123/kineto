@@ -11,13 +11,21 @@ export const Sfx: React.FC<{
   readonly trim?: number;
   readonly fade?: number;
 }> = ({ src, at, duration, volume, trim = 0, fade = 6 }) => (
-  <Sequence name={`sfx:${src.split("/").pop()}`} from={Math.round(at)} durationInFrames={Math.round(duration)} layout="none">
+  <Sequence
+    name={`sfx:${src.split("/").pop()}`}
+    from={Math.round(at)}
+    durationInFrames={Math.round(duration)}
+    layout="none"
+  >
     <Audio
       src={staticFile(src)}
       trimBefore={Math.round(trim * FPS)}
       volume={(f) =>
         volume *
-        interpolate(f, [0, fade, duration - fade, duration], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
+        interpolate(f, [0, fade, duration - fade, duration], [0, 1, 1, 0], {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+        })
       }
     />
   </Sequence>

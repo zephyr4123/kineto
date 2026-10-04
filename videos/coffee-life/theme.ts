@@ -5,7 +5,11 @@ import { assets } from "./assets.gen";
 // 一本会动的咖啡画册：米白纸面，代码画的几何扁平插画，宋体排字，节奏慢。
 // 思源宋体（Noto Serif SC，OFL-1.1）可变字重，一个文件覆盖 200~900，作为资产入库，渲染不依赖外网
 export const SERIF = "Noto Serif SC";
-await loadFont({ family: SERIF, url: staticFile(assets.fontSerif), weight: "200 900" });
+await loadFont({
+  family: SERIF,
+  url: staticFile(assets.fontSerif),
+  weight: "200 900",
+});
 
 // 竖版，抖音 / 小红书 / 视频号的标准画幅
 export const W = 1080;

@@ -1,5 +1,13 @@
 import { AbsoluteFill, Img, staticFile, useCurrentFrame } from "remotion";
-import { Canvas, Note, drawn, ease, easeInOut, pop, prog } from "../components/art";
+import {
+  Canvas,
+  Note,
+  drawn,
+  ease,
+  easeInOut,
+  pop,
+  prog,
+} from "../components/art";
 import type { SceneProps } from "../components/Stage";
 import { assets } from "../assets.gen";
 import { CHERRY, INK, MUTED, PAPER, STAGE } from "../theme";
@@ -43,18 +51,45 @@ export const Belt: React.FC<SceneProps> = ({ cues }) => {
     <AbsoluteFill style={{ overflow: "hidden" }}>
       <Img
         src={staticFile(assets.worldMap)}
-        style={{ position: "absolute", left: -(LON_FROM + 180) * PPD, top: MAP_TOP, width: IMG_W, height: IMG_H, opacity: land }}
+        style={{
+          position: "absolute",
+          left: -(LON_FROM + 180) * PPD,
+          top: MAP_TOP,
+          width: IMG_W,
+          height: IMG_H,
+          opacity: land,
+        }}
       />
       <Canvas>
-        <rect x={0} y={equator - (equator - top) * band} width={STAGE.w} height={(bottom - top) * band} fill={CHERRY} opacity={0.16} />
+        <rect
+          x={0}
+          y={equator - (equator - top) * band}
+          width={STAGE.w}
+          height={(bottom - top) * band}
+          fill={CHERRY}
+          opacity={0.16}
+        />
         {[
           { at: top, name: "北回归线", dash: "10 8", color: CHERRY },
           { at: equator, name: "赤道", dash: "2 8", color: MUTED },
           { at: bottom, name: "南回归线", dash: "10 8", color: CHERRY },
         ].map((l) => (
           <g key={l.name}>
-            <path d={`M 0 ${l.at} L ${STAGE.w} ${l.at}`} stroke={l.color} strokeWidth={2.5} strokeDasharray={l.dash} opacity={0.85 * lines} />
-            <text x={10} y={l.at - 12} fontSize={26} fill={l.color} letterSpacing="0.08em" opacity={labels}>
+            <path
+              d={`M 0 ${l.at} L ${STAGE.w} ${l.at}`}
+              stroke={l.color}
+              strokeWidth={2.5}
+              strokeDasharray={l.dash}
+              opacity={0.85 * lines}
+            />
+            <text
+              x={10}
+              y={l.at - 12}
+              fontSize={26}
+              fill={l.color}
+              letterSpacing="0.08em"
+              opacity={labels}
+            >
               {l.name}
             </text>
           </g>
@@ -62,20 +97,54 @@ export const Belt: React.FC<SceneProps> = ({ cues }) => {
         {ORIGINS.map((o, i) => {
           const on = prog(f, c + 110 + i * 10, c + 126 + i * 10, pop);
           return (
-            <g key={o.name} opacity={prog(f, c + 110 + i * 10, c + 118 + i * 10)}>
-              <circle cx={x(o.lon)} cy={y(o.lat)} r={9 * on} fill={CHERRY} stroke={PAPER} strokeWidth={4} />
-              <text x={x(o.lon) + o.side * 18} y={y(o.lat) + 10} textAnchor={o.side > 0 ? "start" : "end"} fontSize={28} fill={INK}>
+            <g
+              key={o.name}
+              opacity={prog(f, c + 110 + i * 10, c + 118 + i * 10)}
+            >
+              <circle
+                cx={x(o.lon)}
+                cy={y(o.lat)}
+                r={9 * on}
+                fill={CHERRY}
+                stroke={PAPER}
+                strokeWidth={4}
+              />
+              <text
+                x={x(o.lon) + o.side * 18}
+                y={y(o.lat) + 10}
+                textAnchor={o.side > 0 ? "start" : "end"}
+                fontSize={28}
+                fill={INK}
+              >
                 {o.name}
               </text>
             </g>
           );
         })}
         <g opacity={title}>
-          <text x={0} y={110} fontSize={56} fontWeight={600} fill={INK} letterSpacing="0.16em">
+          <text
+            x={0}
+            y={110}
+            fontSize={56}
+            fontWeight={600}
+            fill={INK}
+            letterSpacing="0.16em"
+          >
             咖啡带
           </text>
-          <path d="M 0 140 L 120 140" stroke={CHERRY} strokeWidth={3} {...drawn(title)} />
-          <Note x={0} y={186} text="北纬 23°26′ — 南纬 23°26′" anchor="start" size={26} />
+          <path
+            d="M 0 140 L 120 140"
+            stroke={CHERRY}
+            strokeWidth={3}
+            {...drawn(title)}
+          />
+          <Note
+            x={0}
+            y={186}
+            text="北纬 23°26′ — 南纬 23°26′"
+            anchor="start"
+            size={26}
+          />
         </g>
       </Canvas>
     </AbsoluteFill>

@@ -1,5 +1,18 @@
 import { useCurrentFrame } from "remotion";
-import { Canvas, Cherry, Defs, Leaf, Note, Shadow, drawn, ease, easeInOut, pop, prog, rnd } from "../components/art";
+import {
+  Canvas,
+  Cherry,
+  Defs,
+  Leaf,
+  Note,
+  Shadow,
+  drawn,
+  ease,
+  easeInOut,
+  pop,
+  prog,
+  rnd,
+} from "../components/art";
 import { Sun } from "../components/objects";
 import type { SceneProps } from "../components/Stage";
 import { ART, INK, MUTED } from "../theme";
@@ -19,8 +32,17 @@ const TIERS = [
   { y: 250, len: 90 },
 ];
 
-const Snowflake: React.FC<{ readonly x: number; readonly y: number; readonly s: number }> = ({ x, y, s }) => (
-  <g transform={`translate(${x} ${y}) scale(${s})`} stroke="#7c9bb4" strokeWidth={5} strokeLinecap="round">
+const Snowflake: React.FC<{
+  readonly x: number;
+  readonly y: number;
+  readonly s: number;
+}> = ({ x, y, s }) => (
+  <g
+    transform={`translate(${x} ${y}) scale(${s})`}
+    stroke="#7c9bb4"
+    strokeWidth={5}
+    strokeLinecap="round"
+  >
     {[0, 60, 120].map((a) => (
       <g key={a} transform={`rotate(${a})`}>
         <path d="M 0 -30 L 0 30" />
@@ -57,7 +79,8 @@ export const Climate: React.FC<SceneProps> = ({ cues }) => {
       {/* 细雨 */}
       {Array.from({ length: 16 }, (_, i) => {
         const period = 34 + Math.floor(rnd(`rain-p-${i}`) * 16);
-        const t = ((f + Math.floor(rnd(`rain-o-${i}`) * period)) % period) / period;
+        const t =
+          ((f + Math.floor(rnd(`rain-o-${i}`) * period)) % period) / period;
         const x = 190 + rnd(`rain-x-${i}`) * 560;
         const y = 150 + t * 420;
         return (
@@ -71,9 +94,22 @@ export const Climate: React.FC<SceneProps> = ({ cues }) => {
       })}
 
       {/* 地面与树 */}
-      <path d={`M 150 ${GROUND} L 786 ${GROUND}`} stroke={INK} strokeWidth={3} strokeLinecap="round" opacity={0.5} {...drawn(trunk)} />
+      <path
+        d={`M 150 ${GROUND} L 786 ${GROUND}`}
+        stroke={INK}
+        strokeWidth={3}
+        strokeLinecap="round"
+        opacity={0.5}
+        {...drawn(trunk)}
+      />
       <Shadow x={TRUNK_X} y={GROUND + 4} rx={180 * trunk} ry={16} />
-      <path d={`M ${TRUNK_X} ${GROUND} L ${TRUNK_X} ${GROUND - 410}`} stroke={ART.branch} strokeWidth={16} strokeLinecap="round" {...drawn(trunk)} />
+      <path
+        d={`M ${TRUNK_X} ${GROUND} L ${TRUNK_X} ${GROUND - 410}`}
+        stroke={ART.branch}
+        strokeWidth={16}
+        strokeLinecap="round"
+        {...drawn(trunk)}
+      />
       {TIERS.map((tier, i) => {
         const g = prog(f, 14 + i * 9, 40 + i * 9, pop);
         return [-1, 1].map((side) => {
@@ -110,7 +146,14 @@ export const Climate: React.FC<SceneProps> = ({ cues }) => {
               ))}
               {i < 4
                 ? [0, 1, 2].map((j) => (
-                    <Cherry key={j} x={TRUNK_X + side * (tier.len * 0.5 + j * 13)} y={tier.y + 8 + (j % 2) * 10} r={11} scale={g} color={j === 1 ? ART.ripe : ART.orange} />
+                    <Cherry
+                      key={j}
+                      x={TRUNK_X + side * (tier.len * 0.5 + j * 13)}
+                      y={tier.y + 8 + (j % 2) * 10}
+                      r={11}
+                      scale={g}
+                      color={j === 1 ? ART.ripe : ART.orange}
+                    />
                   ))
                 : null}
             </g>
@@ -119,16 +162,56 @@ export const Climate: React.FC<SceneProps> = ({ cues }) => {
       })}
 
       {/* 温度带 */}
-      <rect x={STRIP.x} y={STRIP.y} width={STRIP.w * strip} height={STRIP.h} rx={STRIP.h / 2} fill="url(#temp)" />
-      <rect x={STRIP.x} y={STRIP.y} width={STRIP.w * 0.3} height={STRIP.h} rx={STRIP.h / 2} fill="#f1eadf" opacity={(1 - coldDim) * strip} />
-      <rect x={STRIP.x + STRIP.w * 0.7} y={STRIP.y} width={STRIP.w * 0.3} height={STRIP.h} rx={STRIP.h / 2} fill="#f1eadf" opacity={(1 - hotDim) * strip} />
+      <rect
+        x={STRIP.x}
+        y={STRIP.y}
+        width={STRIP.w * strip}
+        height={STRIP.h}
+        rx={STRIP.h / 2}
+        fill="url(#temp)"
+      />
+      <rect
+        x={STRIP.x}
+        y={STRIP.y}
+        width={STRIP.w * 0.3}
+        height={STRIP.h}
+        rx={STRIP.h / 2}
+        fill="#f1eadf"
+        opacity={(1 - coldDim) * strip}
+      />
+      <rect
+        x={STRIP.x + STRIP.w * 0.7}
+        y={STRIP.y}
+        width={STRIP.w * 0.3}
+        height={STRIP.h}
+        rx={STRIP.h / 2}
+        fill="#f1eadf"
+        opacity={(1 - hotDim) * strip}
+      />
       <g opacity={coldDim}>
         <Snowflake x={STRIP.x - 2} y={STRIP.y + 70} s={cold} />
-        <Note x={STRIP.x + 50} y={STRIP.y + 82} text="霜冻" anchor="start" opacity={cold} />
+        <Note
+          x={STRIP.x + 50}
+          y={STRIP.y + 82}
+          text="霜冻"
+          anchor="start"
+          opacity={cold}
+        />
       </g>
       <g opacity={hotDim}>
-        <Sun x={STRIP.x + STRIP.w + 2} y={STRIP.y + 70} s={0.9 * hot} spin={f * 0.6} />
-        <Note x={STRIP.x + STRIP.w - 52} y={STRIP.y + 82} text="酷热" anchor="end" opacity={hot} />
+        <Sun
+          x={STRIP.x + STRIP.w + 2}
+          y={STRIP.y + 70}
+          s={0.9 * hot}
+          spin={f * 0.6}
+        />
+        <Note
+          x={STRIP.x + STRIP.w - 52}
+          y={STRIP.y + 82}
+          text="酷热"
+          anchor="end"
+          opacity={hot}
+        />
       </g>
       {/* 温和：中间一段高亮，一条虚线连到树下 */}
       <rect
@@ -142,8 +225,21 @@ export const Climate: React.FC<SceneProps> = ({ cues }) => {
         strokeWidth={3}
         opacity={mild}
       />
-      <path d={`M ${TRUNK_X} ${GROUND + 26} L ${TRUNK_X} ${STRIP.y - 14}`} stroke={MUTED} strokeWidth={3} strokeDasharray="6 8" opacity={mild} />
-      <Note x={TRUNK_X} y={STRIP.y + 82} text="温和 · 湿润" size={32} color={INK} opacity={mild} />
+      <path
+        d={`M ${TRUNK_X} ${GROUND + 26} L ${TRUNK_X} ${STRIP.y - 14}`}
+        stroke={MUTED}
+        strokeWidth={3}
+        strokeDasharray="6 8"
+        opacity={mild}
+      />
+      <Note
+        x={TRUNK_X}
+        y={STRIP.y + 82}
+        text="温和 · 湿润"
+        size={32}
+        color={INK}
+        opacity={mild}
+      />
     </Canvas>
   );
 };

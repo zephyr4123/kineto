@@ -20,11 +20,17 @@ const TAIL = sec(1.8);
 export const END_CARD = sec(4);
 
 // 没有配音时按语速估（云大围 0.9 倍速实测约 3.5 字/秒），只用于还没合成旁白时预览排版
-const estimate = (text: string) => [...text].filter((c) => /\p{Script=Han}/u.test(c)).length / 3.5 + 0.3;
+const estimate = (text: string) =>
+  [...text].filter((c) => /\p{Script=Han}/u.test(c)).length / 3.5 + 0.3;
 
 export type Props = { readonly durations: readonly number[] };
 
-export type TimedLine = { readonly index: number; readonly start: number; readonly end: number; readonly gapBefore: number };
+export type TimedLine = {
+  readonly index: number;
+  readonly start: number;
+  readonly end: number;
+  readonly gapBefore: number;
+};
 // 场景：起止是全片的帧号；cues / ends 是场景里每句旁白的起止（相对场景起点），场景动画按它们卡时间
 export type TimedScene = {
   readonly scene: SceneId;
@@ -38,7 +44,12 @@ export const buildTimeline = (durations: readonly number[]) => {
   const lines: TimedLine[] = [];
   let t = TITLE_HOLD;
   LINES.forEach((line, i) => {
-    const gapBefore = i === 0 ? TITLE_HOLD : line.chapter !== LINES[i - 1]!.chapter ? CHAPTER_GAP : LINE_GAP;
+    const gapBefore =
+      i === 0
+        ? TITLE_HOLD
+        : line.chapter !== LINES[i - 1]!.chapter
+          ? CHAPTER_GAP
+          : LINE_GAP;
     if (i > 0) t += gapBefore;
     const end = t + sec(durations[i]!);
     lines.push({ index: i, start: t, end, gapBefore });
@@ -53,22 +64,44 @@ export const buildTimeline = (durations: readonly number[]) => {
     const scene = LINES[tl.index]!.scene;
     const last = scenes[scenes.length - 1];
     if (last?.scene === scene) {
-      scenes[scenes.length - 1] = { ...last, cues: [...last.cues, tl.start - last.start], ends: [...last.ends, tl.end - last.start] };
+      scenes[scenes.length - 1] = {
+        ...last,
+        cues: [...last.cues, tl.start - last.start],
+        ends: [...last.ends, tl.end - last.start],
+      };
       continue;
     }
     const start = tl.index === 0 ? 0 : tl.start - Math.round(tl.gapBefore / 2);
     if (last) scenes[scenes.length - 1] = { ...last, end: start };
-    scenes.push({ scene, start, end: endCardAt, cues: [tl.start - start], ends: [tl.end - start] });
+    scenes.push({
+      scene,
+      start,
+      end: endCardAt,
+      cues: [tl.start - start],
+      ends: [tl.end - start],
+    });
   }
   return { lines, scenes, endCardAt, total };
 };
 
 const audioSeconds = async (src: string) => {
-  const input = new Input({ formats: ALL_FORMATS, source: new UrlSource(staticFile(src)) });
+  const input = new Input({
+    formats: ALL_FORMATS,
+    source: new UrlSource(staticFile(src)),
+  });
   return input.computeDuration();
 };
 
-export const calculateMetadata: CalculateMetadataFunction<Props> = async ({ props }) => {
-  const durations = await Promise.all(LINES.map((line, i) => (VOICE[i] ? audioSeconds(VOICE[i]) : estimate(line.text))));
-  return { durationInFrames: buildTimeline(durations).total, props: { ...props, durations } };
+export const calculateMetadata: CalculateMetadataFunction<Props> = async ({
+  props,
+}) => {
+  const durations = await Promise.all(
+    LINES.map((line, i) =>
+      VOICE[i] ? audioSeconds(VOICE[i]) : estimate(line.text),
+    ),
+  );
+  return {
+    durationInFrames: buildTimeline(durations).total,
+    props: { ...props, durations },
+  };
 };

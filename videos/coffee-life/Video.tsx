@@ -1,6 +1,13 @@
 import { Audio } from "@remotion/media";
 import { useMemo } from "react";
-import { AbsoluteFill, Sequence, interpolate, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
+import {
+  AbsoluteFill,
+  Sequence,
+  interpolate,
+  staticFile,
+  useCurrentFrame,
+  useVideoConfig,
+} from "remotion";
 import { Backdrop } from "./components/Backdrop";
 import { Caption, ChapterLabel, RunningHead } from "./components/Page";
 import { Sfx } from "./components/Sound";
@@ -37,19 +44,33 @@ export const Video: React.FC<Props> = ({ durations }) => {
 
   // 配乐：Scott Buckley《The Long Way Home》。从曲子中段起放，让它第 157 秒的最后一个和弦落在片尾页出现的那一刻；
   // 有人说话时压低，停顿时抬起来一点
-  const musicFrom = Math.max(0, Math.round(MUSIC_LAST_CHORD * fps) - tl.endCardAt);
+  const musicFrom = Math.max(
+    0,
+    Math.round(MUSIC_LAST_CHORD * fps) - tl.endCardAt,
+  );
   const speaking = (frame: number) =>
     Math.max(
       0,
       ...tl.lines.map((l) =>
-        interpolate(frame, [l.start - 8, l.start + 4, l.end - 4, l.end + 12], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
+        interpolate(
+          frame,
+          [l.start - 8, l.start + 4, l.end - 4, l.end + 12],
+          [0, 1, 1, 0],
+          { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+        ),
       ),
     );
   const musicVolume = (frame: number) =>
     (0.3 - 0.15 * speaking(frame)) *
-    interpolate(frame, [0, 75, tl.total - 45, tl.total], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+    interpolate(frame, [0, 75, tl.total - 45, tl.total], [0, 1, 1, 0], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    });
 
-  const body = interpolate(f, [tl.endCardAt, tl.endCardAt + 24], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const body = interpolate(f, [tl.endCardAt, tl.endCardAt + 24], [1, 0], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
 
   return (
     <AbsoluteFill>
@@ -58,7 +79,13 @@ export const Video: React.FC<Props> = ({ durations }) => {
         <RunningHead />
         {chapters.map((c) =>
           CHAPTERS[c.chapter].title ? (
-            <Sequence key={c.chapter} name={`chapter:${c.chapter}`} from={c.start} durationInFrames={c.end - c.start} premountFor={fps}>
+            <Sequence
+              key={c.chapter}
+              name={`chapter:${c.chapter}`}
+              from={c.start}
+              durationInFrames={c.end - c.start}
+              premountFor={fps}
+            >
               <ChapterLabel chapter={c.chapter} duration={c.end - c.start} />
             </Sequence>
           ) : null,
@@ -67,9 +94,18 @@ export const Video: React.FC<Props> = ({ durations }) => {
         {tl.lines.map((l, i) => {
           const next = tl.lines[i + 1];
           const from = l.start + SPEECH_LEAD;
-          const until = Math.min(l.end + Math.round(fps * 0.6), next ? next.start + SPEECH_LEAD - 2 : tl.endCardAt);
+          const until = Math.min(
+            l.end + Math.round(fps * 0.6),
+            next ? next.start + SPEECH_LEAD - 2 : tl.endCardAt,
+          );
           return (
-            <Sequence key={`caption-${i}`} name={`caption:${i + 1}`} from={from} durationInFrames={until - from} premountFor={fps}>
+            <Sequence
+              key={`caption-${i}`}
+              name={`caption:${i + 1}`}
+              from={from}
+              durationInFrames={until - from}
+              premountFor={fps}
+            >
               <Caption text={LINES[l.index]!.text} duration={until - from} />
             </Sequence>
           );
@@ -83,14 +119,30 @@ export const Video: React.FC<Props> = ({ durations }) => {
         <EndCard />
       </Sequence>
 
-      <Audio src={staticFile(assets.musicLongWayHome)} trimBefore={musicFrom} volume={musicVolume} />
+      <Audio
+        src={staticFile(assets.musicLongWayHome)}
+        trimBefore={musicFrom}
+        volume={musicVolume}
+      />
       {/* 换章翻一页书 */}
       {chapters.slice(1).map((c) => (
-        <Sfx key={`page-${c.chapter}`} src={assets.sfxPageTurn} at={c.start - 6} duration={52} volume={0.3} />
+        <Sfx
+          key={`page-${c.chapter}`}
+          src={assets.sfxPageTurn}
+          at={c.start - 6}
+          duration={52}
+          volume={0.3}
+        />
       ))}
       {tl.lines.map((l) =>
         VOICE[l.index] ? (
-          <Sequence key={`vo-${l.index}`} name={`vo:${l.index + 1}`} from={l.start} durationInFrames={l.end - l.start + 2} layout="none">
+          <Sequence
+            key={`vo-${l.index}`}
+            name={`vo:${l.index + 1}`}
+            from={l.start}
+            durationInFrames={l.end - l.start + 2}
+            layout="none"
+          >
             <Audio src={staticFile(VOICE[l.index]!)} />
           </Sequence>
         ) : null,
