@@ -1,187 +1,155 @@
-import { AbsoluteFill, Sequence, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
-import { shake, sumShakes } from "../../../engine/motion";
+import { interpolate, useCurrentFrame } from "remotion";
+import { Callout, Canvas, Defs, Note, drawn, ease, easeInOut, pop, prog, rnd, roastColor } from "../components/art";
+import { Drum } from "../components/objects";
+import { Sfx } from "../components/Sound";
 import { assets } from "../assets.gen";
-import { beat } from "../beat";
-import { ColorStrip, Journey, Thermo } from "../components/Gauges";
-import { Grid } from "../components/Grid";
-import { Flash, Grain, Leak, Vignette } from "../components/Overlays";
-import { Shot } from "../components/Shot";
-import { Chip, Slam } from "../components/Slam";
-import { ESPRESSO } from "../theme";
+import type { SceneProps } from "../components/Stage";
+import { ART, CHERRY, INK, MUTED, SERIF } from "../theme";
 
-// 烘焙段（全片高潮，也是风格样片）。四小节一个乐句：
-// 1 生豆入锅 → 2 升温变色 → 3 四宫格对比 + 结巴推镜蓄力 → 4 「一爆」落点 → 5 裂开的豆子 → 6 香味收束 → 下一站
-// 所有切点写成拍号（beat(n)），换配乐只改 beat.ts 的 BPM。
-export const ROAST_BEATS = 26;
+// 烘焙（四句）：
+// 1「真正的变化，发生在烘焙机里」——滚筒出现，点火
+// 2「两百度左右……十来分钟，从绿变黄，再一点点变成褐色」——温度计、计时环，窗里的豆子跟着旁白变色
+// 3「噼啪作响，像爆米花一样……一爆」——窗口周围一个个小爆裂，豆子跳起来
+// 4「上千种香味物质」——进料口飘出彩色的香气粒子
+const DRUM = { x: 380, y: 430, s: 0.92 };
+const THERMO = { x: 800, top: 170, bottom: 540 };
+const CLOCK = { x: 800, y: 680, r: 54 };
 
-// 重拍上的震动：[拍, 幅度]
-const HITS = [
-  [0, 12],
-  [12, 34],
-  [13, 10],
-  [14, 10],
-  [15, 10],
-  [16, 14],
-  [17, 14],
+const CHIPS = [
+  { label: "生豆", t: 0 },
+  { label: "转黄", t: 0.35 },
+  { label: "褐色", t: 0.72 },
 ] as const;
 
-export const Roast: React.FC = () => {
+export const Roast: React.FC<SceneProps> = ({ cues }) => {
   const f = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const jolt = sumShakes(...HITS.map(([at, amp], i) => shake(f, beat(at), 10, amp, `roast-${i}`)));
-  const temp = interpolate(f, [beat(4), beat(8), beat(10), beat(11.9), beat(12)], [25, 120, 165, 192, 196], {
+  const [c0, c1, c2, c3] = [cues[0]!, cues[1]!, cues[2]!, cues[3]!];
+  const drum = prog(f, 0, 24, pop);
+  const heat = prog(f, c0 + 40, c0 + 70, ease);
+
+  const gauges = prog(f, c1, c1 + 20);
+  const temp = prog(f, c1 + 10, c1 + 80, easeInOut);
+  const clock = prog(f, c1 + 60, c1 + 120, easeInOut);
+  const tint = interpolate(f, [c1 + 125, c1 + 165, c1 + 180, c1 + 240, c3, c3 + 120], [0, 0.35, 0.35, 0.72, 0.72, 0.8], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const roast = interpolate(f, [beat(4), beat(8), beat(12), beat(16), beat(20)], [0.02, 0.28, 0.5, 0.7, 0.92], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  const chips = CHIPS.map((ch, i) => prog(f, c1 + 115 + [0, 35, 85][i]!, c1 + 135 + [0, 35, 85][i]!, pop));
+
+  // 一爆：开口后约 1.8 秒（「噼啪作响」）开始，持续到「一爆」两个字
+  const crackFrom = c2 + 52;
+  const crackTo = c2 + 160;
+  const bursts = Array.from({ length: 18 }, (_, i) => ({
+    at: crackFrom + rnd(`burst-${i}`) * (crackTo - crackFrom),
+    a: rnd(`burst-a-${i}`) * Math.PI * 2,
+    r: 120 + rnd(`burst-r-${i}`) * 90,
+  }));
+  const hop = (i: number) => {
+    const b = bursts[i % bursts.length]!;
+    const t = f - b.at;
+    return t > 0 && t < 10 ? Math.sin((t / 10) * Math.PI) * 30 : 0;
+  };
+  const shakeX = f > crackFrom && f < crackTo ? Math.sin(f * 2.3) * 2 : 0;
+  const crackName = prog(f, c2 + 150, c2 + 176);
+
+  const aroma = prog(f, c3, c3 + 30);
+  const counter = prog(f, c3 + 36, c3 + 60);
 
   return (
-    <AbsoluteFill style={{ backgroundColor: ESPRESSO }}>
-      <AbsoluteFill style={{ translate: `${jolt.x}px ${jolt.y}px`, scale: "1.04" }}>
-        {/* 1 生豆入锅 */}
-        <Sequence name="greenPour" from={beat(0)} durationInFrames={beat(2)} premountFor={fps}>
-          <Shot src={assets.greenPour} duration={beat(2)} scale={[1.05, 1.2]} punch={0.2} zoomIn={70} aberration={20} />
-        </Sequence>
-        <Sequence name="greenHand" from={beat(2)} durationInFrames={beat(3) - beat(2)} premountFor={fps}>
-          <Shot src={assets.greenHand} duration={beat(3) - beat(2)} scale={[1.15, 1.25]} x={[30, -20]} />
-        </Sequence>
-        <Sequence name="greenBin" from={beat(3)} durationInFrames={beat(4) - beat(3)} premountFor={fps}>
-          <Shot src={assets.greenBin} duration={beat(4) - beat(3)} scale={[1.1, 1.2]} exitZoom />
-        </Sequence>
+    <Canvas>
+      <Defs />
+      {/* 噼啪声：爆米花的录音代替（一爆的声学特征和爆米花相近）；素材有削波，压得很低 */}
+      <Sfx src={assets.sfxCrackle} at={crackFrom} duration={crackTo - crackFrom + 20} volume={0.16} trim={22} fade={14} />
+      {/* 香气粒子：从进料口飘上来 */}
+      {Array.from({ length: 44 }, (_, i) => {
+        const period = 70 + Math.floor(rnd(`ap-${i}`) * 50);
+        const t = ((f - c3 + Math.floor(rnd(`ao-${i}`) * period)) % period) / period;
+        const colors = [ART.crema, ART.orange, ART.sun, CHERRY, ART.brownBean, ART.leaf];
+        // 只在舞台里飘：从进料口升到舞台顶上就散了，不压到书眉
+        const x = DRUM.x + (rnd(`ax-${i}`) - 0.5) * 120 + Math.sin(t * 6 + i) * 60 * t;
+        const y = DRUM.y - 290 - t * 130;
+        return (
+          <circle key={i} cx={x} cy={y} r={3 + rnd(`ar-${i}`) * 7} fill={colors[i % colors.length]} opacity={aroma * Math.sin(Math.PI * t) * 0.9} />
+        );
+      })}
 
-        {/* 2 升温变色：从缩放穿越里冲出来 */}
-        <Sequence name="yellowDrum" from={beat(4)} durationInFrames={beat(6) - beat(4)} premountFor={fps}>
-          <Shot src={assets.yellowDrum} duration={beat(6) - beat(4)} scale={[1.3, 1.1]} zoomIn={90} punch={0} />
-        </Sequence>
-        <Sequence name="goldenDrum" from={beat(6)} durationInFrames={beat(7) - beat(6)} premountFor={fps}>
-          <Shot src={assets.goldenDrum} duration={beat(7) - beat(6)} scale={[1.1, 1.22]} rotate={[-2, 1]} />
-        </Sequence>
-        <Sequence name="paddleDrum" from={beat(7)} durationInFrames={beat(8) - beat(7)} premountFor={fps}>
-          <Shot src={assets.paddleDrum} duration={beat(8) - beat(7)} scale={[1.12, 1.2]} y={[0, -40]} />
-        </Sequence>
+      <g transform={`translate(${DRUM.x + shakeX} ${DRUM.y}) scale(${drum}) translate(${-DRUM.x} ${-DRUM.y})`}>
+        <Drum x={DRUM.x} y={DRUM.y} s={DRUM.s} f={f} color={roastColor(tint)} heat={heat} hop={hop} />
+      </g>
 
-        {/* 3 四宫格：同一批豆子烘到不同程度，半拍弹进一格 */}
-        <Sequence name="grid" from={beat(8)} durationInFrames={beat(10) - beat(8)} premountFor={fps}>
-          <Grid
-            cells={[
-              { src: assets.greenBin, label: "生豆", at: 0 },
-              { src: assets.yellowDrum, label: "转黄", at: beat(0.5) },
-              { src: assets.goldenDrum, label: "肉桂", at: beat(1) },
-              { src: assets.macroBeans, label: "中烘", at: beat(1.5) },
-            ]}
-          />
-        </Sequence>
-        <Sequence name="controlPanel" from={beat(10)} durationInFrames={beat(11) - beat(10)} premountFor={fps}>
-          <Shot src={assets.controlPanel} duration={beat(11) - beat(10)} scale={[1.1, 1.18]} />
-        </Sequence>
-        {/* 结巴推镜：同一张照片每个十六分音符推近一截，蓄力到落点。细节密的照片放大后色差会糊成彩色马赛克，选色块大的 */}
-        <Sequence name="stutter-1" from={beat(11)} durationInFrames={beat(11.25) - beat(11)} premountFor={fps}>
-          <Shot src={assets.goldenDrum} duration={beat(11.25) - beat(11)} scale={[1.15, 1.15]} punch={0.05} zoomIn={16} aberration={4} />
-        </Sequence>
-        <Sequence name="stutter-2" from={beat(11.25)} durationInFrames={beat(11.5) - beat(11.25)} premountFor={fps}>
-          <Shot src={assets.goldenDrum} duration={beat(11.5) - beat(11.25)} scale={[1.3, 1.3]} punch={0.05} zoomIn={22} aberration={6} />
-        </Sequence>
-        <Sequence name="stutter-3" from={beat(11.5)} durationInFrames={beat(11.75) - beat(11.5)} premountFor={fps}>
-          <Shot src={assets.goldenDrum} duration={beat(11.75) - beat(11.5)} scale={[1.5, 1.5]} punch={0.05} zoomIn={28} aberration={8} />
-        </Sequence>
-        <Sequence name="stutter-4" from={beat(11.75)} durationInFrames={beat(12) - beat(11.75)} premountFor={fps}>
-          <Shot src={assets.goldenDrum} duration={beat(12) - beat(11.75)} scale={[1.75, 2]} punch={0.05} zoomIn={40} aberration={10} />
-        </Sequence>
+      {/* 爆裂：窗口周围一圈短线 */}
+      {bursts.map((b, i) => {
+        const t = prog(f, b.at, b.at + 12);
+        if (t <= 0 || t >= 1) return null;
+        const bx = DRUM.x + Math.cos(b.a) * b.r * DRUM.s;
+        const by = DRUM.y + Math.sin(b.a) * b.r * DRUM.s;
+        return (
+          <g key={i} transform={`translate(${bx} ${by}) scale(${0.6 + t * 0.8})`} opacity={1 - t}>
+            {Array.from({ length: 8 }, (_, k) => (
+              <path key={k} d="M 0 -14 L 0 -26" stroke={ART.sun} strokeWidth={5} strokeLinecap="round" transform={`rotate(${k * 45})`} />
+            ))}
+          </g>
+        );
+      })}
+      <Callout x={DRUM.x - 90} y={DRUM.y - 70} tx={DRUM.x - 250} ty={DRUM.y - 300} text="一爆" p={crackName} size={40} />
 
-        {/* 4 一爆：落点 */}
-        <Sequence name="smokePour" from={beat(12)} durationInFrames={beat(13) - beat(12)} premountFor={fps}>
-          <Shot src={assets.smokePour} duration={beat(13) - beat(12)} scale={[1.08, 1.16]} punch={0.28} zoomIn={120} aberration={50} />
-        </Sequence>
-        <Sequence name="steamSpill" from={beat(13)} durationInFrames={beat(14) - beat(13)} premountFor={fps}>
-          <Shot src={assets.steamSpill} duration={beat(14) - beat(13)} scale={[1.12, 1.2]} punch={0.18} aberration={24} />
-        </Sequence>
-        <Sequence name="trayPour" from={beat(14)} durationInFrames={beat(15) - beat(14)} premountFor={fps}>
-          <Shot src={assets.trayPour} duration={beat(15) - beat(14)} scale={[1.1, 1.22]} punch={0.18} aberration={24} />
-        </Sequence>
-        <Sequence name="coolingArm" from={beat(15)} durationInFrames={beat(16) - beat(15)} premountFor={fps}>
-          <Shot src={assets.coolingArm} duration={beat(16) - beat(15)} scale={[1.1, 1.2]} punch={0.18} aberration={24} exitZoom />
-        </Sequence>
+      {/* 温度计 */}
+      <g opacity={gauges}>
+        <rect x={THERMO.x - 16} y={THERMO.top} width={32} height={THERMO.bottom - THERMO.top} rx={16} fill={ART.cup} stroke={INK} strokeWidth={3} />
+        <circle cx={THERMO.x} cy={THERMO.bottom + 20} r={30} fill={CHERRY} stroke={INK} strokeWidth={3} />
+        <rect
+          x={THERMO.x - 8}
+          y={THERMO.bottom - temp * (THERMO.bottom - THERMO.top - 40)}
+          width={16}
+          height={temp * (THERMO.bottom - THERMO.top - 40) + 20}
+          fill={CHERRY}
+        />
+        {[0, 0.5, 1].map((k) => (
+          <path key={k} d={`M ${THERMO.x + 16} ${THERMO.bottom - k * (THERMO.bottom - THERMO.top - 40)} L ${THERMO.x + 30} ${THERMO.bottom - k * (THERMO.bottom - THERMO.top - 40)}`} stroke={INK} strokeWidth={2} />
+        ))}
+        <text x={THERMO.x - 40} y={THERMO.top + 52} textAnchor="end" fontSize={40} fontWeight={600} fill={INK} opacity={prog(f, c1 + 60, c1 + 80)} fontFamily={SERIF}>
+          ≈200°C
+        </text>
+      </g>
 
-        {/* 5 裂开的豆子 */}
-        <Sequence name="macroBeans" from={beat(16)} durationInFrames={beat(17) - beat(16)} premountFor={fps}>
-          <Shot src={assets.macroBeans} duration={beat(17) - beat(16)} scale={[1.35, 1.2]} zoomIn={90} punch={0} />
-        </Sequence>
-        <Sequence name="macroDark" from={beat(17)} durationInFrames={beat(18) - beat(17)} premountFor={fps}>
-          <Shot src={assets.macroDark} duration={beat(18) - beat(17)} scale={[1.15, 1.3]} punch={0.2} aberration={20} />
-        </Sequence>
+      {/* 计时环：十来分钟 */}
+      <g opacity={prog(f, c1 + 54, c1 + 70)}>
+        <circle cx={CLOCK.x} cy={CLOCK.y} r={CLOCK.r} fill={ART.cup} stroke={INK} strokeWidth={3} />
+        <circle
+          cx={CLOCK.x}
+          cy={CLOCK.y}
+          r={CLOCK.r - 12}
+          fill="none"
+          stroke={ART.orange}
+          strokeWidth={14}
+          transform={`rotate(-90 ${CLOCK.x} ${CLOCK.y})`}
+          {...drawn(clock)}
+        />
+        <path d={`M ${CLOCK.x} ${CLOCK.y} L ${CLOCK.x} ${CLOCK.y - 30}`} stroke={INK} strokeWidth={4} strokeLinecap="round" transform={`rotate(${clock * 360} ${CLOCK.x} ${CLOCK.y})`} />
+        <Note x={CLOCK.x} y={CLOCK.y + 100} text="十来分钟" size={28} color={INK} />
+      </g>
 
-        {/* 6 香味收束：拉远亮出整碗深烘豆 */}
-        <Sequence name="darkBowl" from={beat(18)} durationInFrames={beat(24) - beat(18)} premountFor={fps}>
-          <Shot src={assets.darkBowl} duration={beat(24) - beat(18)} scale={[1.45, 1.08]} punch={0.1} zoomIn={60} exitZoom />
-        </Sequence>
-        <Sequence name="outro" from={beat(24)} durationInFrames={beat(ROAST_BEATS) - beat(24)} premountFor={fps}>
-          <AbsoluteFill style={{ backgroundColor: ESPRESSO }} />
-        </Sequence>
-      </AbsoluteFill>
+      {/* 颜色的变化：三个色块，当前的那个下面有一道线 */}
+      {CHIPS.map((ch, i) => {
+        const x = 170 + i * 150;
+        const active = tint >= ch.t - 0.01 && (i === CHIPS.length - 1 || tint < CHIPS[i + 1]!.t - 0.01);
+        return (
+          <g key={ch.label} opacity={chips[i]}>
+            {i > 0 ? <path d={`M ${x - 110} 820 L ${x - 40} 820`} stroke={MUTED} strokeWidth={2} /> : null}
+            <circle cx={x} cy={820} r={30 * chips[i]!} fill={roastColor(ch.t)} />
+            <Note x={x} y={890} text={ch.label} size={28} color={INK} opacity={active ? 1 : 0.55} />
+            <path d={`M ${x - 26} 904 L ${x + 26} 904`} stroke={CHERRY} strokeWidth={3} opacity={active ? 1 : 0} />
+          </g>
+        );
+      })}
 
-      {/* 叠加层：颗粒和暗角全程，字与仪表在照片之上、不跟着震 */}
-      <Grain />
-      <Vignette />
-
-      <Sequence name="title" from={beat(0)} durationInFrames={beat(2)} premountFor={fps}>
-        <Slam text="烘焙" size={400} y={860} />
-      </Sequence>
-      <Sequence name="chip-green" from={beat(2)} durationInFrames={beat(4) - beat(2)} premountFor={fps}>
-        <Chip text="生豆：青绿、坚硬、没有咖啡香" y={1180} />
-      </Sequence>
-      <Sequence name="strip-1" from={beat(4)} durationInFrames={beat(8) - beat(4)} premountFor={fps}>
-        <ColorStrip progress={roast} />
-      </Sequence>
-      <Sequence name="thermo-1" from={beat(4)} durationInFrames={beat(8) - beat(4)} premountFor={fps}>
-        <Thermo value={temp} />
-      </Sequence>
-      <Sequence name="thermo-2" from={beat(10)} durationInFrames={beat(12) - beat(10)} premountFor={fps}>
-        <Thermo value={temp} />
-      </Sequence>
-      <Sequence name="strip-2" from={beat(10)} durationInFrames={beat(24) - beat(10)} premountFor={fps}>
-        <ColorStrip progress={roast} />
-      </Sequence>
-
-      <Sequence name="crack" from={beat(12)} durationInFrames={beat(14) - beat(12)} premountFor={fps}>
-        <Slam text="一爆！" size={420} y={820} tilt={-6} />
-      </Sequence>
-      <Sequence name="thermo-crack" from={beat(12)} durationInFrames={beat(16) - beat(12)} premountFor={fps}>
-        <Thermo value={temp} />
-      </Sequence>
-      <Sequence name="chip-crack" from={beat(16)} durationInFrames={beat(18) - beat(16)} premountFor={fps}>
-        <Chip text="豆子受热膨胀，噼啪裂开" y={1180} />
-      </Sequence>
-      <Sequence name="aroma-1" from={beat(18)} durationInFrames={beat(24) - beat(18)} premountFor={fps}>
-        <Slam text="香味" size={340} y={700} />
-      </Sequence>
-      <Sequence name="aroma-2" from={beat(19)} durationInFrames={beat(24) - beat(19)} premountFor={fps}>
-        <Slam text="是烤出来的" size={150} y={1010} tilt={-4} />
-      </Sequence>
-      <Sequence name="next" from={beat(24)} durationInFrames={beat(ROAST_BEATS) - beat(24)} premountFor={fps}>
-        <Slam text={"下一站\n研磨"} size={200} y={900} />
-      </Sequence>
-
-      <Journey active={3} fill={interpolate(f, [beat(24), beat(25.5)], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })} />
-
-      {/* 闪白只放在乐句的重拍上 */}
-      <Sequence name="flash-0" from={beat(0)} durationInFrames={6} premountFor={fps}>
-        <Flash />
-      </Sequence>
-      <Sequence name="flash-crack" from={beat(12)} durationInFrames={8} premountFor={fps}>
-        <Flash hold={2} fade={5} />
-      </Sequence>
-      <Sequence name="flash-aroma" from={beat(18)} durationInFrames={6} premountFor={fps}>
-        <Flash color="#ffd9a8" />
-      </Sequence>
-      <Sequence name="leak-crack" from={beat(12)} durationInFrames={beat(15) - beat(12)} premountFor={fps}>
-        <Leak duration={beat(15) - beat(12)} seed={4} />
-      </Sequence>
-      <Sequence name="leak-aroma" from={beat(18)} durationInFrames={beat(21) - beat(18)} premountFor={fps}>
-        <Leak duration={beat(21) - beat(18)} seed={9} opacity={0.55} />
-      </Sequence>
-    </AbsoluteFill>
+      {/* 上千种香味物质 */}
+      <g opacity={counter}>
+        <text x={DRUM.x + 190} y={96} fontSize={64} fontWeight={600} fill={INK} fontFamily={SERIF}>
+          1000+
+        </text>
+        <Note x={DRUM.x + 194} y={138} text="种香味物质" anchor="start" size={28} />
+      </g>
+    </Canvas>
   );
 };
