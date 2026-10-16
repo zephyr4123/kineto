@@ -1,8 +1,9 @@
-import { Composition } from "remotion";
+import { Composition, Still } from "remotion";
 import { staged } from "./components/Stage";
 import { VIDEO_FRAMES, Video } from "./Video";
 import { APP_CAMERA, APP_FRAMES, App } from "./scenes/App";
 import { COST_CAMERA, COST_FRAMES, Cost } from "./scenes/Cost";
+import { Cover, CoverPortrait } from "./scenes/Cover";
 import { HOOK_CAMERA, HOOK_FRAMES, Hook } from "./scenes/Hook";
 import { INSTALL_CAMERA, INSTALL_FRAMES, Install } from "./scenes/Install";
 import { ONEKEY_CAMERA, ONEKEY_FRAMES, OneKey } from "./scenes/OneKey";
@@ -24,7 +25,7 @@ const PrivacyStaged = staged(Privacy, PRIVACY_CAMERA);
 const WebStaged = staged(Web, WEB_CAMERA);
 const OutroStaged = staged(Outro, OUTRO_CAMERA);
 
-// 成片 + 每个场景各一个 composition，场景可在 Studio 里单独预览
+// 成片 + 每个场景各一个 composition，场景可在 Studio 里单独预览；最后是发布用的封面两张（横版 16:9、竖版 3:4）
 export const Compositions: React.FC = () => {
   return (
     <>
@@ -39,6 +40,8 @@ export const Compositions: React.FC = () => {
       <Composition id="speakmore-promo-privacy" component={PrivacyStaged} durationInFrames={PRIVACY_FRAMES} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-web" component={WebStaged} durationInFrames={WEB_FRAMES} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-outro" component={OutroStaged} durationInFrames={OUTRO_FRAMES} fps={FPS} width={W} height={H} />
+      <Still id="speakmore-promo-cover" component={Cover} width={W} height={H} />
+      <Still id="speakmore-promo-cover-portrait" component={CoverPortrait} width={1080} height={1440} />
     </>
   );
 };
