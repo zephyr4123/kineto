@@ -47,3 +47,13 @@ export const Stage: React.FC<{ camera: Camera; children?: React.ReactNode }> = (
     </AbsoluteFill>
   );
 };
+
+/** 单独预览一章用：桌面照这一章自己的镜头垫在底下 */
+export const staged = (Scene: React.FC, camera: Camera): React.FC => {
+  const Staged: React.FC = () => (
+    <Stage camera={camera}>
+      <Scene />
+    </Stage>
+  );
+  return Staged;
+};

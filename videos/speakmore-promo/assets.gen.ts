@@ -2,11 +2,18 @@
 // 用法：<Img src={staticFile(assets.logo)} />
 
 export const assets = {
+  ambBed: "speakmore-promo/ambBed.wav",
   ambDrone: "speakmore-promo/ambDrone.wav",
+  fontMono: "speakmore-promo/fontMono.ttf",
   fontSans: "speakmore-promo/fontSans.ttf",
   fontSerif: "speakmore-promo/fontSerif.ttf",
+  githubShot: "speakmore-promo/githubShot.jpg",
   sfxGather: "speakmore-promo/sfxGather.wav",
   sfxKey: "speakmore-promo/sfxKey.wav",
   sfxSeal: "speakmore-promo/sfxSeal.wav",
+  sfxTick: "speakmore-promo/sfxTick.wav",
+  sfxType: "speakmore-promo/sfxType.wav",
+  sfxWhoosh: "speakmore-promo/sfxWhoosh.wav",
+  siteShot: "speakmore-promo/siteShot.jpg",
   wallpaper: "speakmore-promo/wallpaper.jpeg",
 } as const;

@@ -7,12 +7,12 @@ import type { Camera } from "../components/Stage";
 import { show } from "../motion";
 import { COLOR, EASE, SANS, SERIF } from "../theme";
 
-// 第二章 来历：Typeless 是迄今最好的语音输入，作者为它年付 $144 → REA，GitHub 星标滚到当下的数 →
+// 第二章 来历：Typeless 是迄今最好的语音输入，年度订阅 $144 → REA，GitHub 星标滚到当下的数 →
 // 以 REA 拆开 Typeless，十八篇逆向笔记的标题一路滚过 → 从零重写，只取听写。
 // 每一拍左边一行大字定调、右边一个数或一列字作证据；拍与拍之间旧的往上虚掉、新的从下面浮上来。
 
-// GitHub API repos/morluto/rea 的 stargazers_count（2026-10-15 取），渲染当天重取
-const REA_STARS = 271_637;
+// GitHub API repos/morluto/rea 的 stargazers_count（2026-10-16 取），渲染当天重取
+const REA_STARS = 272_464;
 // SpeakMore 仓库 targets/typeless/docs/ 里十八篇逆向笔记的编号和标题，照原样
 const NOTES = [
   ["00", "总览"],
@@ -47,7 +47,14 @@ const T = {
 const OUT = { typeless: 150, rea: 318, notes: 470, rewrite: 610 };
 
 export const ORIGIN_FRAMES = T.end;
-export const ORIGIN_CAMERA: Camera = { focus: [[0, 1]], zoom: [[0, 1.03]] };
+// 开场推近的 3% 在这一章里慢慢退回原大：桌面这时是虚的看不出来，之后各章菜单栏两头不再被裁
+export const ORIGIN_CAMERA: Camera = {
+  focus: [[0, 1]],
+  zoom: [
+    [0, 1.03],
+    [T.end, 1],
+  ],
+};
 
 const LEFT = 200;
 const RIGHT = 200;
@@ -63,7 +70,7 @@ export const Origin: React.FC = () => {
     <AbsoluteFill style={{ fontFamily: SANS, color: COLOR.ink }}>
       {/* 一 Typeless 与 $144 */}
       <Lead top={392} frame={frame} at={T.typeless} out={OUT.typeless} name="Typeless" line="迄今最好的语音输入" />
-      <Figure frame={frame} at={T.typeless + 36} out={OUT.typeless} label="作者为它年付">
+      <Figure frame={frame} at={T.typeless + 36} out={OUT.typeless} label="年度订阅">
         <span style={{ fontWeight: 250 }}>$144</span>
         <span style={{ fontSize: "0.3em", fontWeight: 400, color: COLOR.muted, marginLeft: "0.3em" }}>/ 年</span>
       </Figure>

@@ -1,5 +1,5 @@
 // 由 SpeakMore 官网的图标数据（website/src/icons/data.js，经 Iconify 取下）照搬过来，别手改。
-// 应用标志：SVG Logos（logos，CC0-1.0）和 theSVG（thesvg-color，MIT）；菜单栏的小图标：Remix Icon（ri，Apache-2.0）。
+// 应用标志：SVG Logos（logos，CC0-1.0）和 theSVG（thesvg-color，MIT）；菜单栏和界面里的小图标：Remix Icon（ri，Apache-2.0）；Intel 的标志：Simple Icons（simple-icons，CC0-1.0）。
 // 图标里的 id 已经带着各自的前缀，同一画面里画多个不会撞。
 
 type Icon = { width: number; height: number; body: string };
@@ -62,5 +62,58 @@ export const UI_ICONS: Record<string, Icon> = {
     "width": 24,
     "height": 24,
     "body": "<path fill=\"currentColor\" d=\"m18.031 16.617l4.283 4.282l-1.415 1.415l-4.282-4.283A8.96 8.96 0 0 1 11 20c-4.968 0-9-4.032-9-9s4.032-9 9-9s9 4.032 9 9a8.96 8.96 0 0 1-1.969 5.617m-2.006-.742A6.98 6.98 0 0 0 18 11c0-3.867-3.133-7-7-7s-7 3.133-7 7s3.133 7 7 7a6.98 6.98 0 0 0 4.875-1.975z\"/>"
+  },
+  "lock": {
+    "width": 24,
+    "height": 24,
+    "body": "<path fill=\"currentColor\" d=\"M6 8V7a6 6 0 1 1 12 0v1h2a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1zm13 2H5v10h14zm-8 5.732A2 2 0 0 1 12 12a2 2 0 0 1 1 3.732V18h-2zM8 8h8V7a4 4 0 0 0-8 0z\"/>"
+  },
+  "check": {
+    "width": 24,
+    "height": 24,
+    "body": "<path fill=\"currentColor\" d=\"m10 15.17l9.192-9.191l1.414 1.414L10 17.999l-6.364-6.364l1.414-1.414z\"/>"
+  },
+  "terminal": {
+    "width": 24,
+    "height": 24,
+    "body": "<path fill=\"currentColor\" d=\"M3 3h18a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1m1 2v14h16V5zm8 10h6v2h-6zm-3.333-3L5.838 9.172l1.415-1.415L11.495 12l-4.242 4.243l-1.415-1.415z\"/>"
+  },
+  "globe": {
+    "width": 24,
+    "height": 24,
+    "body": "<path fill=\"currentColor\" d=\"M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10s-4.477 10-10 10m-2.29-2.333A17.9 17.9 0 0 1 8.027 13H4.062a8.01 8.01 0 0 0 5.648 6.667M10.03 13c.151 2.439.848 4.73 1.97 6.752A15.9 15.9 0 0 0 13.97 13zm9.908 0h-3.965a17.9 17.9 0 0 1-1.683 6.667A8.01 8.01 0 0 0 19.938 13M4.062 11h3.965A17.9 17.9 0 0 1 9.71 4.333A8.01 8.01 0 0 0 4.062 11m5.969 0h3.938A15.9 15.9 0 0 0 12 4.248A15.9 15.9 0 0 0 10.03 11m4.259-6.667A17.9 17.9 0 0 1 15.973 11h3.965a8.01 8.01 0 0 0-5.648-6.667\"/>"
+  },
+  "github": {
+    "width": 24,
+    "height": 24,
+    "body": "<path fill=\"currentColor\" d=\"M12.001 2c-5.525 0-10 4.475-10 10a9.99 9.99 0 0 0 6.837 9.488c.5.087.688-.213.688-.476c0-.237-.013-1.024-.013-1.862c-2.512.463-3.162-.612-3.362-1.175c-.113-.288-.6-1.175-1.025-1.413c-.35-.187-.85-.65-.013-.662c.788-.013 1.35.725 1.538 1.025c.9 1.512 2.337 1.087 2.912.825c.088-.65.35-1.087.638-1.337c-2.225-.25-4.55-1.113-4.55-4.938c0-1.088.387-1.987 1.025-2.687c-.1-.25-.45-1.275.1-2.65c0 0 .837-.263 2.75 1.024a9.3 9.3 0 0 1 2.5-.337c.85 0 1.7.112 2.5.337c1.913-1.3 2.75-1.024 2.75-1.024c.55 1.375.2 2.4.1 2.65c.637.7 1.025 1.587 1.025 2.687c0 3.838-2.337 4.688-4.562 4.938c.362.312.675.912.675 1.85c0 1.337-.013 2.412-.013 2.75c0 .262.188.574.688.474A10.02 10.02 0 0 0 22 12c0-5.525-4.475-10-10-10\"/>"
+  }
+};
+
+// 安装包的两种芯片各配自己的标志（和官网下载按钮一样）：Apple 是 Remix Icon 的 ri:apple-fill，Intel 是 Simple Icons 的 simple-icons:intel（CC0-1.0）
+export const CHIP_ICONS: Record<string, Icon> = {
+  "apple": {
+    "width": 24,
+    "height": 24,
+    "body": "<path fill=\"currentColor\" d=\"M11.673 7.222c-.876 0-2.232-.996-3.66-.96c-1.884.024-3.612 1.092-4.584 2.784c-1.956 3.396-.504 8.412 1.404 11.172c.936 1.344 2.04 2.856 3.504 2.808c1.404-.06 1.932-.912 3.636-.912c1.692 0 2.172.912 3.66.876c1.512-.024 2.472-1.368 3.396-2.724c1.068-1.56 1.512-3.072 1.536-3.156c-.036-.012-2.94-1.128-2.976-4.488c-.024-2.808 2.292-4.152 2.4-4.212c-1.32-1.932-3.348-2.148-4.056-2.196c-1.848-.144-3.396 1.008-4.26 1.008m3.12-2.832c.78-.936 1.296-2.244 1.152-3.54c-1.116.048-2.46.744-3.264 1.68c-.72.828-1.344 2.16-1.176 3.432c1.236.096 2.508-.636 3.288-1.572\"/>"
+  },
+  "intel": {
+    "width": 24,
+    "height": 24,
+    "body": "<path fill=\"currentColor\" d=\"M20.42 7.345v9.18h1.651v-9.18zM0 7.475v1.737h1.737V7.474zm9.78.352v6.053q0 .77.13 1.292q.131.511.44.828c.203.21.475.359.803.451q.502.138 1.255.136h.216v-1.533c-.24 0-.445-.012-.593-.037a.67.67 0 0 1-.39-.173a.7.7 0 0 1-.173-.377a4 4 0 0 1-.037-.606v-2.182h1.193v-1.416h-1.193V7.827zm-3.505 2.312c-.396 0-.76.08-1.082.241q-.49.242-.822.668l-.087.117v-.902H2.658v6.256h1.639v-3.214q.025-.881.433-1.299c.29-.297.642-.445 1.044-.445c.476 0 .841.149 1.082.433c.235.284.359.686.359 1.2v3.324h1.663V12.97c.006-.89-.229-1.595-.686-2.09s-1.1-.742-1.917-.742zm10.065.006a3.25 3.25 0 0 0-2.306.946c-.29.29-.525.637-.692 1.033a3.15 3.15 0 0 0-.254 1.273q0 .679.241 1.274c.161.395.39.742.674 1.032s.637.526 1.045.693c.408.173.86.26 1.342.26c1.397 0 2.262-.637 2.782-1.23l-1.187-.904c-.248.297-.841.699-1.583.699c-.464 0-.847-.105-1.138-.321a1.6 1.6 0 0 1-.593-.872l-.019-.056h4.915v-.587q-.001-.676-.235-1.267a3.4 3.4 0 0 0-.661-1.033a3 3 0 0 0-1.02-.692a3.35 3.35 0 0 0-1.311-.248m-16.297.118v6.256h1.651v-6.256zm16.278 1.286c1.132 0 1.664.797 1.664 1.255l-3.32.006c0-.458.525-1.255 1.656-1.261m7.073 3.814a.606.606 0 0 0-.606.606a.606.606 0 0 0 .606.606a.606.606 0 0 0 .606-.606a.606.606 0 0 0-.606-.606m-.008.105h.002a.5.5 0 0 1 .5.501a.5.5 0 0 1-.5.5a.5.5 0 0 1-.5-.5a.5.5 0 0 1 .498-.5zm-.233.155v.699h.13v-.285h.093l.173.285h.136l-.18-.297a.2.2 0 0 0 .118-.056c.03-.03.05-.074.05-.136q0-.1-.063-.154c-.037-.038-.105-.056-.185-.056zm.13.099h.154q.028.001.056.012a.06.06 0 0 1 .037.031c.013.013.012.031.012.056a.1.1 0 0 1-.012.055a.2.2 0 0 1-.037.031q-.028.011-.056.013h-.154Z\"/>"
+  }
+};
+
+// 两家模型的标志：Gemini 是 theSVG 的彩色版（MIT），OpenAI 是 Remix Icon 的 ri:openai-fill
+export const MODEL_ICONS: Record<string, Icon> = {
+  "geminiColor": {
+    "width": 296,
+    "height": 298,
+    "body": "<mask id=\"geminiColor-SVGU5zy4dsu\" width=\"296\" height=\"298\" x=\"0\" y=\"0\" maskUnits=\"userSpaceOnUse\" style=\"mask-type:alpha\"><path fill=\"#3186ff\" d=\"M141.201 4.886c2.282-6.17 11.042-6.071 13.184.148l5.985 17.37a184 184 0 0 0 111.257 113.049l19.304 6.997c6.143 2.227 6.156 10.91.02 13.155l-19.35 7.082a184 184 0 0 0-109.495 109.385l-7.573 20.629c-2.241 6.105-10.869 6.121-13.133.025l-7.908-21.296a184 184 0 0 0-109.02-108.658l-19.698-7.239c-6.102-2.243-6.118-10.867-.025-13.132l20.083-7.467A184 184 0 0 0 133.291 26.28z\"/></mask><g fill=\"none\"><g mask=\"url(#geminiColor-SVGU5zy4dsu)\"><g filter=\"url(#geminiColor-SVG1KOLkbwC)\"><ellipse cx=\"163\" cy=\"149\" fill=\"#3689ff\" rx=\"196\" ry=\"159\"/></g><g filter=\"url(#geminiColor-SVGXASGIdyq)\"><ellipse cx=\"33.5\" cy=\"142.5\" fill=\"#f6c013\" rx=\"68.5\" ry=\"72.5\"/></g><g filter=\"url(#geminiColor-SVGLvRrqeoG)\"><ellipse cx=\"19.5\" cy=\"148.5\" fill=\"#f6c013\" rx=\"68.5\" ry=\"72.5\"/></g><g filter=\"url(#geminiColor-SVGxzEcwcSI)\"><path fill=\"#fa4340\" d=\"M194 10.5C172 82.5 65.5 134.333 22.5 135L144-66z\"/></g><g filter=\"url(#geminiColor-SVGDM3yibyc)\"><path fill=\"#fa4340\" d=\"M190.5-12.5C168.5 59.5 62 111.333 19 112L140.5-89z\"/></g><g filter=\"url(#geminiColor-SVGEKXRtcuY)\"><path fill=\"#14bb69\" d=\"M194.5 279.5C172.5 207.5 66 155.667 23 155l121.5 201z\"/></g><g filter=\"url(#geminiColor-SVGxDXJydkM)\"><path fill=\"#14bb69\" d=\"M196.5 320.5C174.5 248.5 68 196.667 25 196l121.5 201z\"/></g></g><defs><filter id=\"geminiColor-SVG1KOLkbwC\" width=\"464\" height=\"390\" x=\"-69\" y=\"-46\" color-interpolation-filters=\"sRGB\" filterUnits=\"userSpaceOnUse\"><feFlood flood-opacity=\"0\" result=\"BackgroundImageFix\"/><feBlend in=\"SourceGraphic\" in2=\"BackgroundImageFix\" result=\"shape\"/><feGaussianBlur result=\"effect1_foregroundBlur_69_17998\" stdDeviation=\"18\"/></filter><filter id=\"geminiColor-SVGXASGIdyq\" width=\"265\" height=\"273\" x=\"-99\" y=\"6\" color-interpolation-filters=\"sRGB\" filterUnits=\"userSpaceOnUse\"><feFlood flood-opacity=\"0\" result=\"BackgroundImageFix\"/><feBlend in=\"SourceGraphic\" in2=\"BackgroundImageFix\" result=\"shape\"/><feGaussianBlur result=\"effect1_foregroundBlur_69_17998\" stdDeviation=\"32\"/></filter><filter id=\"geminiColor-SVGLvRrqeoG\" width=\"265\" height=\"273\" x=\"-113\" y=\"12\" color-interpolation-filters=\"sRGB\" filterUnits=\"userSpaceOnUse\"><feFlood flood-opacity=\"0\" result=\"BackgroundImageFix\"/><feBlend in=\"SourceGraphic\" in2=\"BackgroundImageFix\" result=\"shape\"/><feGaussianBlur result=\"effect1_foregroundBlur_69_17998\" stdDeviation=\"32\"/></filter><filter id=\"geminiColor-SVGxzEcwcSI\" width=\"299.5\" height=\"329\" x=\"-41.5\" y=\"-130\" color-interpolation-filters=\"sRGB\" filterUnits=\"userSpaceOnUse\"><feFlood flood-opacity=\"0\" result=\"BackgroundImageFix\"/><feBlend in=\"SourceGraphic\" in2=\"BackgroundImageFix\" result=\"shape\"/><feGaussianBlur result=\"effect1_foregroundBlur_69_17998\" stdDeviation=\"32\"/></filter><filter id=\"geminiColor-SVGDM3yibyc\" width=\"299.5\" height=\"329\" x=\"-45\" y=\"-153\" color-interpolation-filters=\"sRGB\" filterUnits=\"userSpaceOnUse\"><feFlood flood-opacity=\"0\" result=\"BackgroundImageFix\"/><feBlend in=\"SourceGraphic\" in2=\"BackgroundImageFix\" result=\"shape\"/><feGaussianBlur result=\"effect1_foregroundBlur_69_17998\" stdDeviation=\"32\"/></filter><filter id=\"geminiColor-SVGEKXRtcuY\" width=\"299.5\" height=\"329\" x=\"-41\" y=\"91\" color-interpolation-filters=\"sRGB\" filterUnits=\"userSpaceOnUse\"><feFlood flood-opacity=\"0\" result=\"BackgroundImageFix\"/><feBlend in=\"SourceGraphic\" in2=\"BackgroundImageFix\" result=\"shape\"/><feGaussianBlur result=\"effect1_foregroundBlur_69_17998\" stdDeviation=\"32\"/></filter><filter id=\"geminiColor-SVGxDXJydkM\" width=\"299.5\" height=\"329\" x=\"-39\" y=\"132\" color-interpolation-filters=\"sRGB\" filterUnits=\"userSpaceOnUse\"><feFlood flood-opacity=\"0\" result=\"BackgroundImageFix\"/><feBlend in=\"SourceGraphic\" in2=\"BackgroundImageFix\" result=\"shape\"/><feGaussianBlur result=\"effect1_foregroundBlur_69_17998\" stdDeviation=\"32\"/></filter></defs></g>"
+  },
+  "openai": {
+    "width": 24,
+    "height": 24,
+    "body": "<path fill=\"currentColor\" d=\"M20.562 10.188c.25-.688.313-1.376.25-2.063c-.062-.687-.312-1.375-.625-2c-.562-.937-1.375-1.687-2.312-2.125c-1-.437-2.063-.562-3.125-.312c-.5-.5-1.063-.938-1.688-1.25S11.687 2 11 2a5.17 5.17 0 0 0-3 .938c-.875.624-1.5 1.5-1.813 2.5c-.75.187-1.375.5-2 .875c-.562.437-1 1-1.375 1.562c-.562.938-.75 2-.625 3.063a5.44 5.44 0 0 0 1.25 2.874a4.7 4.7 0 0 0-.25 2.063c.063.688.313 1.375.625 2c.563.938 1.375 1.688 2.313 2.125c1 .438 2.062.563 3.125.313c.5.5 1.062.937 1.687 1.25S12.312 22 13 22a5.17 5.17 0 0 0 3-.937c.875-.625 1.5-1.5 1.812-2.5a4.54 4.54 0 0 0 1.938-.875c.562-.438 1.062-.938 1.375-1.563c.562-.937.75-2 .625-3.062c-.125-1.063-.5-2.063-1.188-2.876m-7.5 10.5c-1 0-1.75-.313-2.437-.875c0 0 .062-.063.125-.063l4-2.312a.5.5 0 0 0 .25-.25a.57.57 0 0 0 .062-.313V11.25l1.688 1v4.625a3.685 3.685 0 0 1-3.688 3.813M5 17.25c-.438-.75-.625-1.625-.438-2.5c0 0 .063.063.125.063l4 2.312a.56.56 0 0 0 .313.063c.125 0 .25 0 .312-.063l4.875-2.812v1.937l-4.062 2.375A3.7 3.7 0 0 1 7.312 19c-1-.25-1.812-.875-2.312-1.75M3.937 8.563a3.8 3.8 0 0 1 1.938-1.626v4.751c0 .124 0 .25.062.312a.5.5 0 0 0 .25.25l4.875 2.813l-1.687 1l-4-2.313a3.7 3.7 0 0 1-1.75-2.25c-.25-.937-.188-2.062.312-2.937M17.75 11.75l-4.875-2.812l1.687-1l4 2.312c.625.375 1.125.875 1.438 1.5s.5 1.313.437 2.063a3.7 3.7 0 0 1-.75 1.937c-.437.563-1 1-1.687 1.25v-4.75c0-.125 0-.25-.063-.312c0 0-.062-.126-.187-.188m1.687-2.5s-.062-.062-.125-.062l-4-2.313c-.125-.062-.187-.062-.312-.062s-.25 0-.313.062L9.812 9.688V7.75l4.063-2.375c.625-.375 1.312-.5 2.062-.5c.688 0 1.375.25 2 .688c.563.437 1.063 1 1.313 1.625s.312 1.375.187 2.062m-10.5 3.5l-1.687-1V7.063c0-.688.187-1.438.562-2C8.187 4.438 8.75 4 9.375 3.688a3.37 3.37 0 0 1 2.062-.313c.688.063 1.375.375 1.938.813c0 0-.063.062-.125.062l-4 2.313a.5.5 0 0 0-.25.25c-.063.125-.063.187-.063.312zm.875-2L12 9.5l2.187 1.25v2.5L12 14.5l-2.188-1.25z\"/>"
   }
 };

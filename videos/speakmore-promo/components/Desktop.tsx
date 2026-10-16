@@ -3,6 +3,7 @@ import { clamp } from "../../../engine/motion";
 import { assets } from "../assets.gen";
 import { APP_ICONS, UI_ICONS } from "../icons";
 import { SANS } from "../theme";
+import { Glyph } from "./Glyph";
 import { Seal } from "./Seal";
 
 // 一台 Mac 的桌面：壁纸铺满，顶上菜单栏，底下程序坞，悬浮条和字幕都在它上面。
@@ -148,16 +149,3 @@ const Tile: React.FC<{ size: number; children: React.ReactNode }> = ({ size, chi
     {children}
   </span>
 );
-
-const Glyph: React.FC<{ icon: { width: number; height: number; body: string }; size: number }> = ({ icon, size }) => {
-  const ratio = icon.width / icon.height;
-  return (
-    <svg
-      viewBox={`0 0 ${icon.width} ${icon.height}`}
-      width={ratio >= 1 ? size : size * ratio}
-      height={ratio >= 1 ? size / ratio : size}
-      // biome-ignore lint/security/noDangerouslySetInnerHtml: 图标是构建时照搬的固定 SVG，不来自外部输入
-      dangerouslySetInnerHTML={{ __html: icon.body }}
-    />
-  );
-};
