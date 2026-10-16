@@ -3,8 +3,8 @@ import { AbsoluteFill, Sequence, interpolate, staticFile, useCurrentFrame, useVi
 import { clamp } from "../../../engine/motion";
 import { assets } from "../assets.gen";
 import { Bar } from "../components/Bar";
-import { Desktop } from "../components/Desktop";
 import { Seal } from "../components/Seal";
+import type { Camera } from "../components/Stage";
 import { COLOR, EASE, SANS, SERIF, W } from "../theme";
 
 // 开场：口述的原话一字一字冒出来（比真人说得快，意思到了就行）→ 摁下完成键 → 语气词和改口前的话依次散掉，
@@ -121,11 +121,26 @@ const T = (() => {
     bars,
     impact,
     word: impact + 14,
-    end: impact + 104,
+    leave: impact + 104,
+    end: impact + 124,
   };
 })();
 
 export const HOOK_FRAMES = T.end;
+
+// 桌面先原样亮一下，口述开始后退后（虚、暗），片名时再退一点，让印和名字跳出来；镜头极慢地往前推，到整句散去为止
+export const HOOK_CAMERA: Camera = {
+  focus: [
+    [T.barIn + 16, 0],
+    [SPEECH_START + 36, 0.85],
+    [T.out, 0.85],
+    [T.impact, 1],
+  ],
+  zoom: [
+    [0, 1],
+    [T.out, 1.03],
+  ],
+};
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 // 在 oklab 里混：oklch 会绕着色相走，朱砂转白的半路会泛紫
@@ -141,23 +156,17 @@ export const Hook: React.FC = () => {
     glyphs.reduce((sum, g) => (g.raw && frame >= g.raw.at ? sum + 0.34 * Math.exp(-(frame - g.raw.at) / 7) : sum), 0),
   );
 
-  // 镜头极慢地往前推，到整句散去为止
+  // 字和悬浮条跟着桌面一起往前推（HOOK_CAMERA 的 zoom）
   const push = 1 + 0.03 * interpolate(frame, [0, T.out], [0, 1], clamp);
   const lit = interpolate(frame, [T.move + 10, T.settled], [0, 1], clamp);
   const sentenceOut = interpolate(frame, [T.out, T.out + 26], [0, 1], { ...clamp, easing: EASE.outQuint });
-
-  // 桌面先原样亮一下，口述开始后退后（虚、暗），片名时再退一点，让印和名字跳出来
-  const focus =
-    interpolate(frame, [T.barIn + 16, SPEECH_START + 36], [0, 0.85], { ...clamp, easing: EASE.inOut }) +
-    interpolate(frame, [T.out, T.impact], [0, 0.15], { ...clamp, easing: EASE.inOut });
 
   const barIn = interpolate(frame, [T.barIn, T.barIn + 40], [0, 1], { ...clamp, easing: EASE.outExpo });
   const barOut = interpolate(frame, [T.barOut, T.barOut + 30], [0, 1], { ...clamp, easing: EASE.outQuint });
 
   return (
-    <AbsoluteFill style={{ background: COLOR.canvas, fontFamily: SANS }}>
+    <AbsoluteFill style={{ fontFamily: SANS }}>
       <AbsoluteFill style={{ transform: `scale(${push})` }}>
-        <Desktop focus={focus} />
         <AbsoluteFill
           style={{
             opacity: 1 - sentenceOut,
@@ -287,9 +296,19 @@ const Title: React.FC<{ frame: number }> = ({ frame }) => {
     interpolate(frame, [T.word + delay, T.word + delay + 34], [0, 1], { ...clamp, easing: EASE.outExpo });
   const name = rise(0);
   const motto = rise(12);
+  // 下一章接上来之前，整块往上虚掉
+  const leave = interpolate(frame, [T.leave, T.end], [0, 1], { ...clamp, easing: EASE.outQuint });
 
   return (
-    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
+    <AbsoluteFill
+      style={{
+        alignItems: "center",
+        justifyContent: "center",
+        opacity: 1 - leave,
+        filter: leave > 0.01 ? `blur(${12 * leave}px)` : undefined,
+        transform: `translateY(${-20 * leave}px)`,
+      }}
+    >
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", transform: "translateY(-24px)" }}>
         <Seal size={196} bars={bars} base={base} />
         <div

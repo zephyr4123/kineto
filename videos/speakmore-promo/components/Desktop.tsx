@@ -16,14 +16,14 @@ const DOCK_APPS = ["wechat", "slack", "notion", "vscode", "chrome", "gmail", "ob
 const CLOCK = "10月12日 周一  09:41";
 const MENUS = ["文件", "编辑", "显示", "前往", "窗口", "帮助"];
 
-/** focus：字幕出来时桌面退后（虚一点、暗一点），0 是原样，1 是退到底 */
-export const Desktop: React.FC<{ focus: number }> = ({ focus }) => {
+/** focus：字幕出来时桌面退后（虚一点、暗一点），0 是原样，1 是退到底；zoom：整块桌面连菜单栏、程序坞一起推近 */
+export const Desktop: React.FC<{ focus: number; zoom?: number }> = ({ focus, zoom = 1 }) => {
   const frame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
   const drift = interpolate(frame, [0, durationInFrames], [0, 1], clamp);
 
   return (
-    <AbsoluteFill style={{ overflow: "hidden", fontFamily: SANS }}>
+    <AbsoluteFill style={{ overflow: "hidden", fontFamily: SANS, transform: zoom === 1 ? undefined : `scale(${zoom})` }}>
       <Img
         src={staticFile(assets.wallpaper)}
         style={{
