@@ -1,7 +1,8 @@
 import { Audio } from "@remotion/media";
-import { AbsoluteFill, Img, Sequence, interpolate, staticFile, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Sequence, interpolate, staticFile, useCurrentFrame } from "remotion";
 import { clamp } from "../../../engine/motion";
 import { assets } from "../assets.gen";
+import { APP_WIN, AppShot, AppWindow } from "../components/AppWindow";
 import { DOCK_SPEAKMORE } from "../components/Desktop";
 import { Seal } from "../components/Seal";
 import type { Camera } from "../components/Stage";
@@ -14,9 +15,8 @@ import { BEAT, COLOR, EASE, SANS, SERIF, SHADOW } from "../theme";
 // 耗时按本机真实记录造成 3.5 秒左右，不比真的快。
 // 时间按拍算，对在这两小节听得见的重音上：点"历史"在第 3 拍，换主题在第 5 拍，转深色在第 6 拍半（两小节里最重的一下）。
 
-const WIN = { width: 1080, height: 750, radius: 14 };
 /** 主窗口打开后的中心 */
-const MAIN = { x: 700 + WIN.width / 2, y: 166 + WIN.height / 2 };
+const MAIN = { x: 700 + APP_WIN.width / 2, y: 166 + APP_WIN.height / 2 };
 /** 三扇并排时：中间那扇大一点、两边的往它身后掖进去一点 */
 const ROW = { x: 1260, y: 541, mid: 0.44, side: 0.36, dx: 392 };
 // 侧栏卡片右缘之外一点：翻页时侧栏只换选中的那一项，右边的内容才动
@@ -39,7 +39,7 @@ const SIDES = [
 ];
 
 // 光标：[帧, x, y]，画面坐标，指的是箭头尖。在程序坞的图标上点一下，进窗口歇着，再去点侧栏的"历史"
-const HISTORY_ITEM = { x: MAIN.x - WIN.width / 2 + 75, y: MAIN.y - WIN.height / 2 + 170 };
+const HISTORY_ITEM = { x: MAIN.x - APP_WIN.width / 2 + 75, y: MAIN.y - APP_WIN.height / 2 + 170 };
 const REST = { x: 1190, y: 640 };
 const CURSOR = [
   [0, DOCK_SPEAKMORE.x + 70, DOCK_SPEAKMORE.y - 110],
@@ -80,7 +80,7 @@ export const App: React.FC = () => {
   // 主窗口：先从程序坞的图标里长到原位，换主题时再缩到三扇的中间
   const open = ease(frame, [T.open, T.open + 36], EASE.outExpo);
   const shrink = ease(frame, [T.themes, T.themes + 26]);
-  const s0 = DOCK_SPEAKMORE.size / WIN.width;
+  const s0 = DOCK_SPEAKMORE.size / APP_WIN.width;
   // 窗口一直极慢地往前推一点
   const push = 1 + 0.02 * ease(frame, [0, T.end]);
   const main = {
@@ -107,16 +107,16 @@ export const App: React.FC = () => {
         {slide > 0
           ? SIDES.map((w) => (
               <AppWindow key={w.light} x={ROW.x + w.side * ROW.dx * slide} y={ROW.y} scale={push * mix(ROW.side * 0.9, ROW.side, slide)} opacity={interpolate(slide, [0, 0.3], [0, 1], clamp)}>
-                <Shot src={w.light} />
+                <AppShot src={w.light} />
                 <Dark src={w.dark} fall={fallAt(frame, w.darkAt)} />
               </AppWindow>
             ))
           : null}
         <AppWindow x={main.x} y={main.y} scale={main.scale} opacity={interpolate(open, [0, 0.15], [0, 1], clamp)}>
-          <Shot src={assets.appHomeLightCinnabar} />
-          <Shot src={assets.appHistory} style={{ opacity: sideSwap, clipPath: `inset(0 ${WIN.width - SIDEBAR}px 0 0)` }} />
-          <Shot src={assets.appHistory} style={{ clipPath: `inset(0 0 0 ${SIDEBAR}px)`, opacity: historyIn, transform: `translateY(${14 * (1 - historyRise)}px)` }} />
-          {backHome > 0 ? <Shot src={assets.appHomeLightCinnabar} style={{ opacity: backHome }} /> : null}
+          <AppShot src={assets.appHomeLightCinnabar} />
+          <AppShot src={assets.appHistory} style={{ opacity: sideSwap, clipPath: `inset(0 ${APP_WIN.width - SIDEBAR}px 0 0)` }} />
+          <AppShot src={assets.appHistory} style={{ clipPath: `inset(0 0 0 ${SIDEBAR}px)`, opacity: historyIn, transform: `translateY(${14 * (1 - historyRise)}px)` }} />
+          {backHome > 0 ? <AppShot src={assets.appHomeLightCinnabar} style={{ opacity: backHome }} /> : null}
           <Dark src={assets.appHomeDarkCinnabar} fall={fallAt(frame, T.dark + 4)} />
         </AppWindow>
       </AbsoluteFill>
@@ -143,42 +143,8 @@ export const App: React.FC = () => {
   );
 };
 
-/** 一扇 App 窗口：给中心和缩放，里面叠截图，左上角画上红绿灯 */
-const AppWindow: React.FC<{ x: number; y: number; scale: number; opacity: number; children: React.ReactNode }> = ({ x, y, scale, opacity, children }) => (
-  <div
-    style={{
-      position: "absolute",
-      left: x - WIN.width / 2,
-      top: y - WIN.height / 2,
-      width: WIN.width,
-      height: WIN.height,
-      borderRadius: WIN.radius,
-      overflow: "hidden",
-      opacity,
-      transform: `scale(${scale})`,
-      boxShadow: "0 0 0 1px oklch(0 0 0 / 0.12), 0 34px 90px oklch(0 0 0 / 0.42), 0 10px 26px oklch(0 0 0 / 0.24)",
-    }}
-  >
-    {children}
-    <TrafficLights />
-  </div>
-);
-
-const Shot: React.FC<{ src: string; style?: React.CSSProperties }> = ({ src, style }) => (
-  <Img src={staticFile(src)} style={{ position: "absolute", left: 0, top: 0, width: WIN.width, height: WIN.height, maxWidth: "none", ...style }} />
-);
-
 /** 深色那张，由上往下盖下来 */
-const Dark: React.FC<{ src: string; fall: number }> = ({ src, fall }) => (fall > 0 ? <Shot src={src} style={{ clipPath: `inset(0 0 ${(1 - fall) * 100}% 0)` }} /> : null);
-
-/** 真窗口的红绿灯在侧栏左上角（src/app/main.mjs 的 trafficLightPosition: 26, 24） */
-const TrafficLights: React.FC = () => (
-  <span style={{ position: "absolute", left: 26, top: 24, display: "flex", gap: 8 }}>
-    {["#ff5f57", "#febc2e", "#28c840"].map((c) => (
-      <i key={c} style={{ width: 12, height: 12, borderRadius: "50%", background: c, boxShadow: "inset 0 0 0 0.5px oklch(0 0 0 / 0.15)" }} />
-    ))}
-  </span>
-);
+const Dark: React.FC<{ src: string; fall: number }> = ({ src, fall }) => (fall > 0 ? <AppShot src={src} style={{ clipPath: `inset(0 0 ${(1 - fall) * 100}% 0)` }} /> : null);
 
 /** 左边定调：App 的图标像安装包里那样盖下来，下面一个大字"App"，再下面一行随页面换的小字 */
 const Lead: React.FC<{ frame: number }> = ({ frame }) => {
