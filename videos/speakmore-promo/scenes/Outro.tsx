@@ -62,8 +62,9 @@ export const Outro: React.FC = () => {
       </div>
       <AbsoluteFill style={{ background: "oklch(0.08 0.005 255)", opacity: fade }} />
 
+      {/* 底下垫着铺底，落印这一声比开场那次轻一点，不然峰值顶到 0 dB */}
       <Sequence from={T.impact} layout="none" name="sfx:seal">
-        <Audio src={staticFile(assets.sfxSeal)} volume={1} />
+        <Audio src={staticFile(assets.sfxSeal)} volume={0.75} />
       </Sequence>
     </AbsoluteFill>
   );
