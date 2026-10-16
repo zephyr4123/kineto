@@ -107,7 +107,7 @@ const { rows: ROWS, marks: MARKS } = (() => {
   return { rows, marks };
 })();
 
-const T = { dmg: 6, drag: [70, 130] as const, chips: 40, dmgOut: 206, term: 216, cli: MARKS[1], out: MARKS[4] + 70, end: MARKS[4] + 90 };
+const T = { dmg: 6, drag: [70, 130] as const, chips: 40, dmgOut: 206, term: 216, cli: MARKS[1], out: MARKS[4] + 86, end: MARKS[4] + 106 };
 
 export const INSTALL_FRAMES = T.end;
 export const INSTALL_CAMERA: Camera = { focus: [[0, 0.55]], zoom: [[0, 1]] };

@@ -15,6 +15,8 @@ import { COLOR, EASE, SANS, SERIF } from "../theme";
 const T = { bars: 8, impact: 38, word: 52, links: 100, credit: 130, fade: 290, end: 330 };
 
 export const OUTRO_FRAMES = T.end;
+/** 印底落下的那一帧：对在配乐的一个重拍上（Video.tsx） */
+export const OUTRO_IMPACT = T.impact;
 export const OUTRO_CAMERA: Camera = { focus: [[0, 1]], zoom: [[0, 1]] };
 
 export const Outro: React.FC = () => {
@@ -62,9 +64,9 @@ export const Outro: React.FC = () => {
       </div>
       <AbsoluteFill style={{ background: "oklch(0.08 0.005 255)", opacity: fade }} />
 
-      {/* 底下垫着铺底，落印这一声比开场那次轻一点，不然峰值顶到 0 dB */}
+      {/* 配乐的重拍和这一下同时落，音效收着点，叠起来才不削波 */}
       <Sequence from={T.impact} layout="none" name="sfx:seal">
-        <Audio src={staticFile(assets.sfxSeal)} volume={0.75} />
+        <Audio src={staticFile(assets.sfxSeal)} volume={0.3} />
       </Sequence>
     </AbsoluteFill>
   );

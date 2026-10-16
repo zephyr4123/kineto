@@ -63,7 +63,7 @@ const T = {
   appsOut: 452,
   cleanups: 476,
   card: 80,
-  end: 720,
+  end: 766,
 };
 
 export const USAGE_FRAMES = T.end;
@@ -219,7 +219,7 @@ export const Usage: React.FC = () => {
       </Sequence>
       {[T.press, T.stop].map((at) => (
         <Sequence key={at} from={at} layout="none" name="sfx:key">
-          <Audio src={staticFile(assets.sfxKey)} volume={0.85} />
+          <Audio src={staticFile(assets.sfxKey)} volume={0.7} />
         </Sequence>
       ))}
       {[T.paste, T.apps + 40, T.apps + 68, T.apps + 96].map((at) => (

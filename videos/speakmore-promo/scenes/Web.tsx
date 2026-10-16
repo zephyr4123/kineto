@@ -16,13 +16,13 @@ const H = 700;
 
 const T = {
   github: 6,
-  ghScroll: [70, 300] as const,
-  site: 330,
-  out: 650,
-  end: 680,
+  ghScroll: [60, 270] as const,
+  site: 290,
+  out: 598,
+  end: 618,
 };
 // 官网往下翻：首屏停一会儿 → "口述随意，成文规整" → "月均成本，约 1 美元"（截图里的像素位置）
-const SITE_SCROLL = { at: [400, 460, 500, 570], to: [0, 1560, 1560, 4730] };
+const SITE_SCROLL = { at: [350, 410, 440, 520], to: [0, 1560, 1560, 4730] };
 
 export const WEB_FRAMES = T.end;
 export const WEB_CAMERA: Camera = { focus: [[0, 0.55]], zoom: [[0, 1]] };

@@ -9,7 +9,7 @@ import { COLOR, SANS, SERIF } from "../theme";
 // 中间没有别的服务器，没有统计上报，不读屏幕；说过的话只存在本机。
 
 const NOTS = ["不经中转", "不做统计", "不读屏幕"];
-const T = { line: 6, row: 26, out: 250, end: 270 };
+const T = { line: 6, row: 26, out: 308, end: 328 };
 
 export const PRIVACY_FRAMES = T.end;
 export const PRIVACY_CAMERA: Camera = { focus: [[0, 1]], zoom: [[0, 1]] };

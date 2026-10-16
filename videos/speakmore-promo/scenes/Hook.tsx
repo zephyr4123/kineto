@@ -9,6 +9,7 @@ import { COLOR, EASE, SANS, SERIF, W } from "../theme";
 
 // 开场：口述的原话一字一字冒出来（比真人说得快，意思到了就行）→ 摁下完成键 → 语气词和改口前的话依次散掉，
 // 留下的字挪到一起，模型添上的字用朱砂亮一下 → 整句停一拍 → 五道声波立起来、落成那方印，出片名。
+// 声音：三处音效（按键、收拢、落印），配乐在 Video.tsx 里铺满全片。
 // 原话和成品都是真的：系统语音（Tingting）读原话，交给 SpeakMore 当前的提示词（Gemini），3 次里 2 次得到一字不差的这句成品。
 
 type Kind = "cut" | "keep" | "add";
@@ -127,6 +128,8 @@ const T = (() => {
 })();
 
 export const HOOK_FRAMES = T.end;
+/** 印底落下的那一帧：配乐的重拍对在这里（Video.tsx） */
+export const HOOK_IMPACT = T.impact;
 
 // 桌面先原样亮一下，口述开始后退后（虚、暗），片名时再退一点，让印和名字跳出来；镜头极慢地往前推，到整句散去为止
 export const HOOK_CAMERA: Camera = {
@@ -195,18 +198,15 @@ export const Hook: React.FC = () => {
 
       <Title frame={frame} />
 
-      <Audio
-        src={staticFile(assets.ambDrone)}
-        volume={(f) => interpolate(f, [0, 60, T.impact - 4, T.impact + 40, T.end], [0, 0.14, 0.3, 0.08, 0.04], clamp)}
-      />
       <Sequence from={T.press} layout="none" name="sfx:key">
         <Audio src={staticFile(assets.sfxKey)} volume={0.85} />
       </Sequence>
       <Sequence from={T.cut + 6} layout="none" name="sfx:gather">
         <Audio src={staticFile(assets.sfxGather)} volume={0.55} />
       </Sequence>
+      {/* 配乐的重拍和这一下同时落，音效收着点，叠起来才不削波 */}
       <Sequence from={T.impact} layout="none" name="sfx:seal">
-        <Audio src={staticFile(assets.sfxSeal)} volume={1} />
+        <Audio src={staticFile(assets.sfxSeal)} volume={0.3} />
       </Sequence>
     </AbsoluteFill>
   );

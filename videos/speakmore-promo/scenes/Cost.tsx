@@ -21,7 +21,7 @@ const BARS = [
 ];
 const TRACK = 1040;
 
-const T = { title: 4, stats: 20, statsOut: 196, compare: 212, grow: 236, out: 400, end: 420 };
+const T = { title: 4, stats: 20, statsOut: 196, compare: 212, grow: 236, out: 418, end: 438 };
 
 export const COST_FRAMES = T.end;
 export const COST_CAMERA: Camera = { focus: [[0, 1]], zoom: [[0, 1]] };

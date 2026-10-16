@@ -5,14 +5,13 @@
   "status": "draft",
   "tags": [],
   "createdAt": "2026-10-15T16:41:42.853Z",
-  "updatedAt": "2026-10-16T02:11:24.370Z",
+  "updatedAt": "2026-10-16T02:39:30.886Z",
   "assets": {
     "fontSans": "sha256:a3041811a78c361b1de50f953c805e0244951c21c5bd412f7232ef0d899af0da",
     "fontSerif": "sha256:050080d9255a86808f2945bffac582b31ef32bc36411ce29563b4961670c66f9",
     "sfxKey": "sha256:9426ba8b9887ad03f25324251e403d148d317e230b6c00f6a595b21925abad1c",
     "sfxGather": "sha256:80dd224ef9dca10e2c5cdf0dc7258991ba92507345463e48eec6c727906cce0a",
     "sfxSeal": "sha256:8877602e8c7f55e94fe04038afdb8ec24a8824a425b6f6590ecff2f688fe2cbc",
-    "ambDrone": "sha256:d1a22cf72689dba30f8af0e96fba242da1dad6d278fc5485dca66c59fb74d21b",
     "wallpaper": "sha256:77f5dc285d54d595ef0480b65661914be06e8850fdbb7819b212befd5acd30cc",
     "fontMono": "sha256:48715a42ec242c21e9f02692891e147d022299a52e48d5e413e1a942193ffeda",
     "siteShot": "sha256:1fd9461e0eb2bc6badd3c29b75ebd3ef69efafe3d338dd9eb7369643f51422a8",
@@ -20,6 +19,6 @@
     "sfxTick": "sha256:6e8c3e996d291afde8cbbfb8905914ffb403dd2c8993f45fa0e165a30c14e79e",
     "sfxWhoosh": "sha256:5479e4fc926bdb1ca5079653a8f703f0b61d15de41230194c4b6465251fa7dea",
     "sfxType": "sha256:aff3b4cdede0ab03c849276f7e4ec551aeb8d1a28af646dbdaae5b9c29217f05",
-    "ambBed": "sha256:405e981e0b41b6148570e11e198dd76d18c617c988ca98c9eca5d1d2a2380721"
+    "music": "sha256:a908d4451f4b33bef50c080fc5766b8b0753cd1ffb34a7deff72a7f1c618d6f8"
   }
 }

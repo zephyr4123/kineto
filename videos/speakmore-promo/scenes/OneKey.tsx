@@ -17,7 +17,7 @@ import { COLOR, EASE, SANS, SERIF } from "../theme";
 const NEEDLESS = ["下载语音模型", "配置运行环境", "注册账号"];
 const DOTS = 28;
 
-const T = { lines: 6, linesOut: 178, field: 196, typing: [214, 252] as const, check: 258, line: 268, out: 372, end: 392 };
+const T = { lines: 6, linesOut: 178, field: 196, typing: [214, 252] as const, check: 258, line: 268, out: 417, end: 437 };
 
 export const ONEKEY_FRAMES = T.end;
 export const ONEKEY_CAMERA: Camera = { focus: [[0, 1]], zoom: [[0, 1]] };
