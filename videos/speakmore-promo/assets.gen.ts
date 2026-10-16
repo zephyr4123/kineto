@@ -9,6 +9,7 @@ export const assets = {
   appHomeLightCinnabar: "speakmore-promo/appHomeLightCinnabar.png",
   appHomeLightIndigo: "speakmore-promo/appHomeLightIndigo.png",
   appHomeLightInk: "speakmore-promo/appHomeLightInk.png",
+  desktop: "speakmore-promo/desktop.png",
   fontMono: "speakmore-promo/fontMono.ttf",
   fontSans: "speakmore-promo/fontSans.ttf",
   fontSerif: "speakmore-promo/fontSerif.ttf",
@@ -21,5 +22,4 @@ export const assets = {
   sfxType: "speakmore-promo/sfxType.wav",
   sfxWhoosh: "speakmore-promo/sfxWhoosh.wav",
   siteShot: "speakmore-promo/siteShot.jpg",
-  wallpaper: "speakmore-promo/wallpaper.jpeg",
 } as const;

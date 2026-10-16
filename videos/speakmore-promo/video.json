@@ -5,14 +5,13 @@
   "status": "draft",
   "tags": [],
   "createdAt": "2026-10-15T16:41:42.853Z",
-  "updatedAt": "2026-10-16T02:55:13.820Z",
+  "updatedAt": "2026-10-16T03:30:34.888Z",
   "assets": {
     "fontSans": "sha256:a3041811a78c361b1de50f953c805e0244951c21c5bd412f7232ef0d899af0da",
     "fontSerif": "sha256:050080d9255a86808f2945bffac582b31ef32bc36411ce29563b4961670c66f9",
     "sfxKey": "sha256:9426ba8b9887ad03f25324251e403d148d317e230b6c00f6a595b21925abad1c",
     "sfxGather": "sha256:80dd224ef9dca10e2c5cdf0dc7258991ba92507345463e48eec6c727906cce0a",
     "sfxSeal": "sha256:8877602e8c7f55e94fe04038afdb8ec24a8824a425b6f6590ecff2f688fe2cbc",
-    "wallpaper": "sha256:77f5dc285d54d595ef0480b65661914be06e8850fdbb7819b212befd5acd30cc",
     "fontMono": "sha256:48715a42ec242c21e9f02692891e147d022299a52e48d5e413e1a942193ffeda",
     "siteShot": "sha256:1fd9461e0eb2bc6badd3c29b75ebd3ef69efafe3d338dd9eb7369643f51422a8",
     "githubShot": "sha256:7424a9f4fb26e968a0444652226a918ef0c58ddb22ca3816d462ab4e641ec172",
@@ -26,6 +25,7 @@
     "appHomeDarkCinnabar": "sha256:c3d48aa1cb04b166aa72d0b7c105a140cfe9f624a85c7d883df36ff9de0e2a2d",
     "appHomeLightIndigo": "sha256:cc72fddc8d917c20a4f2b3e6e8fb32234f027f8b2538b3bb786a4635c15fbba7",
     "appHomeDarkIndigo": "sha256:1d93ac6c2e4e1f2c48537f57b0c98c1791fe69c3e871033535516b521bd54915",
-    "appHistory": "sha256:63ab2f75ad62d6d64c036adb66d8e18f544788c75d0c4bd236c12a9048242e8d"
+    "appHistory": "sha256:63ab2f75ad62d6d64c036adb66d8e18f544788c75d0c4bd236c12a9048242e8d",
+    "desktop": "sha256:16a9d51b8a491b8624bb18237e894081b1a230723f8daf2bca295d1260d4fc7b"
   }
 }
