@@ -5,7 +5,7 @@
   "status": "draft",
   "tags": [],
   "createdAt": "2026-10-15T16:41:42.853Z",
-  "updatedAt": "2026-10-16T02:39:30.886Z",
+  "updatedAt": "2026-10-16T02:55:13.820Z",
   "assets": {
     "fontSans": "sha256:a3041811a78c361b1de50f953c805e0244951c21c5bd412f7232ef0d899af0da",
     "fontSerif": "sha256:050080d9255a86808f2945bffac582b31ef32bc36411ce29563b4961670c66f9",
@@ -19,6 +19,13 @@
     "sfxTick": "sha256:6e8c3e996d291afde8cbbfb8905914ffb403dd2c8993f45fa0e165a30c14e79e",
     "sfxWhoosh": "sha256:5479e4fc926bdb1ca5079653a8f703f0b61d15de41230194c4b6465251fa7dea",
     "sfxType": "sha256:aff3b4cdede0ab03c849276f7e4ec551aeb8d1a28af646dbdaae5b9c29217f05",
-    "music": "sha256:a908d4451f4b33bef50c080fc5766b8b0753cd1ffb34a7deff72a7f1c618d6f8"
+    "music": "sha256:a908d4451f4b33bef50c080fc5766b8b0753cd1ffb34a7deff72a7f1c618d6f8",
+    "appHomeLightInk": "sha256:e48bce9ce78bf0fb49b129bb76c85d64cfeb4885525123850956cfdc724a3851",
+    "appHomeDarkInk": "sha256:437134c41f2fefa52bf27f672ec40edc88137c54a92c8c187a95263504fcec44",
+    "appHomeLightCinnabar": "sha256:c9351a498849db011fd49a6864fcf6bdf3843eccd35f8d077d00645bfb1ad356",
+    "appHomeDarkCinnabar": "sha256:c3d48aa1cb04b166aa72d0b7c105a140cfe9f624a85c7d883df36ff9de0e2a2d",
+    "appHomeLightIndigo": "sha256:cc72fddc8d917c20a4f2b3e6e8fb32234f027f8b2538b3bb786a4635c15fbba7",
+    "appHomeDarkIndigo": "sha256:1d93ac6c2e4e1f2c48537f57b0c98c1791fe69c3e871033535516b521bd54915",
+    "appHistory": "sha256:63ab2f75ad62d6d64c036adb66d8e18f544788c75d0c4bd236c12a9048242e8d"
   }
 }

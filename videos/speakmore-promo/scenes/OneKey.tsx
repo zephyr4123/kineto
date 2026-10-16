@@ -9,7 +9,7 @@ import { MODEL_ICONS, UI_ICONS } from "../icons";
 import { show } from "../motion";
 import { COLOR, EASE, SANS, SERIF } from "../theme";
 
-// 第四章 一把密钥：三个"无需"排下来（不下载语音模型、不配运行环境、不注册账号）→
+// 第五章 一把密钥：三个"无需"排下来（不下载语音模型、不配运行环境、不注册账号）→
 // 一个填密钥的框，字一个个打进去、打勾 → 一把密钥，即可开口。
 // 录音连同提示词一次交给模型（SpeakMore 的 src/server/providers/gemini.mjs、openai.mjs），本机不装语音模型。
 // 框里只显示 Gemini 密钥固定的开头 AIza，后面全是圆点，不是谁的真密钥。

@@ -18,6 +18,8 @@ await loadFont({ family: MONO, url: staticFile(assets.fontMono), weight: "100 80
 export const W = 1920;
 export const H = 1080;
 export const FPS = 60;
+// 配乐（ADTurnUp《purple sky》）一拍的帧数：一小节 3.6448 秒、四拍。章节起点、画面切换都踩在它的整数倍上
+export const BEAT = (3.6448 / 4) * FPS;
 
 // 颜色和官网固定深色那一段（website/src/styles.css 的 .tone-ink）一致；印章的几种颜色取自 assets/icon.svg
 export const COLOR = {

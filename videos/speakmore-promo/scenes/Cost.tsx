@@ -6,7 +6,7 @@ import type { Camera } from "../components/Stage";
 import { show } from "../motion";
 import { COLOR, EASE, SANS } from "../theme";
 
-// 第五章 成本：按量计费，三个数并排（每句、每月、免费额度内）→ 一年的花费和 Typeless Pro 并排两根条。
+// 第六章 成本：按量计费，三个数并排（每句、每月、免费额度内）→ 一年的花费和 Typeless Pro 并排两根条。
 // 数都出自 SpeakMore 的 README：一句 $0.0003（Gemini 提示词缓存之后）；每月 $0.67–1.05（按真实用量和 Gemini 3.6 Flash
 // 标准价估算），取"约 $1"，一年约 $12；Typeless Pro 年付 $144（typeless.com/pricing，2026-10-14 查）。
 

@@ -7,7 +7,7 @@ import { Browser } from "../components/Window";
 import { show } from "../motion";
 import { COLOR, EASE, SANS, SERIF, SHADOW } from "../theme";
 
-// 第八章 开源与官网：GitHub 上的仓库页从顶上滑到 README → 官网的窗口叠上来，从首屏往下翻到"月均成本"。
+// 第九章 开源与官网：GitHub 上的仓库页从顶上滑到 README → 官网的窗口叠上来，从首屏往下翻到"月均成本"。
 // 两张都是 Playwright 截的真页面（浅色）：GitHub 那张裁掉了它带标志的顶栏，只留仓库自己的内容。
 
 const SHOT_W = 1440;

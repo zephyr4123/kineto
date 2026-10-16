@@ -5,7 +5,7 @@ import type { Camera } from "../components/Stage";
 import { show } from "../motion";
 import { COLOR, SANS, SERIF } from "../theme";
 
-// 第七章 隐私：一句话定调，三件不做的事并成一排。出处是 SpeakMore 的 README：录音直接发给选的那一家、
+// 第八章 隐私：一句话定调，三件不做的事并成一排。出处是 SpeakMore 的 README：录音直接发给选的那一家、
 // 中间没有别的服务器，没有统计上报，不读屏幕；说过的话只存在本机。
 
 const NOTS = ["不经中转", "不做统计", "不读屏幕"];

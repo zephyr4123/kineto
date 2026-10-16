@@ -1,6 +1,7 @@
 import { Composition } from "remotion";
 import { staged } from "./components/Stage";
 import { VIDEO_FRAMES, Video } from "./Video";
+import { APP_CAMERA, APP_FRAMES, App } from "./scenes/App";
 import { COST_CAMERA, COST_FRAMES, Cost } from "./scenes/Cost";
 import { HOOK_CAMERA, HOOK_FRAMES, Hook } from "./scenes/Hook";
 import { INSTALL_CAMERA, INSTALL_FRAMES, Install } from "./scenes/Install";
@@ -15,6 +16,7 @@ import { FPS, H, W } from "./theme";
 const HookStaged = staged(Hook, HOOK_CAMERA);
 const OriginStaged = staged(Origin, ORIGIN_CAMERA);
 const UsageStaged = staged(Usage, USAGE_CAMERA);
+const AppStaged = staged(App, APP_CAMERA);
 const OneKeyStaged = staged(OneKey, ONEKEY_CAMERA);
 const CostStaged = staged(Cost, COST_CAMERA);
 const InstallStaged = staged(Install, INSTALL_CAMERA);
@@ -30,6 +32,7 @@ export const Compositions: React.FC = () => {
       <Composition id="speakmore-promo-hook" component={HookStaged} durationInFrames={HOOK_FRAMES} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-origin" component={OriginStaged} durationInFrames={ORIGIN_FRAMES} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-usage" component={UsageStaged} durationInFrames={USAGE_FRAMES} fps={FPS} width={W} height={H} />
+      <Composition id="speakmore-promo-app" component={AppStaged} durationInFrames={APP_FRAMES} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-onekey" component={OneKeyStaged} durationInFrames={ONEKEY_FRAMES} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-cost" component={CostStaged} durationInFrames={COST_FRAMES} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-install" component={InstallStaged} durationInFrames={INSTALL_FRAMES} fps={FPS} width={W} height={H} />

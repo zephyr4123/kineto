@@ -12,7 +12,7 @@ import { CHIP_ICONS, UI_ICONS } from "../icons";
 import { show } from "../motion";
 import { COLOR, EASE, SANS, WINDOW } from "../theme";
 
-// 第六章 两种装法：安装包（拖进"应用程序"，Apple 芯片和 Intel 两个包同等，经 Apple 公证）→
+// 第七章 两种装法：安装包（拖进"应用程序"，Apple 芯片和 Intel 两个包同等，经 Apple 公证）→
 // 一个终端：一行命令装好，接着敲 speakmore status、model、usage。
 // 终端里的字都是真的：安装那段照 SpeakMore 的 install.sh 打印的原话（版本、芯片取本机），
 // 三条命令是 2026-10-16 在本机跑出来的输出，只删了两行因为临时切中文才冒出来的语言提示。

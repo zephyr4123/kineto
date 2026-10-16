@@ -2,6 +2,13 @@
 // 用法：<Img src={staticFile(assets.logo)} />
 
 export const assets = {
+  appHistory: "speakmore-promo/appHistory.png",
+  appHomeDarkCinnabar: "speakmore-promo/appHomeDarkCinnabar.png",
+  appHomeDarkIndigo: "speakmore-promo/appHomeDarkIndigo.png",
+  appHomeDarkInk: "speakmore-promo/appHomeDarkInk.png",
+  appHomeLightCinnabar: "speakmore-promo/appHomeLightCinnabar.png",
+  appHomeLightIndigo: "speakmore-promo/appHomeLightIndigo.png",
+  appHomeLightInk: "speakmore-promo/appHomeLightInk.png",
   fontMono: "speakmore-promo/fontMono.ttf",
   fontSans: "speakmore-promo/fontSans.ttf",
   fontSerif: "speakmore-promo/fontSerif.ttf",
