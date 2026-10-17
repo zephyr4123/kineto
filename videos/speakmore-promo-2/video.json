@@ -1,0 +1,13 @@
+{
+  "id": "speakmore-promo-2",
+  "title": "SpeakMore 宣传片 · 第二支",
+  "description": "",
+  "status": "draft",
+  "tags": [],
+  "createdAt": "2026-10-17T15:14:53.971Z",
+  "updatedAt": "2026-10-17T15:14:57.086Z",
+  "assets": {
+    "desktop": "sha256:991cdde9d25dbc94ff9811c9d4ed6fc53a880e4986a27fee0c3562b7da97afdf",
+    "music": "sha256:f22e875346282fd101f5fcadcba222769742f0fb876683a375efd2d88382b6ea"
+  }
+}
