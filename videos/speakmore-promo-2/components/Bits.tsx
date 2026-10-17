@@ -1,6 +1,6 @@
-import { COLOR, MONO_STACK, SANS } from "../theme";
+import { COLOR, SANS } from "../theme";
 
-// 几样小物件：鼠标指针、键帽、一行带标签的大数字。
+// 几样小物件：鼠标指针、键帽。
 
 /** Mac 的箭头指针（自己画的），尖端在 (x, y) */
 export const Pointer: React.FC<{ x: number; y: number; scale?: number; opacity?: number }> = ({ x, y, scale = 1.5, opacity = 1 }) => (
@@ -34,35 +34,5 @@ export const Keycap: React.FC<{ label: string; press: number; size?: number; sty
     }}
   >
     {label}
-  </div>
-);
-
-/** 一个大数字：上面一行小标签，数字后面跟单位 */
-export const Stat: React.FC<{ label: string; value: React.ReactNode; unit?: string; size?: number; mono?: boolean; color?: string; style?: React.CSSProperties }> = ({
-  label,
-  value,
-  unit,
-  size = 200,
-  mono = false,
-  color = COLOR.ink,
-  style,
-}) => (
-  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", fontFamily: SANS, color, ...style }}>
-    <div style={{ fontSize: size * 0.2, fontWeight: 500, color: COLOR.ink2, letterSpacing: "0.04em" }}>{label}</div>
-    <div style={{ display: "flex", alignItems: "baseline", gap: size * 0.06, marginTop: size * 0.04 }}>
-      <span
-        style={{
-          fontFamily: mono ? MONO_STACK : SANS,
-          fontSize: size,
-          fontWeight: mono ? 300 : 650,
-          letterSpacing: mono ? "-0.04em" : "-0.03em",
-          lineHeight: 1,
-          fontVariantNumeric: "tabular-nums",
-        }}
-      >
-        {value}
-      </span>
-      {unit ? <span style={{ fontSize: size * 0.3, fontWeight: 500, color: COLOR.ink2 }}>{unit}</span> : null}
-    </div>
   </div>
 );

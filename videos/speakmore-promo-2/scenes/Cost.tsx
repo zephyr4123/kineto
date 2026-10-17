@@ -1,191 +1,166 @@
 import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
 import { clamp } from "../../../engine/motion";
 import { Flash, MotionBlurX, Sfx } from "../components/Fx";
+import { Question } from "../components/Question";
+import { Lift, type Rect, SHOTS, Shot } from "../components/Shot";
 import { deepCamera } from "../components/Stage";
-import { prog, punch, show } from "../motion";
-import { COLOR, EASE, MONO_STACK, SANS, SERIF, SHADOW, b } from "../theme";
+import { prog, show } from "../motion";
+import { COLOR, EASE, SANS, SHADOW, b } from "../theme";
 
-// 费用：两拍一切"软件免费""没有订阅"（订阅两个字被朱砂划掉），然后两张小票一行一行打出来：
-// 转写 + 润色每天 100 次每月 ¥2.6，数据隐私 ¥0、盖一方"免费"。
-// ¥2.6 出自 SpeakMore 官网的 website/src/costs.json（每天 100 次识别，¥2.63 / 月）。
+// 费用：先问"订阅费用高昂？"，答的是 App 的真页面。模型页的推荐组合（真截图）：
+// 本机转写 + DeepSeek 每月 ¥2.63、纯本机 ¥0，各自圈出来、抽到左边；再是首页的本月花费（真页面，
+// 一个月每天百次上下、按 App 自己的价目逐笔算的演示数据），花费那一块整个抽出来放大。
+// ¥2.63 出自推荐组合上的月成本（每天 100 次，和官网 website/src/costs.json 同一套算法）。
 
 export const COST_FRAMES = b(16);
 export const COST_CAMERA = deepCamera(COST_FRAMES);
 
-const T = { free: 0, nosub: b(2), strike: b(2.6), receipts: b(4), stamp: b(11), out: b(15) };
+const T = { settle: b(2.2), presets: b(2.4), paid: b(3.8), free: b(6.6), home: b(9), lift: b(10), note: b(11), out: b(15) };
 
-type Line = { k: string; v: string; big?: boolean } | "rule" | { note: string };
-const PAID: readonly Line[] = [
-  { k: "软件", v: "¥0" },
-  { k: "订阅", v: "无" },
-  { k: "模型", v: "按用量" },
-  "rule",
-  { k: "每月", v: "¥2.6", big: true },
-  { note: "每天 100 次 · 直付厂商" },
-];
-const FREE: readonly Line[] = [
-  { k: "软件", v: "¥0" },
-  { k: "模型", v: "本机运行" },
-  { k: "密钥", v: "无需" },
-  "rule",
-  { k: "每月", v: "¥0", big: true },
-  { note: "不联网 · 不上传" },
-];
-const lineAt = (start: number, i: number) => start + Math.round(i * b(0.5));
+// 推荐组合菜单里的两项（截图像素）：圈的是整项，抽出来的只要上半截（名字、说明、经过哪几个模型）
+const PAID: Rect = { x: 1040, y: 380, w: 1096, h: 280 };
+const PAID_TOP: Rect = { x: 1052, y: 386, w: 1076, h: 180 };
+const FREE: Rect = { x: 1040, y: 1240, w: 1096, h: 296 };
+const FREE_TOP: Rect = { x: 1052, y: 1250, w: 1076, h: 180 };
+// 首页的花费那一块
+const SPEND: Rect = { x: 608, y: 1328, w: 1072, h: 536 };
+
+const PRESETS_AT = { left: 900, top: 70, width: 960 };
+const HOME_AT = { left: 860, top: 110, width: 1000 };
+const LIFT_SCALE = 0.72;
+const SPEND_SCALE = 0.8;
+const SPEND_TO = { left: 110, top: 300 };
 
 export const Cost: React.FC = () => {
   const frame = useCurrentFrame();
   const whip = prog(frame, T.out, 22, EASE.inOut);
-  const words = frame < T.receipts;
+  const presetsIn = prog(frame, T.presets, 40);
+  const presetsOut = prog(frame, T.home, 16, EASE.inOut);
+  const homeIn = prog(frame, T.home + 10, 40);
+  const spot = frame < T.free ? prog(frame, T.paid, 14) : 1;
+
+  // 花费那一块：从首页截图里它所在的位置飞出来，放大到左边
+  const lift = prog(frame, T.lift, 40, EASE.inOut);
+  const homeScale = HOME_AT.width / SHOTS.cost.w;
+  const from = { left: HOME_AT.left + SPEND.x * homeScale, top: HOME_AT.top + SPEND.y * homeScale, k: homeScale / SPEND_SCALE };
 
   return (
     <AbsoluteFill style={{ fontFamily: SANS, color: COLOR.ink }}>
       <MotionBlurX id="cost-whip" amount={60 * Math.sin(Math.PI * whip)} />
       <AbsoluteFill style={{ transform: `translateX(${1400 * whip}px)`, filter: whip > 0.01 && whip < 0.99 ? "url(#cost-whip)" : undefined, opacity: 1 - whip }}>
-        {words ? (
-          <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
-            {frame < T.nosub ? (
-              <Big frame={frame} at={T.free}>
-                软件免费
-              </Big>
-            ) : (
-              <Big frame={frame} at={T.nosub}>
-                没有
-                <span style={{ position: "relative" }}>
-                  订阅
-                  <i
-                    style={{
-                      position: "absolute",
-                      left: -10,
-                      top: "54%",
-                      height: 16,
-                      borderRadius: 8,
-                      width: `calc(${interpolate(frame, [T.strike, T.strike + 12], [0, 100], { ...clamp, easing: EASE.outQuint })}% + 20px)`,
-                      background: COLOR.cinnabar,
-                    }}
-                  />
-                </span>
-              </Big>
-            )}
+        {/* 推荐组合：截图在右，圈出的那一项抽到左边，下面是每月多少 */}
+        {presetsIn > 0 && presetsOut < 1 ? (
+          <AbsoluteFill style={{ perspective: 2200, opacity: 1 - presetsOut, transform: `translateX(${-180 * presetsOut}px)` }}>
+            <Shot
+              shot={SHOTS.presets}
+              width={PRESETS_AT.width}
+              spot={{ rect: frame < T.free ? PAID : FREE, k: spot }}
+              style={{
+                left: PRESETS_AT.left,
+                top: PRESETS_AT.top,
+                opacity: presetsIn,
+                transformOrigin: "100% 50%",
+                transform: `translateX(${200 * (1 - presetsIn)}px) rotateY(${-16 + 10 * presetsIn}deg)`,
+              }}
+            />
+            <Plan frame={frame} at={T.paid} until={T.free} rect={PAID_TOP} price="¥2.63" note="每天 100 次" />
+            <Plan frame={frame} at={T.free} until={T.home} rect={FREE_TOP} price="¥0" note="纯本机 · 不上传" />
           </AbsoluteFill>
         ) : null}
 
-        {!words ? (
-          <>
-            <Receipt left={420} title="转写 + 润色" lines={PAID} at={T.receipts} frame={frame} />
-            <Receipt left={1000} title="数据隐私" lines={FREE} at={lineAt(T.receipts, 6)} frame={frame} />
-            <Stamp frame={frame} />
-          </>
+        {/* 首页：本月花费 */}
+        {homeIn > 0 ? (
+          <AbsoluteFill style={{ perspective: 2200 }}>
+            <Shot
+              shot={SHOTS.cost}
+              width={HOME_AT.width}
+              spot={{ rect: SPEND, k: prog(frame, T.lift - 10, 16) }}
+              style={{
+                left: HOME_AT.left,
+                top: HOME_AT.top,
+                opacity: homeIn,
+                transformOrigin: "100% 50%",
+                transform: `translateX(${200 * (1 - homeIn)}px) rotateY(${-16 + 10 * homeIn}deg)`,
+              }}
+            />
+            {lift > 0 ? (
+              <Lift
+                shot={SHOTS.cost}
+                rect={SPEND}
+                scale={SPEND_SCALE}
+                radius={22}
+                style={{
+                  left: interpolate(lift, [0, 1], [from.left, SPEND_TO.left]),
+                  top: interpolate(lift, [0, 1], [from.top, SPEND_TO.top]),
+                  transformOrigin: "0 0",
+                  transform: `scale(${interpolate(lift, [0, 1], [from.k, 1])})`,
+                  boxShadow: `0 0 0 1px oklch(0 0 0 / 0.08), 0 ${40 * lift}px ${100 * lift}px oklch(0 0 0 / ${0.55 * lift})`,
+                }}
+              />
+            ) : null}
+            <div
+              style={{
+                position: "absolute",
+                left: SPEND_TO.left + 10,
+                top: SPEND_TO.top + SPEND.h * SPEND_SCALE + 50,
+                fontSize: 40,
+                fontWeight: 500,
+                color: COLOR.ink2,
+                letterSpacing: "0.06em",
+                textShadow: SHADOW,
+                ...show(frame, T.note),
+              }}
+            >
+              逐笔记录 · 按官方价
+            </div>
+          </AbsoluteFill>
         ) : null}
+
+        <Question frame={frame} text="订阅费用高昂？" settle={T.settle} />
       </AbsoluteFill>
 
-      <Flash frame={frame} at={[T.free, T.nosub]} strength={0.7} />
-      <Sfx at={T.free} name="sfxFlash" volume={0.3} />
-      <Sfx at={T.nosub} name="sfxFlash" volume={0.3} />
-      <Sfx at={T.strike} name="sfxSwish" volume={0.35} />
-      {[...PAID.map((_, i) => lineAt(T.receipts, i + 1)), ...FREE.map((_, i) => lineAt(lineAt(T.receipts, 6), i + 1))].map((at, i) => (
-        <Sfx key={i} at={at} name="sfxTap" volume={0.22} />
-      ))}
-      <Sfx at={T.stamp} name="sfxClick" volume={0.32} />
-      <Sfx at={T.stamp} name="sfxNote2" volume={0.3} />
+      <Flash frame={frame} at={[0]} strength={0.75} />
+      <Flash frame={frame} at={[T.free, T.lift + 30]} strength={0.2} dur={12} />
+      <Sfx at={0} name="sfxFlash" volume={0.35} />
+      <Sfx at={T.presets} name="sfxSwish" volume={0.35} />
+      <Sfx at={T.paid} name="sfxTap" volume={0.24} />
+      <Sfx at={T.paid + 8} name="sfxNote2" volume={0.26} />
+      <Sfx at={T.free} name="sfxTap" volume={0.24} />
+      <Sfx at={T.free + 8} name="sfxNote4" volume={0.26} />
+      <Sfx at={T.home} name="sfxSwish" volume={0.35} />
+      <Sfx at={T.lift + 30} name="sfxBlip" volume={0.4} />
       <Sfx at={T.out} name="sfxSwish" volume={0.45} />
     </AbsoluteFill>
   );
 };
 
-const Big: React.FC<{ frame: number; at: number; children: React.ReactNode }> = ({ frame, at, children }) => (
-  <div
-    style={{
-      fontSize: 196,
-      fontWeight: 700,
-      letterSpacing: "0.04em",
-      textShadow: SHADOW,
-      transform: `scale(${punch(frame, at, 0.06, 24)})`,
-      filter: `blur(${6 * (1 - prog(frame, at, 8))}px)`,
-    }}
-  >
-    {children}
-  </div>
-);
-
-const PAPER = "oklch(0.975 0.008 85)";
-const RECEIPT = { width: 500, top: 150 };
-
-/** 一张小票：从顶上的出纸口往下长出来，一行一行打上去，底边是锯齿 */
-const Receipt: React.FC<{ left: number; title: string; lines: readonly Line[]; at: number; frame: number }> = ({ left, title, lines, at, frame }) => {
-  const printed = lines.filter((_, i) => frame >= lineAt(at, i + 1)).length;
-  const height = 200 + printed * 78 + 40;
-  const grow = interpolate(frame, [at, at + 20], [0, 1], { ...clamp, easing: EASE.outQuint });
+/** 推荐组合里的一项抽到左边，下面是每月多少；和截图上圈出的那一项之间牵一道虚线 */
+const Plan: React.FC<{ frame: number; at: number; until: number; rect: Rect; price: string; note: string }> = ({ frame, at, until, rect, price, note }) => {
+  if (frame < at || frame >= until + 20) return null;
+  const card = show(frame, at, until, 30);
+  const slide = 80 * (1 - prog(frame, at, 30));
+  const s = PRESETS_AT.width / SHOTS.presets.w;
   return (
-    <div style={{ position: "absolute", left, top: RECEIPT.top, width: RECEIPT.width, ...show(frame, at, undefined, -30) }}>
-      <div
-        style={{
-          position: "relative",
-          height: height * grow,
-          overflow: "hidden",
-          background: PAPER,
-          color: COLOR.paperInk,
-          padding: "34px 40px 0",
-          boxSizing: "border-box",
-          boxShadow: "0 30px 70px oklch(0 0 0 / 0.45)",
-          // 底边锯齿
-          clipPath: "polygon(0 0, 100% 0, 100% calc(100% - 14px), 96% 100%, 92% calc(100% - 14px), 88% 100%, 84% calc(100% - 14px), 80% 100%, 76% calc(100% - 14px), 72% 100%, 68% calc(100% - 14px), 64% 100%, 60% calc(100% - 14px), 56% 100%, 52% calc(100% - 14px), 48% 100%, 44% calc(100% - 14px), 40% 100%, 36% calc(100% - 14px), 32% 100%, 28% calc(100% - 14px), 24% 100%, 20% calc(100% - 14px), 16% 100%, 12% calc(100% - 14px), 8% 100%, 4% calc(100% - 14px), 0 100%)",
-        }}
-      >
-        <div style={{ textAlign: "center", fontSize: 34, fontWeight: 700, letterSpacing: "0.04em" }}>SpeakMore</div>
-        <div style={{ textAlign: "center", fontSize: 26, color: COLOR.paperInk2, marginTop: 6 }}>{title}</div>
-        <div style={{ borderTop: `2px dashed oklch(0.75 0.01 85)`, margin: "26px 0 8px" }} />
-        {lines.map((line, i) => {
-          if (frame < lineAt(at, i + 1)) return null;
-          const k = prog(frame, lineAt(at, i + 1), 10);
-          if (line === "rule") return <div key={i} style={{ borderTop: `2px dashed oklch(0.75 0.01 85)`, margin: "18px 0", opacity: k }} />;
-          if ("note" in line)
-            return (
-              <div key={i} style={{ textAlign: "center", fontSize: 24, color: COLOR.paperInk2, marginTop: 14, opacity: k }}>
-                {line.note}
-              </div>
-            );
-          return (
-            <div key={i} style={{ display: "flex", alignItems: "baseline", gap: 14, height: line.big ? 76 : 54, opacity: k, fontSize: line.big ? 32 : 27, fontWeight: line.big ? 700 : 500 }}>
-              <span>{line.k}</span>
-              <span style={{ flex: 1, borderBottom: "2px dotted oklch(0.8 0.01 85)", transform: "translateY(-8px)" }} />
-              <span style={{ fontFamily: MONO_STACK, fontSize: line.big ? 52 : 30, fontWeight: line.big ? 600 : 500 }}>{line.v}</span>
-              {line.big && line.v !== "¥0" ? <span style={{ fontSize: 24, color: COLOR.paperInk2 }}>/ 月</span> : null}
-            </div>
-          );
-        })}
+    <>
+      <Lift shot={SHOTS.presets} rect={rect} scale={LIFT_SCALE} style={{ left: 150, top: 290, ...card, transform: `translateX(${slide}px) ${card.transform}` }} />
+      <div style={{ position: "absolute", left: 150, top: 470, display: "flex", alignItems: "baseline", gap: 18, textShadow: SHADOW, ...show(frame, at + 8, until) }}>
+        <span style={{ fontSize: 176, fontWeight: 650, letterSpacing: "-0.03em", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{price}</span>
+        <span style={{ fontSize: 56, fontWeight: 500, color: COLOR.ink2 }}>/ 月</span>
       </div>
-    </div>
-  );
-};
-
-/** 数据隐私那张小票上盖一方"免费"：朱砂的框和字，盖下去时略大落回原大 */
-const Stamp: React.FC<{ frame: number }> = ({ frame }) => {
-  const k = prog(frame, T.stamp, 10, EASE.outQuint);
-  if (k <= 0) return null;
-  return (
-    <div
-      style={{
-        position: "absolute",
-        left: 1300,
-        top: 560,
-        width: 170,
-        height: 170,
-        borderRadius: 26,
-        border: `8px solid ${COLOR.cinnabar}`,
-        display: "grid",
-        placeItems: "center",
-        color: COLOR.cinnabar,
-        fontFamily: SERIF,
-        fontSize: 64,
-        fontWeight: 800,
-        letterSpacing: "0.06em",
-        opacity: 0.9 * k,
-        transform: `rotate(-12deg) scale(${1.5 - 0.5 * k})`,
-        mixBlendMode: "multiply",
-      }}
-    >
-      免费
-    </div>
+      <div style={{ position: "absolute", left: 156, top: 690, fontSize: 40, fontWeight: 500, color: COLOR.ink2, letterSpacing: "0.06em", textShadow: SHADOW, ...show(frame, at + 14, until) }}>
+        {note}
+      </div>
+      <svg width={1920} height={1080} style={{ position: "absolute", left: 0, top: 0, opacity: interpolate(frame, [at + 10, at + 24, until, until + 12], [0, 0.8, 0.8, 0], clamp) }}>
+        <line
+          x1={150 + rect.w * LIFT_SCALE + 12}
+          y1={290 + (rect.h * LIFT_SCALE) / 2}
+          x2={PRESETS_AT.left + rect.x * s - 6}
+          y2={PRESETS_AT.top + (rect.y + rect.h / 2) * s}
+          stroke={COLOR.cinnabar}
+          strokeWidth={2}
+          strokeDasharray="6 8"
+        />
+      </svg>
+    </>
   );
 };

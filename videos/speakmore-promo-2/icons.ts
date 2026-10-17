@@ -3,7 +3,7 @@
 
 import type { Icon } from "../../engine/Glyph";
 
-export const UI: Record<"apple" | "windows" | "github" | "mic" | "chip" | "cloud" | "text" | "wifiOff" | "key" | "plug" | "search" | "folder" | "globe" | "terminal" | "wifi" | "volume" | "battery" | "chevronUp" | "arrowRight" | "check" | "minimize" | "maximize" | "close" | "download" | "sparkle" | "shield" | "lock", Icon> = {
+export const UI: Record<"apple" | "windows" | "github" | "mic" | "chip" | "cloud" | "text" | "wifiOff" | "key" | "plug" | "search" | "folder" | "globe" | "terminal" | "wifi" | "volume" | "battery" | "chevronUp" | "check" | "minimize" | "maximize" | "close" | "shield" | "lock", Icon> = {
   "apple": {
     "width": 24,
     "height": 24,
@@ -94,11 +94,6 @@ export const UI: Record<"apple" | "windows" | "github" | "mic" | "chip" | "cloud
     "height": 24,
     "body": "<path fill=\"currentColor\" d=\"m12 10.828l-4.95 4.95l-1.414-1.414L12 8l6.364 6.364l-1.414 1.414z\"/>"
   },
-  "arrowRight": {
-    "width": 24,
-    "height": 24,
-    "body": "<path fill=\"currentColor\" d=\"m16.172 11l-5.364-5.364l1.414-1.414L20 12l-7.778 7.778l-1.414-1.414L16.172 13H4v-2z\"/>"
-  },
   "check": {
     "width": 24,
     "height": 24,
@@ -118,16 +113,6 @@ export const UI: Record<"apple" | "windows" | "github" | "mic" | "chip" | "cloud
     "width": 24,
     "height": 24,
     "body": "<path fill=\"currentColor\" d=\"m12 10.587l4.95-4.95l1.414 1.414l-4.95 4.95l4.95 4.95l-1.415 1.414l-4.95-4.95l-4.949 4.95l-1.414-1.415l4.95-4.95l-4.95-4.95L7.05 5.638z\"/>"
-  },
-  "download": {
-    "width": 24,
-    "height": 24,
-    "body": "<path fill=\"currentColor\" d=\"M13 10h5l-6 6l-6-6h5V3h2zm-9 9h16v-7h2v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-8h2z\"/>"
-  },
-  "sparkle": {
-    "width": 24,
-    "height": 24,
-    "body": "<path fill=\"currentColor\" d=\"m17 1.208l1.32 2.473L20.792 5L18.32 6.319L17 8.792l-1.318-2.473l-2.473-1.32l2.473-1.318zm-6.333 8.125l5 2.667l-5 2.667l-2.666 5l-2.667-5l-5-2.667l5-2.667l2.667-5zm.75 2.667L9.19 10.812L8.001 8.583l-1.189 2.229L4.584 12l2.228 1.188l1.189 2.229l1.188-2.229zm8.25 4.333l-1.666-3.125l-1.667 3.125L13.209 18l3.125 1.667l1.667 3.125l1.666-3.125L22.792 18z\"/>"
   },
   "shield": {
     "width": 24,

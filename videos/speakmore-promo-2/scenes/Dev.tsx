@@ -9,7 +9,7 @@ import { prog, show, typed } from "../motion";
 import { COLOR, EASE, MONO_STACK, SANS, SHADOW, b } from "../theme";
 
 // 开发者：终端里敲命令（命令和输出照 SpeakMore 官网终端演示那几条，都是真跑出来的），切到"Windows 开发"再跑全部单测；
-// 然后 GitHub 的仓库页转进来。字只有"命令行 / 与 App 对等"和"开源 · MIT"。
+// 然后 GitHub 的仓库页（10-17 截的整页长图）转进来，从上往下慢慢滑到 README。字只有"命令行 / 与 App 对等"和"开源 · MIT"。
 
 export const DEV_FRAMES = b(16);
 export const DEV_CAMERA = deepCamera(DEV_FRAMES);
@@ -19,17 +19,21 @@ type Cmd = { at: number; cmd: string; out: readonly Out[]; tab: 0 | 1 };
 const TYPE = 18;
 const CMDS: readonly Cmd[] = [
   {
-    at: b(0.5),
+    at: b(0.4),
     tab: 0,
     cmd: "speakmore mode private",
     out: [{ text: "切到了 private 模式：本机的 qwen3-asr-0.6b-q8，不润色、不上传。", tone: "faint" }, { text: "已经换上，不用重启。", tone: "green" }],
   },
-  { at: b(2.2), tab: 0, cmd: "speakmore status --json", out: [{ text: '{"running":true,"settings":{"mode":{"value":"private",…},…}}', tone: "faint" }] },
-  { at: b(4.6), tab: 1, cmd: "scripts/dev/win-test.sh", out: [{ text: "ℹ tests 920  ℹ pass 904  ℹ fail 0  ℹ skipped 16", tone: "green" }] },
-  { at: b(6.3), tab: 1, cmd: "scripts/dev/win-screenshot.sh desktop.png", out: [{ text: "desktop.png", tone: "faint" }] },
+  { at: b(1.7), tab: 0, cmd: "speakmore status --json", out: [{ text: '{"running":true,"settings":{"mode":{"value":"private",…},…}}', tone: "faint" }] },
+  { at: b(3.3), tab: 1, cmd: "scripts/dev/win-test.sh", out: [{ text: "ℹ tests 920  ℹ pass 904  ℹ fail 0  ℹ skipped 16", tone: "green" }] },
+  { at: b(4.5), tab: 1, cmd: "scripts/dev/win-screenshot.sh desktop.png", out: [{ text: "desktop.png", tone: "faint" }] },
 ];
-const TAB_SWITCH = b(4.2);
-const T = { caption: b(1.6), github: b(8.2), open: b(9.4), out: b(15.2) };
+const TAB_SWITCH = b(3);
+const T = { caption: b(1.2), github: b(5.8), open: b(7), scroll: b(6.6), out: b(15.4) };
+// 浏览器窗口和里面的长图：图 1800 像素宽，按窗口宽缩；往下滑到 README 的"五项自由"露出来
+const BROWSER = { left: 860, top: 90, width: 980, height: 900, bar: 58 };
+const PAGE = { w: 1800, h: 4584 };
+const SCROLL = 1300;
 const TERM = { left: 150, top: 240, width: 1080, height: 560 };
 
 export const Dev: React.FC = () => {
@@ -111,10 +115,10 @@ export const Dev: React.FC = () => {
         <div
           style={{
             position: "absolute",
-            left: 880,
-            top: 110,
-            width: 900,
-            height: 860,
+            left: BROWSER.left,
+            top: BROWSER.top,
+            width: BROWSER.width,
+            height: BROWSER.height,
             borderRadius: 20,
             overflow: "hidden",
             background: "white",
@@ -124,7 +128,7 @@ export const Dev: React.FC = () => {
             transform: `perspective(2200px) translateX(${260 * (1 - gh)}px) rotateY(${-20 * (1 - gh)}deg)`,
           }}
         >
-          <div style={{ height: 58, display: "flex", alignItems: "center", gap: 12, padding: "0 20px", background: "oklch(0.96 0.004 80)", borderBottom: "1px solid oklch(0.9 0.006 80)" }}>
+          <div style={{ position: "relative", zIndex: 1, height: BROWSER.bar, display: "flex", alignItems: "center", gap: 12, padding: "0 20px", background: "oklch(0.96 0.004 80)", borderBottom: "1px solid oklch(0.9 0.006 80)" }}>
             <span style={{ display: "flex", gap: 9 }}>
               {["#ff5f57", "#febc2e", "#28c840"].map((c) => (
                 <i key={c} style={{ width: 13, height: 13, borderRadius: "50%", background: c }} />
@@ -138,8 +142,14 @@ export const Dev: React.FC = () => {
             </span>
           </div>
           <Img
-            src={staticFile(assets.githubShot)}
-            style={{ position: "absolute", left: 0, top: 58 - interpolate(frame, [T.open, T.out], [0, 260], { ...clamp, easing: EASE.inOut }), width: 900 }}
+            src={staticFile(assets.githubPage)}
+            style={{
+              position: "absolute",
+              left: 0,
+              top: BROWSER.bar - interpolate(frame, [T.scroll, DEV_FRAMES], [0, SCROLL], { ...clamp, easing: EASE.inOut }),
+              width: BROWSER.width,
+              height: (BROWSER.width * PAGE.h) / PAGE.w,
+            }}
           />
         </div>
       ) : null}

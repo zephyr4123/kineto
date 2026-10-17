@@ -7,22 +7,24 @@ import { Stage } from "./components/Stage";
 import { COST_CAMERA, COST_FRAMES, Cost } from "./scenes/Cost";
 import { CUSTOM_CAMERA, CUSTOM_FRAMES, Custom } from "./scenes/Custom";
 import { DEV_CAMERA, DEV_FRAMES, Dev } from "./scenes/Dev";
+import { DOWNLOAD_CAMERA, DOWNLOAD_FRAMES, Download } from "./scenes/Download";
 import { HARDWARE_CAMERA, HARDWARE_FRAMES, Hardware } from "./scenes/Hardware";
 import { HERO_CAMERA, HERO_FRAMES, Hero } from "./scenes/Hero";
-import { LOCAL_CAMERA, LOCAL_FRAMES, Local } from "./scenes/Local";
 import { LONG_CAMERA, LONG_FRAMES, Long } from "./scenes/Long";
 import { MODELS_CAMERA, MODELS_FRAMES, Models } from "./scenes/Models";
 import { MODES_CAMERA, MODES_FRAMES, Modes } from "./scenes/Modes";
 import { OUTRO_CAMERA, OUTRO_FRAMES, Outro } from "./scenes/Outro";
+import { PRIVACY_CAMERA, PRIVACY_FRAMES, Privacy } from "./scenes/Privacy";
 import { SPEED_CAMERA, SPEED_FRAMES, Speed } from "./scenes/Speed";
 import { SYSTEMS_CAMERA, SYSTEMS_FRAMES, Systems } from "./scenes/Systems";
 import { BEAT, beat } from "./theme";
 
 // 成片的时间线：只排场景，外加贯穿全片的配乐。每章从一句（16 拍）的头上起。
-// 官网首屏 → 两个系统 → 硬件 → 速度 → 三种方式 → 模型 → 自定义接口 → 长录音（两句）→ 费用 → 本机运行 → 开发者 → 落款
+// 官网首屏 → 两个系统 → 硬件 → 速度 → 三种方式 → 模型 → 自定义接口 → 长录音（两句）
+// → 费用、隐私、下载（各以一句反问开头）→ 开发者 → 落款
 //
-// 配乐前 70 秒照原曲放（前奏、起、副歌、主歌、副歌）；第 160 拍跳到原曲第 224 拍的最后一段副歌，
-// 跳点在拍上、两边交叉淡 9 帧。这样落款正好落在原曲 112 秒那一句收住的地方，印底落在它重新起来的那一拍（第 208 拍）。
+// 配乐前 84 秒照原曲放；第 192 拍跳到原曲第 240 拍（最后一段副歌的后半句），跳点在拍上、两边交叉淡 9 帧。
+// 这样落款正好落在原曲 112 秒那一句收住的地方，印底落在它重新起来的那一拍（成片第 224 拍）。
 
 const SCENES = [
   { Scene: Hero, frames: HERO_FRAMES, camera: HERO_CAMERA, from: 0 },
@@ -34,9 +36,10 @@ const SCENES = [
   { Scene: Custom, frames: CUSTOM_FRAMES, camera: CUSTOM_CAMERA, from: beat(96) },
   { Scene: Long, frames: LONG_FRAMES, camera: LONG_CAMERA, from: beat(112) },
   { Scene: Cost, frames: COST_FRAMES, camera: COST_CAMERA, from: beat(144) },
-  { Scene: Local, frames: LOCAL_FRAMES, camera: LOCAL_CAMERA, from: beat(160) },
-  { Scene: Dev, frames: DEV_FRAMES, camera: DEV_CAMERA, from: beat(176) },
-  { Scene: Outro, frames: OUTRO_FRAMES, camera: OUTRO_CAMERA, from: beat(192) },
+  { Scene: Privacy, frames: PRIVACY_FRAMES, camera: PRIVACY_CAMERA, from: beat(160) },
+  { Scene: Download, frames: DOWNLOAD_FRAMES, camera: DOWNLOAD_CAMERA, from: beat(176) },
+  { Scene: Dev, frames: DEV_FRAMES, camera: DEV_CAMERA, from: beat(192) },
+  { Scene: Outro, frames: OUTRO_FRAMES, camera: OUTRO_CAMERA, from: beat(208) },
 ] as const;
 
 const last = SCENES[SCENES.length - 1];
@@ -44,9 +47,9 @@ export const VIDEO_FRAMES = last.from + last.frames;
 const CAMERA = joinCameras(SCENES.map(({ from, camera }) => ({ from, camera })));
 
 const VOLUME = 0.45;
-const CUT = beat(160);
-/** 跳过去之后，成片的一帧对应原曲往后多少帧（64 拍） */
-const SKIP = Math.round(64 * BEAT);
+const CUT = beat(192);
+/** 跳过去之后，成片的一帧对应原曲往后多少帧（48 拍） */
+const SKIP = Math.round(48 * BEAT);
 const XF = 9;
 
 /** 每章里镜头都在极慢地往前推，画面不死 */
