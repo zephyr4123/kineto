@@ -22,29 +22,32 @@ const MENUS = ["文件", "编辑", "显示", "前往", "窗口", "帮助"];
 
 /**
  * src：处理好的截图；dock：截图里程序坞的外框；clock：菜单栏右边的时间。
- * focus：字幕出来时桌面退后（虚一点、暗一点），0 是原样，1 是退到底；zoom：整块桌面连菜单栏、程序坞一起推近
+ * focus：字幕出来时桌面退后（虚一点、暗一点），0 是原样，1 是退到底；zoom：整块桌面连菜单栏、程序坞一起推近。
+ * chromeFade：桌面退后时菜单栏和程序坞也跟着淡掉（默认它们一直清楚，看得出是 Mac）
  */
-export const MacDesktop: React.FC<{ src: string; dock: Rect; clock: string; fontFamily: string; focus: number; zoom?: number }> = ({
+export const MacDesktop: React.FC<{ src: string; dock: Rect; clock: string; fontFamily: string; focus: number; zoom?: number; chromeFade?: boolean }> = ({
   src,
   dock,
   clock,
   fontFamily,
   focus,
   zoom = 1,
+  chromeFade = false,
 }) => {
   const { width, height } = useVideoConfig();
   const l = shotLayout(width, height);
   const [dockL, dockT] = fromShot(l, dock.left, dock.top);
   const [dockR, dockB] = fromShot(l, dock.right, dock.bottom);
+  const chrome = chromeFade ? 1 - focus : 1;
   return (
     <AbsoluteFill style={{ overflow: "hidden", fontFamily, transform: zoom === 1 ? undefined : `scale(${zoom})` }}>
       <Shot src={src} l={l} style={{ filter: focus > 0.01 ? `blur(${12 * focus}px)` : undefined }} />
-      {focus > 0.01 ? (
-        <div style={{ position: "absolute", left: dockL, top: dockT, width: dockR - dockL, height: dockB - dockT, borderRadius: 41 * l.k, overflow: "hidden" }}>
+      {focus > 0.01 && chrome > 0.01 ? (
+        <div style={{ position: "absolute", left: dockL, top: dockT, width: dockR - dockL, height: dockB - dockT, borderRadius: 41 * l.k, overflow: "hidden", opacity: chromeFade ? chrome : undefined }}>
           <Shot src={src} l={{ ...l, x: l.x - dockL, y: l.y - dockT }} />
         </div>
       ) : null}
-      <MenuBar k={l.k} clock={clock} />
+      {chrome > 0.01 ? <MenuBar k={l.k} clock={clock} opacity={chrome} /> : null}
       <AbsoluteFill style={{ background: `oklch(0.12 0.01 255 / ${0.58 * focus})` }} />
     </AbsoluteFill>
   );
@@ -70,7 +73,7 @@ const WIFI = { width: 24, height: 24, body: "<path fill=\"currentColor\" d=\"M.6
 const SEARCH = { width: 24, height: 24, body: "<path fill=\"currentColor\" d=\"m18.031 16.617l4.283 4.282l-1.415 1.415l-4.282-4.283A8.96 8.96 0 0 1 11 20c-4.968 0-9-4.032-9-9s4.032-9 9-9s9 4.032 9 9a8.96 8.96 0 0 1-1.969 5.617m-2.006-.742A6.98 6.98 0 0 0 18 11c0-3.867-3.133-7-7-7s-7 3.133-7 7s3.133 7 7 7a6.98 6.98 0 0 0 4.875-1.975z\"/>" };
 
 // macOS 26 的菜单栏是全透明的，字直接压在壁纸上，靠一点阴影托住。照真屏幕的点数画：1 点 = 2 个截图像素
-const MenuBar: React.FC<{ k: number; clock: string }> = ({ k, clock }) => {
+const MenuBar: React.FC<{ k: number; clock: string; opacity: number }> = ({ k, clock, opacity }) => {
   const pt = (n: number) => n * 2 * k;
   return (
     <div
@@ -85,6 +88,7 @@ const MenuBar: React.FC<{ k: number; clock: string }> = ({ k, clock }) => {
         fontSize: pt(13),
         color: "oklch(0.99 0 0)",
         textShadow: "0 1px 3px oklch(0 0 0 / 0.35)",
+        opacity: opacity < 1 ? opacity : undefined,
       }}
     >
       <span style={{ fontWeight: 700 }}>访达</span>

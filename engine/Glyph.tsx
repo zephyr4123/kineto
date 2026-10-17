@@ -1,5 +1,7 @@
+export type Icon = { width: number; height: number; body: string };
+
 /** 一个照搬来的 SVG 图标，按长边缩到 size */
-export const Glyph: React.FC<{ icon: { width: number; height: number; body: string }; size: number; style?: React.CSSProperties }> = ({
+export const Glyph: React.FC<{ icon: Icon; size: number; style?: React.CSSProperties }> = ({
   icon,
   size,
   style,
