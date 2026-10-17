@@ -1,7 +1,7 @@
 import { Img } from "remotion";
 import { UI_ICONS } from "../icons";
 import { MONO, SANS, WINDOW } from "../theme";
-import { Glyph } from "./Glyph";
+import { Glyph } from "../../../engine/Glyph";
 
 // 桌面上的窗口：圆角、标题栏左边三个圆点，阴影压在桌面上。自己画的通用样子，不照搬哪个应用的界面。
 

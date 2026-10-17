@@ -2,7 +2,7 @@ import { AbsoluteFill, Img, staticFile, useVideoConfig } from "remotion";
 import { assets } from "../assets.gen";
 import { UI_ICONS } from "../icons";
 import { SANS } from "../theme";
-import { Glyph } from "./Glyph";
+import { Glyph } from "../../../engine/Glyph";
 
 // 一台 Mac 的桌面：底图是真屏幕的截图（壁纸连程序坞），顶上的菜单栏是画的，悬浮条和字幕都在它上面。
 // 截图是 3024×1964 的 2 倍图，裁掉顶上 263 像素（真菜单栏在里面）成 16:9，四周镜像多出 63 像素，留在画外给虚化垫边。

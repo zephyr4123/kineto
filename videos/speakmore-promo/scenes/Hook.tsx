@@ -2,8 +2,8 @@ import { Audio } from "@remotion/media";
 import { AbsoluteFill, Sequence, interpolate, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { clamp } from "../../../engine/motion";
 import { assets } from "../assets.gen";
-import { Bar } from "../components/Bar";
-import { Seal } from "../components/Seal";
+import { Bar } from "../../../engine/speakmore/Bar";
+import { Seal } from "../../../engine/speakmore/Seal";
 import type { Camera } from "../components/Stage";
 import { COLOR, EASE, SANS, SERIF, W } from "../theme";
 

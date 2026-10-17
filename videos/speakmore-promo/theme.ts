@@ -1,6 +1,7 @@
 import { loadFont } from "@remotion/fonts";
-import { Easing } from "remotion";
 import { staticFile } from "remotion";
+import { inOutQuint, outExpo, outQuint } from "../../engine/motion";
+import { SEAL_COLOR } from "../../engine/speakmore/Seal";
 import { assets } from "./assets.gen";
 
 // SpeakMore 的宣传片：发布会的调子，冷静、克制。近黑的底，字是主角，颜色只从 App 图标那方印里取。
@@ -30,10 +31,10 @@ export const COLOR = {
   muted: "oklch(0.72 0.016 255)",
   // 朱砂：模型添上的字先用它亮一下
   cinnabar: "oklch(0.74 0.17 32)",
-  sealIndigo: "#29486f",
-  sealPaper: "#f7f4ed",
-  sealCinnabar: "#c7563c",
-  sealOchre: "#d69d43",
+  sealIndigo: SEAL_COLOR.indigo,
+  sealPaper: SEAL_COLOR.paper,
+  sealCinnabar: SEAL_COLOR.cinnabar,
+  sealOchre: SEAL_COLOR.ochre,
 } as const;
 
 // 桌面上的窗口：浅色的偏一点暖，和截下来的官网（浅色）放在一起不打架；终端是深色
@@ -54,8 +55,4 @@ export const WINDOW = {
 export const SHADOW = "0 2px 14px oklch(0 0 0 / 0.38)";
 
 // 先快后慢、不回弹（官网用的同一组曲线）；字在画面里挪位置用两头缓的那条
-export const EASE = {
-  outExpo: Easing.bezier(0.16, 1, 0.3, 1),
-  outQuint: Easing.bezier(0.22, 1, 0.36, 1),
-  inOut: Easing.bezier(0.7, 0, 0.2, 1),
-} as const;
+export const EASE = { outExpo, outQuint, inOut: inOutQuint } as const;

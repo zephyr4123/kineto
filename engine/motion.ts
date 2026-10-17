@@ -18,6 +18,11 @@ export const easeIn = Easing.in(Easing.cubic);
 export const easeInOut = Easing.inOut(Easing.cubic);
 export const backOut = Easing.out(Easing.back(2.2));
 
+// 先快后慢、不回弹（SpeakMore 官网用的同一组曲线）
+export const outExpo = Easing.bezier(0.16, 1, 0.3, 1);
+export const outQuint = Easing.bezier(0.22, 1, 0.36, 1);
+export const inOutQuint = Easing.bezier(0.7, 0, 0.2, 1);
+
 // 屏幕震动：start 起 duration 帧内线性衰减；每帧取一个确定的随机偏移
 export const shake = (
   frame: number,

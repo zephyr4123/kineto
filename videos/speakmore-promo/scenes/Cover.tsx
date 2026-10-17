@@ -1,9 +1,9 @@
 import { AbsoluteFill } from "remotion";
 import { assets } from "../assets.gen";
 import { AppShot, AppWindow } from "../components/AppWindow";
-import { Bar } from "../components/Bar";
+import { Bar } from "../../../engine/speakmore/Bar";
 import { Desktop } from "../components/Desktop";
-import { Seal } from "../components/Seal";
+import { Seal } from "../../../engine/speakmore/Seal";
 import { COLOR, SANS, SERIF, SHADOW } from "../theme";
 
 // 发布用的封面：真桌面压暗做底；一边是印章、SpeakMore、开口即成文和一行卖点，另一边浮着真的主窗口，

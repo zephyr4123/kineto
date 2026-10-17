@@ -4,7 +4,7 @@ import { clamp } from "../../../engine/motion";
 import { assets } from "../assets.gen";
 import { APP_WIN, AppShot, AppWindow } from "../components/AppWindow";
 import { DOCK_SPEAKMORE } from "../components/Desktop";
-import { Seal } from "../components/Seal";
+import { Seal } from "../../../engine/speakmore/Seal";
 import type { Camera } from "../components/Stage";
 import { show } from "../motion";
 import { BEAT, COLOR, EASE, SANS, SERIF, SHADOW } from "../theme";

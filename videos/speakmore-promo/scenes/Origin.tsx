@@ -2,7 +2,7 @@ import { Audio } from "@remotion/media";
 import { AbsoluteFill, Sequence, interpolate, staticFile, useCurrentFrame } from "remotion";
 import { clamp } from "../../../engine/motion";
 import { assets } from "../assets.gen";
-import { Counter } from "../components/Counter";
+import { Counter } from "../../../engine/Counter";
 import type { Camera } from "../components/Stage";
 import { show } from "../motion";
 import { COLOR, EASE, SANS, SERIF } from "../theme";

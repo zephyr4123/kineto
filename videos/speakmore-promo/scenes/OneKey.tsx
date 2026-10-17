@@ -2,7 +2,7 @@ import { Audio } from "@remotion/media";
 import { AbsoluteFill, Sequence, interpolate, staticFile, useCurrentFrame } from "remotion";
 import { clamp } from "../../../engine/motion";
 import { assets } from "../assets.gen";
-import { Glyph } from "../components/Glyph";
+import { Glyph } from "../../../engine/Glyph";
 import type { Camera } from "../components/Stage";
 import { MONO_STACK } from "../components/Window";
 import { MODEL_ICONS, UI_ICONS } from "../icons";

@@ -3,8 +3,8 @@ import { AbsoluteFill, Sequence, interpolate, staticFile, useCurrentFrame } from
 import { clamp } from "../../../engine/motion";
 import { assets } from "../assets.gen";
 import { Caption } from "../components/Caption";
-import { Glyph } from "../components/Glyph";
-import { Seal } from "../components/Seal";
+import { Glyph } from "../../../engine/Glyph";
+import { Seal } from "../../../engine/speakmore/Seal";
 import type { Camera } from "../components/Stage";
 import { type Row, type Seg, Terminal } from "../components/Terminal";
 import { Window } from "../components/Window";

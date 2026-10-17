@@ -1,8 +1,7 @@
 import { interpolate } from "remotion";
-import { clamp } from "../../../engine/motion";
-import { EASE } from "../theme";
+import { clamp, outQuint } from "../motion";
 
-// 说话时屏幕底部的悬浮条，照 SpeakMore 里的样子（src/renderer/bar/bar.css，朱砂主题）画，放大 SCALE 倍。
+// SpeakMore 说话时屏幕底部的悬浮条（两支 SpeakMore 宣传片共用），照 SpeakMore 里的样子（src/renderer/bar/bar.css，朱砂主题）画，放大 SCALE 倍。
 // 官网的同一个组件（website/src/components/Bar.jsx）靠 CSS 动画，这里全部改成帧的纯函数。
 const SCALE = 2;
 const SURFACE = "oklch(0.17 0.008 32)";
@@ -37,7 +36,7 @@ export const Bar: React.FC<{ frame: number; fps: number; level: number; timing: 
     interpolate(frame, [timing.done, timing.done + 10], [1, 0], clamp),
   );
   const done = interpolate(frame, [timing.done, timing.done + 6], [0, 1], clamp);
-  const draw = interpolate(frame, [timing.done, timing.done + 23], [1, 0], { ...clamp, easing: EASE.outQuint });
+  const draw = interpolate(frame, [timing.done, timing.done + 23], [1, 0], { ...clamp, easing: outQuint });
   const squeeze = interpolate(frame, [timing.press, timing.press + 4, timing.press + 14], [1, 0.84, 1], clamp);
   const buttons = { opacity: recording, transform: `scale(${0.6 + 0.4 * recording})` };
 

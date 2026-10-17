@@ -1,14 +1,15 @@
-import { COLOR } from "../theme";
 
-// SpeakMore 的图标：一方靛青的印，刻着五道声波。形状照搬 SpeakMore 仓库的 assets/icon.svg（MIT），
+// SpeakMore 的图标（两支 SpeakMore 宣传片共用）：一方靛青的印，刻着五道声波。形状照搬 SpeakMore 仓库的 assets/icon.svg（MIT），
 // 用代码画是为了能分开动：五道先立起来，印底再落下，"一段声音落成一方印"。
 // 五道两头斜切、左右不完全对称，是刀刻的样子，坐标别改。
+export const SEAL_COLOR = { indigo: "#29486f", paper: "#f7f4ed", cinnabar: "#c7563c", ochre: "#d69d43" } as const;
+
 const BARS = [
-  { fill: COLOR.sealPaper, points: "197,469 271,437 271,644 197,611" },
-  { fill: COLOR.sealCinnabar, points: "329,348 398,315 411,354 411,701 395,743 329,712" },
-  { fill: COLOR.sealPaper, points: "469,219 517,187 547,226 547,814 526,842 469,811" },
-  { fill: COLOR.sealOchre, points: "606,372 672,342 686,359 686,674 677,720 606,685" },
-  { fill: COLOR.sealPaper, points: "745,439 820,469 820,609 745,641" },
+  { fill: SEAL_COLOR.paper, points: "197,469 271,437 271,644 197,611" },
+  { fill: SEAL_COLOR.cinnabar, points: "329,348 398,315 411,354 411,701 395,743 329,712" },
+  { fill: SEAL_COLOR.paper, points: "469,219 517,187 547,226 547,814 526,842 469,811" },
+  { fill: SEAL_COLOR.ochre, points: "606,372 672,342 686,359 686,674 677,720 606,685" },
+  { fill: SEAL_COLOR.paper, points: "745,439 820,469 820,609 745,641" },
 ] as const;
 
 /**
@@ -23,7 +24,7 @@ export const Seal: React.FC<{ size: number; bars: readonly number[]; base: numbe
       width={824}
       height={824}
       rx={186}
-      fill={COLOR.sealIndigo}
+      fill={SEAL_COLOR.indigo}
       style={{
         opacity: base,
         transformBox: "fill-box",
