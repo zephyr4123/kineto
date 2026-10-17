@@ -5,14 +5,13 @@
   "status": "draft",
   "tags": [],
   "createdAt": "2026-10-17T15:14:53.971Z",
-  "updatedAt": "2026-10-17T16:07:24.297Z",
+  "updatedAt": "2026-10-17T16:44:20.751Z",
   "assets": {
     "desktop": "sha256:991cdde9d25dbc94ff9811c9d4ed6fc53a880e4986a27fee0c3562b7da97afdf",
     "music": "sha256:f22e875346282fd101f5fcadcba222769742f0fb876683a375efd2d88382b6ea",
     "fontSans": "sha256:a3041811a78c361b1de50f953c805e0244951c21c5bd412f7232ef0d899af0da",
     "fontSerif": "sha256:050080d9255a86808f2945bffac582b31ef32bc36411ce29563b4961670c66f9",
     "fontMono": "sha256:48715a42ec242c21e9f02692891e147d022299a52e48d5e413e1a942193ffeda",
-    "githubShot": "sha256:7424a9f4fb26e968a0444652226a918ef0c58ddb22ca3816d462ab4e641ec172",
     "appHome": "sha256:9f68edd4409327593b1b2020463ebb891977139375c4f365d445f6eb78017b54",
     "appModePicker": "sha256:99d7256054bc94a9cf8e689f856877ecee8ada7ff792883ff8d951835728bce7",
     "appModels": "sha256:d886a16e9ef5e530f4acc7f3f3f7161214585bb74b67bc809a89c377dbee58a3",
@@ -47,6 +46,17 @@
     "sfxClick": "sha256:f2ee26c38300175d6ae0b2f7ba350d2c512de70bed4a41d6eeb68f4da82dfe20",
     "sfxTap": "sha256:e08de3616aa5b13bdc55f4346a86ecc57c7f718fcbf6be6113b88ee6a116864d",
     "sfxKeys": "sha256:f1bba9a83e3580bb24ec6b6137c6bfe1a79deb27d1041d13e68c4d5802400200",
-    "sfxBlip": "sha256:da7fcf4e83c2c5b0379dd526f1cd2d7df0c889369c328f9bdc18cb1f017804b6"
+    "sfxBlip": "sha256:da7fcf4e83c2c5b0379dd526f1cd2d7df0c889369c328f9bdc18cb1f017804b6",
+    "appTranscribe": "sha256:643d66f52663d249f36aded485de88ffa70375c1864eecb976d49883b22ed79f",
+    "appPresets": "sha256:ecd31b60dc8b26d7b6871e3d1c999e94a7627e694fd8def28a33c8d1a231b66e",
+    "appHistory": "sha256:77f0bb1b3b969cab3a1c856483dc3ff289ac40d6ba1df67b7c914145ceb4aeb0",
+    "appKeys": "sha256:9d3a7c4ff5016a0d3ec8cdcfb368880b46500957901e6d98476b92097d336bc9",
+    "appSettings": "sha256:9989f1d9bd9559b2d87f40e216b11e81754c2d8ba2af0d5d6567972338cc1d21",
+    "appPreparePrivate": "sha256:4a564b9cf8486cacd61908c0a63c304f1cd1be7de55e9dd9bdf5902b4880dcb5",
+    "appDownloading": "sha256:ae31462c3f630052455d6d384747b67326cdef932d7ebe1ca97deff9103b5e1e",
+    "appWay": "sha256:5017d754c1449353e7acf6e61e8797127a8fcd324d682801be255d55c32a7bbf",
+    "downloadSpeed": "sha256:170a9cedc3f17b917f124eea805efb33d1c79d0594035ef4dc4cf381f5429fa8",
+    "appCost": "sha256:4b13cb64c738484af706527aac67ad284ec97e9f17f137cdf0d5aa7d386a101e",
+    "githubPage": "sha256:3929868262e9ad29656cf16189ea0a49ce06486e9cee5ef1616c207b89d4a7f8"
   }
 }
