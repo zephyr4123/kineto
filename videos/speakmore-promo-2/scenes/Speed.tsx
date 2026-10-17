@@ -3,16 +3,15 @@ import { clamp } from "../../../engine/motion";
 import { Bar } from "../../../engine/speakmore/Bar";
 import { Keycap } from "../components/Bits";
 import { Flash, MotionBlurX, Sfx } from "../components/Fx";
-import { MacWindow } from "../components/Screens";
-import { type Rect, SHOTS, Shot } from "../components/Shot";
+import { Lift, type Rect, SHOTS } from "../components/Shot";
 import { deepCamera } from "../components/Stage";
 import { mix, prog, punch, show } from "../motion";
-import { COLOR, EASE, MONO_STACK, SANS, SHADOW, b } from "../theme";
+import { COLOR, EASE, SANS, SHADOW, b } from "../theme";
 
-// 速度：按一下右 Option 开始说，再按一下停；松开那一刻秒表起跑，按真实的快慢走（1.24 秒，不加速），
-// 下面一条分成本机转写、润色两段跟着填满，字落进文稿、秒表停住。
-// 随后秒表缩进右边的一列数里，和另外三个数并在一屏：主流硬件不到 2 秒出字、本机转写中位数 0.23 秒、
-// 一分钟录音本机转写 0.9 秒；左边是模型页转写一栏的真截图，最后一个数出自它（圈出那一行）。
+// 速度：一把横贯画面的时间尺（0–2 秒，刻度细到 0.05 秒）。按一下右 Option 开始说，再按一下停；
+// 松开那一刻光标从 0 起跑，按真实的快慢走到 1.24 秒，身后留下两段光：本机转写（靛青）、润色（朱砂），字落进文稿。
+// 随后同一把尺上再落三个数：本机转写中位数 0.23 秒、一分钟录音本机转写 0.9 秒（下面抽出模型页里那一行真截图）、
+// 主流硬件不到 2 秒。四个数一把尺，一屏看完。
 // 1.24 秒是 2026-10-16 在 App 里实测的一次（11.3 秒的录音：解码 65 ms、转写 626 ms、润色 550 ms，
 // SpeakMore 仓库 bench/results/e2e-local-2026-10-16.md）；< 2 秒、0.23 秒和官网同一套数。
 
@@ -22,6 +21,7 @@ export const SPEED_CAMERA = deepCamera(SPEED_FRAMES);
 const SENTENCE = "下午三点和设计组过一遍新版首页，带上上周收集的反馈。";
 const MS = { decode: 65, transcribe: 626, polish: 550 };
 const TOTAL = (MS.decode + MS.transcribe + MS.polish) / 1000;
+const SPLIT = (MS.decode + MS.transcribe) / 1000;
 const RELEASE = 104;
 const T = {
   start: 22,
@@ -31,17 +31,22 @@ const T = {
   out: b(14.6),
 };
 
-// 并成一屏的四个数：第一个就是刚才秒表停住的那个
-const ROWS = [
-  { value: TOTAL.toFixed(2), unit: "秒", label: "松开到出字 · 本次实测", at: T.board + 24 },
-  { value: "< 2", unit: "秒", label: "主流硬件 · 出字", at: b(10) },
-  { value: "0.23", unit: "秒", label: "本机转写 · 中位数", at: b(11) },
-  { value: "0.9", unit: "秒", label: "一分钟录音 · 本机转写", at: b(12) },
-] as const;
-const LIST = { left: 1130, top: 190, row: 190 };
-// 转写一栏里本机模型表的第一行：Qwen3-ASR 0.6B（Metal 版），一分钟录音 0.9 秒（截图像素）
+// 尺：0–2 秒铺满 1520 像素
+const AXIS = { left: 200, right: 1720, y: 640, span: 2 };
+const px = (s: number) => AXIS.left + (s / AXIS.span) * (AXIS.right - AXIS.left);
+const TICKS = Array.from({ length: 41 }, (_, i) => i);
+
+type Mark = { s: number; value: string; caption: string; top: number; align: "left" | "right"; at: number; color: string };
+// 标记的高低、朝哪边放，排得互不相压（细线不穿过别的字）
+const MARKS: readonly Mark[] = [
+  { s: TOTAL, value: TOTAL.toFixed(2), caption: "松开到出字 · 本次实测", top: 250, align: "left", at: T.board + 12, color: COLOR.cinnabar },
+  { s: 0.23, value: "0.23", caption: "本机转写 · 中位数", top: 250, align: "left", at: b(9.6), color: COLOR.seal },
+  { s: 0.9, value: "0.9", caption: "一分钟录音 · 本机转写", top: 430, align: "right", at: b(10.6), color: COLOR.seal },
+  { s: 2, value: "< 2", caption: "主流硬件 · 出字", top: 430, align: "right", at: b(11.6), color: COLOR.ink },
+];
+// 模型页转写一栏里本机模型表的第一行：Qwen3-ASR 0.6B（Metal 版），一分钟录音 0.9 秒（截图像素）
 const QWEN_ROW: Rect = { x: 604, y: 852, w: 1528, h: 128 };
-const SHOT_AT = { left: 70, top: 100, width: 960 };
+const ROW_SCALE = 0.46;
 
 export const Speed: React.FC = () => {
   const frame = useCurrentFrame();
@@ -49,169 +54,336 @@ export const Speed: React.FC = () => {
   const sec = frame / fps;
 
   const elapsed = interpolate(frame, [T.release, T.done], [0, TOTAL], clamp);
-  const stopped = prog(frame, T.done, 30);
   const speaking = interpolate(frame, [T.start + 6, T.start + 16, T.release - 8, T.release], [0, 1, 1, 0], clamp);
   const level = speaking * (0.5 + 0.5 * Math.abs(Math.sin(sec * 6.1) * Math.sin(sec * 2.3 + 0.7)));
   const keyPress = Math.max(
     interpolate(frame, [T.start - 3, T.start, T.start + 8], [0, 1, 0], clamp),
     interpolate(frame, [T.release - 3, T.release, T.release + 8], [0, 1, 0], clamp),
   );
-
-  // 两段：本机转写（含解码）、润色；按毫秒算各自在什么时候填满
-  const split = (MS.decode + MS.transcribe) / 1000 / TOTAL;
-  const fill = elapsed / TOTAL;
-
-  // 演示退场：文稿和悬浮条往左走，秒表缩到右边那一列的第一行
-  const board = prog(frame, T.board, 36, EASE.inOut);
-  // 文稿和悬浮条先走（18 帧），截图再从左边进来，不叠在一起
-  const demoOut = prog(frame, T.board, 18, EASE.inOut);
-  const shotIn = prog(frame, T.board + 16, 44);
-
-  // 甩出去：往左甩，带横向模糊
+  // 演示的东西（文稿、键帽、悬浮条、跟着光标的大数字）在板子出来时退场
+  const demoOut = prog(frame, T.board, 20, EASE.inOut);
   const whip = prog(frame, T.out, 22, EASE.inOut);
+  const head = px(elapsed);
+  const running = frame >= T.release - 10;
 
   return (
     <AbsoluteFill style={{ fontFamily: SANS, color: COLOR.ink }}>
       <MotionBlurX id="speed-whip" amount={60 * Math.sin(Math.PI * whip)} />
       <AbsoluteFill style={{ transform: `translateX(${-1400 * whip}px)`, filter: whip > 0.01 && whip < 0.99 ? "url(#speed-whip)" : undefined, opacity: 1 - whip }}>
-        {demoOut < 1 ? (
-          <AbsoluteFill style={{ opacity: 1 - demoOut, transform: `translateX(${-160 * demoOut}px)`, filter: demoOut > 0.01 ? `blur(${10 * demoOut}px)` : undefined }}>
-            <MacWindow title="新建文稿" width={860} height={330} style={{ left: 150, top: 230, ...show(frame, 0, undefined, 30) }}>
-              <div style={{ padding: "30px 36px", fontSize: 36, lineHeight: 1.62, color: COLOR.paperInk }}>
-                {frame >= T.done ? (
-                  <span style={{ color: mix(COLOR.paperInk, "oklch(0.6 0.17 32)", prog(frame, T.done + 10, 40)) }}>{SENTENCE}</span>
-                ) : (
-                  <span style={{ display: "inline-block", width: 3, height: 40, verticalAlign: "-7px", background: "oklch(0.55 0.15 250)", opacity: Math.floor(frame / 30) % 2 === 0 ? 1 : 0 }} />
-                )}
-              </div>
-            </MacWindow>
-            <div style={{ position: "absolute", left: 0, right: 0, top: 812, display: "flex", justifyContent: "center", alignItems: "center", gap: 44, ...show(frame, 12, undefined, 30) }}>
-              <Keycap label="右 ⌥" press={keyPress} size={0.95} />
-              <Bar frame={frame} fps={fps} level={level} timing={{ press: T.release, finishing: T.release + 6, done: T.done }} />
-            </div>
-          </AbsoluteFill>
+        {/* 尺下面一层很淡的光，托住整把尺 */}
+        <div style={{ position: "absolute", left: 200, right: 200, top: AXIS.y - 120, height: 240, borderRadius: "50%", background: "oklch(0.8 0.06 255 / 0.07)", filter: "blur(60px)", opacity: prog(frame, 0, 40) }} />
+
+        <Ruler frame={frame} />
+        {running ? <Trail frame={frame} elapsed={elapsed} /> : null}
+        <Brackets frame={frame} elapsed={elapsed} />
+
+        {/* 光标：尺上一颗亮点，往上一道短光 */}
+        {running && demoOut < 1 ? (
+          <>
+            <div
+              style={{
+                position: "absolute",
+                left: head - 1,
+                top: AXIS.y - 70,
+                width: 2,
+                height: 86,
+                background: "linear-gradient(transparent, oklch(1 0 0 / 0.95) 70%, transparent)",
+                opacity: prog(frame, T.release - 10, 10) * (1 - demoOut),
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                left: head - 7,
+                top: AXIS.y - 7,
+                width: 14,
+                height: 14,
+                borderRadius: "50%",
+                background: "white",
+                boxShadow: `0 0 18px 6px ${frame < T.release + Math.round(SPLIT * 60) ? "oklch(0.8 0.07 255 / 0.8)" : "oklch(0.74 0.17 32 / 0.8)"}`,
+                opacity: prog(frame, T.release - 10, 10) * (1 - demoOut),
+                transform: `scale(${punch(frame, T.done, 0.6, 24)})`,
+              }}
+            />
+          </>
         ) : null}
 
-        {/* 秒表：板子出来时缩进第一行的位置，交给那一行 */}
-        {board < 1 ? (
+        {/* 跟着光标走的大数字 */}
+        {demoOut < 1 ? (
           <div
             style={{
               position: "absolute",
-              left: 1110,
-              width: 680,
-              top: 236,
+              left: Math.min(1460, Math.max(460, head)),
+              top: 336,
+              transform: `translateX(-50%) scale(${punch(frame, T.done, 0.05)})`,
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              transformOrigin: "0 0",
-              transform: `translate(${interpolate(board, [0, 1], [0, LIST.left - 1130])}px, ${interpolate(board, [0, 1], [0, LIST.top - 290])}px) scale(${interpolate(board, [0, 1], [1, 0.5])})`,
-              opacity: 1 - prog(frame, T.board + 14, 14),
-              ...(frame < T.board ? show(frame, 8) : {}),
+              opacity: (frame < T.board ? 1 : 1 - demoOut) * prog(frame, 8, 20),
+              filter: demoOut > 0.01 ? `blur(${8 * demoOut}px)` : undefined,
+              textShadow: SHADOW,
             }}
           >
-            <div style={{ fontSize: 34, fontWeight: 500, color: COLOR.ink2, letterSpacing: "0.08em", textShadow: SHADOW, opacity: 1 - board }}>松开到出字</div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 18, marginTop: 6, transform: `scale(${punch(frame, T.done, 0.06)})` }}>
+            <div style={{ fontSize: 26, fontWeight: 500, color: COLOR.ink2, letterSpacing: "0.16em" }}>松开到出字</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 14, marginTop: 4 }}>
               <span
                 style={{
-                  fontFamily: MONO_STACK,
-                  fontSize: 230,
-                  fontWeight: 300,
-                  letterSpacing: "-0.05em",
+                  fontSize: 210,
+                  fontWeight: 200,
+                  letterSpacing: "-0.03em",
                   lineHeight: 1,
                   fontVariantNumeric: "tabular-nums",
-                  color: mix(COLOR.ink, COLOR.cinnabar, frame < T.done ? 1 : stopped),
-                  opacity: frame < T.release ? 0.45 : 1,
-                  textShadow: SHADOW,
+                  opacity: frame < T.release ? 0.4 : 1,
+                  textShadow: frame >= T.done ? `0 0 40px oklch(0.74 0.17 32 / ${0.5 * prog(frame, T.done, 20)})` : SHADOW,
                 }}
               >
                 {elapsed.toFixed(2)}
               </span>
-              <span style={{ fontSize: 70, fontWeight: 500, color: COLOR.ink2 }}>秒</span>
-            </div>
-            {/* 一条分两段：本机转写、润色 */}
-            <div style={{ opacity: 1 - board }}>
-              <div style={{ position: "relative", width: 640, height: 14, marginTop: 34, borderRadius: 7, background: "oklch(1 0 0 / 0.12)", overflow: "hidden" }}>
-                <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${Math.min(fill, split) * 100}%`, background: COLOR.seal }} />
-                <div style={{ position: "absolute", left: `${split * 100}%`, top: 0, bottom: 0, width: `${Math.max(0, fill - split) * 100}%`, background: COLOR.cinnabar }} />
-              </div>
-              <div style={{ position: "relative", width: 640, height: 40, marginTop: 14, fontSize: 26, color: COLOR.ink2 }}>
-                <span style={{ position: "absolute", left: 0 }}>本机转写</span>
-                <span style={{ position: "absolute", left: `${split * 100}%`, marginLeft: 14 }}>润色</span>
-              </div>
+              <span style={{ fontSize: 54, fontWeight: 400, color: COLOR.ink2 }}>秒</span>
             </div>
           </div>
         ) : null}
 
-        {/* 一屏四个数：左边真截图，右边一列 */}
-        {shotIn > 0 ? (
-          <AbsoluteFill style={{ perspective: 2200 }}>
-            <Shot
-              shot={SHOTS.transcribe}
-              width={SHOT_AT.width}
-              spot={{ rect: QWEN_ROW, k: prog(frame, ROWS[3].at, 14) }}
-              style={{
-                left: SHOT_AT.left,
-                top: SHOT_AT.top,
-                opacity: shotIn,
-                transformOrigin: "0% 50%",
-                transform: `translateX(${-200 * (1 - shotIn)}px) rotateY(${16 - 10 * shotIn}deg)`,
-              }}
-            />
-          </AbsoluteFill>
-        ) : null}
-        {frame >= T.board ? (
-          <div style={{ position: "absolute", left: LIST.left, top: LIST.top, width: 680, textShadow: SHADOW }}>
-            {ROWS.map((row, i) => (
-              <Metric key={row.label} frame={frame} index={i} {...row} hot={i === 3 ? prog(frame, row.at, 14) : 0} />
-            ))}
+        {/* 文稿：一块深色玻璃，字整句落进去 */}
+        {demoOut < 1 ? (
+          <div
+            style={{
+              position: "absolute",
+              left: 340,
+              top: 96,
+              width: 1240,
+              height: 132,
+              boxSizing: "border-box",
+              padding: "0 44px",
+              display: "flex",
+              alignItems: "center",
+              borderRadius: 26,
+              background: "oklch(0.2 0.012 255 / 0.5)",
+              boxShadow: `0 0 0 1px ${COLOR.line}, 0 30px 80px oklch(0 0 0 / 0.35)`,
+              backdropFilter: "blur(24px)",
+              fontSize: 40,
+              letterSpacing: "0.01em",
+              ...show(frame, 0, T.board, 24),
+            }}
+          >
+            {frame >= T.done ? (
+              <span style={{ color: mix(COLOR.ink, COLOR.cinnabar, prog(frame, T.done + 10, 40)), opacity: prog(frame, T.done, 8) }}>{SENTENCE}</span>
+            ) : (
+              <span style={{ display: "inline-block", width: 3, height: 46, background: COLOR.seal, opacity: Math.floor(frame / 30) % 2 === 0 ? 1 : 0 }} />
+            )}
           </div>
         ) : null}
+
+        {demoOut < 1 ? (
+          <div style={{ position: "absolute", left: 0, right: 0, top: 846, display: "flex", justifyContent: "center", alignItems: "center", gap: 44, ...show(frame, 12, T.board, 30) }}>
+            <Keycap label="右 ⌥" press={keyPress} size={0.9} />
+            <Bar frame={frame} fps={fps} level={level} timing={{ press: T.release, finishing: T.release + 6, done: T.done }} />
+          </div>
+        ) : null}
+
+        {/* 同一把尺上的四个数 */}
+        {MARKS.map((mark) => (
+          <Marker key={mark.value} frame={frame} mark={mark} />
+        ))}
+        {/* 0.9 秒的出处：模型页里那一行，挂在尺下 */}
+        <Lift shot={SHOTS.transcribe} rect={QWEN_ROW} scale={ROW_SCALE} radius={12} style={{ left: px(0.9) - (QWEN_ROW.w * ROW_SCALE) / 2, top: 830, ...show(frame, MARKS[2].at + 10, undefined, 20) }} />
+        <div
+          style={{
+            position: "absolute",
+            left: px(0.9),
+            top: AXIS.y + 12,
+            width: 0,
+            height: 830 - AXIS.y - 12,
+            borderLeft: `1.5px dashed ${COLOR.seal}`,
+            opacity: 0.7 * prog(frame, MARKS[2].at + 6, 16),
+          }}
+        />
       </AbsoluteFill>
 
       <Flash frame={frame} at={[0]} strength={0.7} />
-      <Flash frame={frame} at={[T.done]} strength={0.25} dur={12} />
+      <Flash frame={frame} at={[T.done]} strength={0.22} dur={12} />
       <Sfx at={0} name="sfxFlash" volume={0.35} />
       <Sfx at={T.start} name="sfxClick" volume={0.32} />
       <Sfx at={T.release} name="sfxClick" volume={0.32} />
-      <Sfx at={T.release + Math.round(((MS.decode + MS.transcribe) / 1000) * 60)} name="sfxTap" volume={0.22} />
+      <Sfx at={T.release + Math.round(SPLIT * 60)} name="sfxTap" volume={0.22} />
       <Sfx at={T.done} name="sfxDing" volume={0.45} />
-      <Sfx at={T.board} name="sfxSwish" volume={0.35} />
-      {ROWS.slice(1).map((row, i) => (
-        <Sfx key={row.label} at={row.at} name={(["sfxNote1", "sfxNote2", "sfxNote3"] as const)[i]} volume={0.26} />
+      <Sfx at={T.board} name="sfxSwish" volume={0.3} />
+      {MARKS.slice(1).map((mark, i) => (
+        <Sfx key={mark.value} at={mark.at} name={(["sfxNote1", "sfxNote2", "sfxNote3"] as const)[i]} volume={0.26} />
       ))}
       <Sfx at={T.out} name="sfxSwish" volume={0.45} />
     </AbsoluteFill>
   );
 };
 
-/** 一列里的一个数：数字、单位，下面一行说明；行与行之间一道细线。hot 时数字染成朱砂（和截图上圈出的那一行对上） */
-const Metric: React.FC<{ frame: number; index: number; value: string; unit: string; label: string; at: number; hot: number }> = ({
-  frame,
-  index,
-  value,
-  unit,
-  label,
-  at,
-  hot,
-}) => (
-  <div style={{ position: "absolute", left: 0, top: index * LIST.row, width: 680, height: LIST.row, ...show(frame, at, undefined, 20) }}>
-    {index > 0 ? <div style={{ position: "absolute", left: 0, right: 0, top: -14, height: 1, background: COLOR.line }} /> : null}
-    <div style={{ display: "flex", alignItems: "baseline", gap: 14, transform: `scale(${punch(frame, at, 0.05, 20)})`, transformOrigin: "0 50%" }}>
-      <span
+/** 尺：一道细线，0.05 秒一根小刻度、0.25 秒一根中刻度、0.5 秒一根大刻度标数；从左往右一根根亮起来 */
+const Ruler: React.FC<{ frame: number }> = ({ frame }) => (
+  <>
+    <div style={{ position: "absolute", left: AXIS.left, width: AXIS.right - AXIS.left, top: AXIS.y, height: 1, background: "oklch(1 0 0 / 0.32)", transformOrigin: "0 0", transform: `scaleX(${prog(frame, 2, 36, EASE.inOut)})` }} />
+    {TICKS.map((i) => {
+      const major = i % 10 === 0;
+      const mid = i % 5 === 0;
+      const k = prog(frame, 4 + i * 0.7, 14);
+      return (
+        <div key={i}>
+          <div
+            style={{
+              position: "absolute",
+              left: px(i * 0.05),
+              top: AXIS.y,
+              width: 1,
+              height: major ? 26 : mid ? 16 : 9,
+              background: `oklch(1 0 0 / ${major ? 0.6 : mid ? 0.34 : 0.18})`,
+              opacity: k,
+            }}
+          />
+          {major ? (
+            <div
+              style={{
+                position: "absolute",
+                left: px(i * 0.05),
+                top: AXIS.y + 34,
+                transform: "translateX(-50%)",
+                fontSize: 20,
+                fontWeight: 400,
+                color: COLOR.faint,
+                fontVariantNumeric: "tabular-nums",
+                letterSpacing: "0.04em",
+                opacity: k,
+              }}
+            >
+              {i === 40 ? "2.0 秒" : (i * 0.05).toFixed(1)}
+            </div>
+          ) : null}
+        </div>
+      );
+    })}
+  </>
+);
+
+/** 光标身后的两段光：本机转写（靛青）、润色（朱砂），底下再垫一层虚的，像是在发光 */
+const Trail: React.FC<{ frame: number; elapsed: number }> = ({ frame, elapsed }) => {
+  const a = Math.min(elapsed, SPLIT);
+  const c = Math.max(0, elapsed - SPLIT);
+  const seg = (from: number, len: number, color: string, glow: boolean) => (
+    <div
+      style={{
+        position: "absolute",
+        left: px(from),
+        width: px(from + len) - px(from),
+        top: AXIS.y - (glow ? 5 : 1.5),
+        height: glow ? 10 : 3,
+        borderRadius: 2,
+        background: color,
+        filter: glow ? "blur(8px)" : undefined,
+        opacity: glow ? 0.9 : 1,
+      }}
+    />
+  );
+  // 跑完之后，整条光从左往右再亮一遍
+  const sheen = interpolate(frame, [T.done + 4, T.done + 40], [-0.2, 1.2], clamp);
+  return (
+    <>
+      {seg(0, a, COLOR.seal, true)}
+      {seg(SPLIT, c, COLOR.cinnabar, true)}
+      {seg(0, a, "oklch(0.86 0.06 255)", false)}
+      {seg(SPLIT, c, "oklch(0.8 0.15 35)", false)}
+      {frame > T.done ? (
+        <div
+          style={{
+            position: "absolute",
+            left: px(0),
+            width: px(TOTAL) - px(0),
+            top: AXIS.y - 2,
+            height: 4,
+            background: `linear-gradient(90deg, transparent ${sheen * 100 - 8}%, white ${sheen * 100}%, transparent ${sheen * 100 + 8}%)`,
+            opacity: 0.9,
+          }}
+        />
+      ) : null}
+    </>
+  );
+};
+
+/** 尺下面两道括号：本机转写多久、润色多久，光走过去时各自标出来 */
+const Brackets: React.FC<{ frame: number; elapsed: number }> = ({ frame, elapsed }) => {
+  const parts = [
+    { from: 0, to: SPLIT, label: "本机转写", value: SPLIT, color: COLOR.seal, at: T.release + Math.round(SPLIT * 60), align: "center" as const },
+    // 靠右放：0.9 秒那道虚线从这一段中间穿下去，字别压在线上
+    { from: SPLIT, to: TOTAL, label: "润色", value: TOTAL - SPLIT, color: COLOR.cinnabar, at: T.done, align: "right" as const },
+  ];
+  return (
+    <>
+      {parts.map((part) => {
+        const k = prog(frame, part.at, 20);
+        if (elapsed <= part.from || k <= 0) return null;
+        const x0 = px(part.from) + 4;
+        const x1 = px(part.to) - 4;
+        return (
+          <div key={part.label} style={{ position: "absolute", left: x0, width: x1 - x0, top: AXIS.y + 78, opacity: k }}>
+            <div style={{ height: 10, borderLeft: `1px solid ${part.color}`, borderRight: `1px solid ${part.color}`, borderBottom: `1px solid ${part.color}`, opacity: 0.8 }} />
+            <div style={{ marginTop: 12, textAlign: part.align, fontSize: 24, fontWeight: 500, letterSpacing: "0.08em", color: part.color }}>
+              {part.label}
+              <span style={{ marginLeft: 12, fontWeight: 300, fontVariantNumeric: "tabular-nums", color: COLOR.ink2 }}>{part.value.toFixed(2)} 秒</span>
+            </div>
+          </div>
+        );
+      })}
+    </>
+  );
+};
+
+/** 尺上的一个数：尺上一颗点，往上一道细线，顶上是数字和一行说明 */
+const Marker: React.FC<{ frame: number; mark: Mark }> = ({ frame, mark }) => {
+  const k = prog(frame, mark.at, 26);
+  if (k <= 0) return null;
+  const x = px(mark.s);
+  const labelBottom = mark.top + 140;
+  const line = prog(frame, mark.at, 22, EASE.outQuint);
+  const right = mark.align === "right";
+  return (
+    <>
+      <div
         style={{
-          fontFamily: MONO_STACK,
-          fontSize: 112,
-          fontWeight: 300,
-          letterSpacing: "-0.04em",
-          lineHeight: 1,
-          fontVariantNumeric: "tabular-nums",
-          color: index === 0 ? COLOR.cinnabar : mix(COLOR.cinnabar, COLOR.ink, hot),
+          position: "absolute",
+          left: x,
+          top: labelBottom + 12,
+          width: 1.5,
+          height: AXIS.y - labelBottom - 22,
+          background: `linear-gradient(oklch(1 0 0 / 0.25), ${mark.color})`,
+          transformOrigin: "50% 100%",
+          transform: `scaleY(${line})`,
+          opacity: 0.85,
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          left: x - 6,
+          top: AXIS.y - 6,
+          width: 12,
+          height: 12,
+          borderRadius: "50%",
+          background: mark.color,
+          boxShadow: `0 0 16px 4px ${mark.color}`,
+          transform: `scale(${line * punch(frame, mark.at, 0.6, 20)})`,
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          top: mark.top,
+          ...(right ? { right: 1920 - x + 18, textAlign: "right" as const } : { left: x + 18 }),
+          textShadow: SHADOW,
+          ...show(frame, mark.at + 4, undefined, 18),
         }}
       >
-        {value}
-      </span>
-      <span style={{ fontSize: 40, fontWeight: 500, color: COLOR.ink2 }}>{unit}</span>
-    </div>
-    <div style={{ marginTop: 14, fontSize: 30, fontWeight: 500, color: COLOR.ink2, letterSpacing: "0.05em" }}>{label}</div>
-  </div>
-);
+        <div style={{ display: "flex", alignItems: "baseline", gap: 10, justifyContent: right ? "flex-end" : "flex-start" }}>
+          <span style={{ fontSize: 96, fontWeight: 200, letterSpacing: "-0.02em", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{mark.value}</span>
+          <span style={{ fontSize: 30, fontWeight: 400, color: COLOR.ink2 }}>秒</span>
+        </div>
+        <div style={{ marginTop: 14, fontSize: 24, fontWeight: 500, color: COLOR.ink2, letterSpacing: "0.1em", whiteSpace: "nowrap" }}>{mark.caption}</div>
+      </div>
+    </>
+  );
+};

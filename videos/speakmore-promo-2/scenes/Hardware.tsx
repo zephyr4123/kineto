@@ -1,16 +1,14 @@
 import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
-import { Glyph } from "../../../engine/Glyph";
 import { clamp } from "../../../engine/motion";
 import { assets } from "../assets.gen";
 import { Logo } from "../components/Brand";
 import { Flash, Sfx, swellBefore } from "../components/Fx";
 import { deepCamera } from "../components/Stage";
-import { UI } from "../icons";
-import { prog, punch, show } from "../motion";
+import { mix, prog, punch, show } from "../motion";
 import { COLOR, EASE, SANS, SHADOW, b } from "../theme";
 
 // 硬件：副歌一进来就一拍一切。处理器 → Apple、Intel、AMD → 直接运行；显卡 → NVIDIA、AMD、Intel → 自动加速；
-// 最后六家并成一张两行的表，逐格打勾。只有词，没有句子。
+// 最后六家并成两行，排在两道细线上，一束光沿线扫过、逐家亮起。只有词，没有句子。
 
 export const HARDWARE_FRAMES = b(16);
 export const HARDWARE_CAMERA = deepCamera(HARDWARE_FRAMES);
@@ -113,63 +111,66 @@ const ROWS = [
   { name: "处理器", note: "直接运行", brands: CPU },
   { name: "显卡", note: "自动加速", brands: GPU },
 ] as const;
+// 两行，不用卡片：左边一列名目，右边三家标志排在一道细线上；一束光沿着线扫过去，扫到哪家哪家亮起来
+const GRID = { left: 230, right: 1690, top: 330, row: 250, logo: 84, first: 870, gap: 330 };
 
 const Matrix: React.FC<{ frame: number }> = ({ frame }) => (
-  <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", gap: 34 }}>
-    {ROWS.map((row, r) => (
-      <div key={row.name} style={{ display: "flex", alignItems: "center", gap: 30 }}>
-        <div style={{ width: 230, textShadow: SHADOW, ...show(frame, b(MATRIX) + r * 6) }}>
-          <div style={{ fontSize: 50, fontWeight: 700 }}>{row.name}</div>
-          <div style={{ marginTop: 6, fontSize: 28, color: COLOR.ink2, letterSpacing: "0.06em" }}>{row.note}</div>
+  <AbsoluteFill>
+    {ROWS.map((row, r) => {
+      const y = GRID.top + r * GRID.row;
+      const enter = b(MATRIX) + r * 6;
+      const sweep = interpolate(frame, [checkAt(r * 3) - 14, checkAt(r * 3 + 2) + 14], [GRID.first - 200, GRID.first + 2 * GRID.gap + 200], clamp);
+      const sweeping = frame >= checkAt(r * 3) - 14 && frame <= checkAt(r * 3 + 2) + 30;
+      return (
+        <div key={row.name}>
+          <div style={{ position: "absolute", left: GRID.left, top: y + 6, textShadow: SHADOW, ...show(frame, enter) }}>
+            <div style={{ fontSize: 54, fontWeight: 600, letterSpacing: "0.04em" }}>{row.name}</div>
+            <div style={{ marginTop: 10, fontSize: 26, fontWeight: 500, color: COLOR.ink2, letterSpacing: "0.2em" }}>{row.note}</div>
+          </div>
+          {/* 细线：从左画到右 */}
+          <div
+            style={{
+              position: "absolute",
+              left: GRID.left,
+              width: GRID.right - GRID.left,
+              top: y + 170,
+              height: 1,
+              background: "linear-gradient(90deg, oklch(1 0 0 / 0.05), oklch(1 0 0 / 0.3) 30%, oklch(1 0 0 / 0.3) 80%, oklch(1 0 0 / 0.05))",
+              transformOrigin: "0 0",
+              transform: `scaleX(${prog(frame, enter, 40, EASE.inOut)})`,
+            }}
+          />
+          {/* 扫过去的那束光：线上一点亮、上方一片淡光 */}
+          {sweeping ? (
+            <>
+              <div style={{ position: "absolute", left: sweep - 160, top: y - 30, width: 320, height: 210, borderRadius: "50%", background: "oklch(0.9 0.04 255 / 0.12)", filter: "blur(40px)" }} />
+              <div style={{ position: "absolute", left: sweep - 90, top: y + 169, width: 180, height: 3, background: "linear-gradient(90deg, transparent, white, transparent)", boxShadow: "0 0 14px white" }} />
+            </>
+          ) : null}
+          {row.brands.map((brand, i) => {
+            const n = r * 3 + i;
+            const lit = prog(frame, checkAt(n), 18);
+            const x = GRID.first + i * GRID.gap;
+            return (
+              <div key={brand.name} style={{ position: "absolute", left: x, top: y, transform: "translateX(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 22, ...show(frame, enter + 6 + i * 4, undefined, 16) }}>
+                <div
+                  style={{
+                    height: GRID.logo + 20,
+                    display: "flex",
+                    alignItems: "center",
+                    opacity: 0.32 + 0.68 * lit,
+                    filter: `grayscale(${1 - lit}) drop-shadow(0 0 ${18 * lit}px oklch(1 0 0 / ${0.25 * lit}))`,
+                    transform: `scale(${punch(frame, checkAt(n), 0.08, 20)})`,
+                  }}
+                >
+                  <Logo src={brand.src} height={GRID.logo * brand.height} />
+                </div>
+                <div style={{ fontSize: 26, fontWeight: 500, letterSpacing: "0.04em", whiteSpace: "nowrap", color: mix(COLOR.ink, COLOR.faint, lit) }}>{brand.name}</div>
+              </div>
+            );
+          })}
         </div>
-        {row.brands.map((brand, i) => {
-          const n = r * 3 + i;
-          const checked = prog(frame, checkAt(n), 14);
-          return (
-            <div
-              key={brand.name}
-              style={{
-                position: "relative",
-                width: 400,
-                height: 214,
-                borderRadius: 30,
-                background: COLOR.glass,
-                boxShadow: `0 0 0 1px ${COLOR.line}, 0 24px 60px oklch(0 0 0 / 0.35)`,
-                backdropFilter: "blur(20px)",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 26,
-                ...show(frame, b(MATRIX) + 4 + n * 3, undefined, 30),
-              }}
-            >
-              <div style={{ height: 86, display: "flex", alignItems: "center" }}>
-                <Logo src={brand.src} height={86 * brand.height} />
-              </div>
-              <div style={{ fontSize: 28, fontWeight: 500, color: COLOR.ink2 }}>{brand.name}</div>
-              <div
-                style={{
-                  position: "absolute",
-                  top: 18,
-                  right: 18,
-                  width: 40,
-                  height: 40,
-                  borderRadius: "50%",
-                  display: "grid",
-                  placeItems: "center",
-                  background: COLOR.green,
-                  color: "oklch(0.2 0.03 150)",
-                  opacity: checked,
-                  transform: `scale(${interpolate(checked, [0, 1], [0.4, 1], clamp)})`,
-                }}
-              >
-                <Glyph icon={UI.check} size={28} />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    ))}
+      );
+    })}
   </AbsoluteFill>
 );

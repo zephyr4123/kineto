@@ -12,7 +12,7 @@ import { prog, show, typed } from "../motion";
 import { COLOR, EASE, MONO_STACK, SANS, SHADOW, b } from "../theme";
 
 // 自定义接口：润色那一跳可以交给任何兼容 OpenAI 接口的服务（SpeakMore 的 src/server/chat/vendors.mjs 里的 custom）。
-// 设置卡片里敲进地址和模型名、点检测、可用。Ollama、LM Studio 只作为例子露一下标志，不展开讲（没有实际接过）。
+// 一张深色玻璃的设置卡片里敲进地址和模型名、点检测、可用。Ollama、LM Studio 只作为例子露一下标志，不展开讲（没有实际接过）。
 // 地址用的是 Ollama 默认的本机端口。检测通过后，这张卡缩进模型页"密钥"一栏的真截图里"自定义服务"那一行。
 
 export const CUSTOM_FRAMES = b(16);
@@ -26,7 +26,7 @@ const CARD = { left: 900, top: 214, width: 860, height: 620 };
 const KEYS_AT = { left: 900, top: 90, width: 940 };
 const CUSTOM_ROW: Rect = { x: 610, y: 1500, w: 1516, h: 128 };
 // 检测按钮在卡片里的位置
-const CHECK = { x: CARD.left + 52 + 80, y: CARD.top + 520 + 33 };
+const CHECK = { x: CARD.left + 56 + 70, y: CARD.top + 520 + 32 };
 
 export const Custom: React.FC = () => {
   const frame = useCurrentFrame();
@@ -74,69 +74,56 @@ export const Custom: React.FC = () => {
         />
       ) : null}
 
-      {/* 设置卡片：照 App 的浅色样子画 */}
+      {/* 设置卡片：深色玻璃，输入框只留一道底线，敲字时那道线亮起来 */}
       <div
         style={{
           position: "absolute",
           ...CARD,
           borderRadius: 30,
-          background: COLOR.paper,
-          color: COLOR.paperInk,
-          boxShadow: "0 0 0 1px oklch(0 0 0 / 0.08), 0 40px 100px oklch(0 0 0 / 0.5)",
+          background: "oklch(0.2 0.012 255 / 0.62)",
+          backdropFilter: "blur(28px)",
+          boxShadow: `0 0 0 1px ${COLOR.line}, inset 0 1px 0 oklch(1 0 0 / 0.08), 0 40px 100px oklch(0 0 0 / 0.5)`,
           opacity: cardIn * (1 - into),
           transformOrigin: "0 0",
           transform:
             into > 0
               ? `translate(${(row.left - CARD.left) * into}px, ${(row.top - CARD.top) * into}px) scale(${1 - (1 - row.width / CARD.width) * into})`
               : `perspective(2000px) translateX(${120 * (1 - cardIn)}px) rotateY(${-14 * (1 - cardIn)}deg)`,
-          padding: "40px 52px",
+          padding: "44px 56px",
           boxSizing: "border-box",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 32, fontWeight: 650 }}>
-          <span style={{ width: 54, height: 54, borderRadius: 16, display: "grid", placeItems: "center", background: COLOR.paperSurface }}>
-            <Glyph icon={UI.plug} size={30} />
-          </span>
-          自定义服务
-          <span style={{ marginLeft: 6, fontSize: 24, fontWeight: 500, color: COLOR.paperInk2 }}>润色</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+          <Glyph icon={UI.plug} size={34} style={{ color: COLOR.seal }} />
+          <span style={{ fontSize: 34, fontWeight: 600, letterSpacing: "0.02em" }}>自定义服务</span>
+          <span style={{ marginLeft: "auto", fontSize: 20, fontWeight: 500, letterSpacing: "0.2em", color: COLOR.ink2 }}>润色 · OPENAI 兼容</span>
         </div>
-        <div style={{ height: 1, background: COLOR.paperLine, margin: "30px 0 26px" }} />
+        <div style={{ height: 1, background: COLOR.line, margin: "30px 0 34px" }} />
         <Field label="地址" value={typed(URL, frame, T.url, T.urlFrames)} caret={frame >= T.url - 10 && frame < T.model} frame={frame} />
         <Field label="模型" value={typed(MODEL, frame, T.model, T.modelFrames)} caret={frame >= T.model && frame < T.ok} frame={frame} />
-        <div style={{ position: "absolute", left: 52, top: 520, display: "flex", alignItems: "center", gap: 22 }}>
+        <div style={{ position: "absolute", left: 56, right: 56, top: 520, display: "flex", alignItems: "center", gap: 26 }}>
           <span
             style={{
               display: "inline-flex",
               alignItems: "center",
-              height: 66,
-              padding: "0 34px",
-              borderRadius: 18,
-              boxShadow: `inset 0 0 0 1.5px ${COLOR.paperLine}`,
-              background: COLOR.paper,
-              fontSize: 28,
-              fontWeight: 600,
+              height: 64,
+              padding: "0 36px",
+              borderRadius: 32,
+              boxShadow: `inset 0 0 0 1px oklch(1 0 0 / ${0.3 + 0.4 * press})`,
+              background: `oklch(1 0 0 / ${0.06 + 0.1 * press})`,
+              fontSize: 26,
+              fontWeight: 500,
+              letterSpacing: "0.12em",
               transform: `scale(${1 - 0.04 * press})`,
             }}
           >
             检测
           </span>
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 10,
-              height: 54,
-              padding: "0 24px",
-              borderRadius: 999,
-              background: "oklch(0.93 0.06 150)",
-              color: "oklch(0.42 0.12 150)",
-              fontSize: 26,
-              fontWeight: 650,
-              opacity: ok,
-              transform: `scale(${0.7 + 0.3 * ok})`,
-            }}
-          >
-            <Glyph icon={UI.check} size={26} />
+          {/* 结果：一颗亮起来的绿点和"可用"，点外一圈光散开 */}
+          <span style={{ position: "relative", display: "inline-flex", alignItems: "center", gap: 14, fontSize: 28, fontWeight: 500, letterSpacing: "0.1em", color: COLOR.green, opacity: ok }}>
+            <i style={{ position: "relative", width: 14, height: 14, borderRadius: "50%", background: COLOR.green, boxShadow: `0 0 16px 3px ${COLOR.green}` }}>
+              <i style={{ position: "absolute", inset: -2, borderRadius: "50%", border: `2px solid ${COLOR.green}`, transform: `scale(${1 + 3 * prog(frame, T.ok, 30)})`, opacity: 1 - prog(frame, T.ok, 30) }} />
+            </i>
             可用
           </span>
         </div>
@@ -164,25 +151,14 @@ export const Custom: React.FC = () => {
   );
 };
 
+/** 一栏：上面一行字距拉开的小字，下面是敲进去的值，底下一道线；正在敲的那一栏线是亮的 */
 const Field: React.FC<{ label: string; value: string; caret: boolean; frame: number }> = ({ label, value, caret, frame }) => (
-  <div style={{ marginBottom: 30 }}>
-    <div style={{ fontSize: 24, fontWeight: 550, color: COLOR.paperInk2, marginBottom: 12 }}>{label}</div>
-    <div
-      style={{
-        height: 76,
-        borderRadius: 18,
-        background: COLOR.paperSurface,
-        boxShadow: caret ? "inset 0 0 0 2px oklch(0.55 0.13 255)" : `inset 0 0 0 1px ${COLOR.paperLine}`,
-        display: "flex",
-        alignItems: "center",
-        padding: "0 26px",
-        fontFamily: MONO_STACK,
-        fontSize: 32,
-        whiteSpace: "pre",
-      }}
-    >
+  <div style={{ marginBottom: 40 }}>
+    <div style={{ fontSize: 20, fontWeight: 500, color: COLOR.ink2, letterSpacing: "0.2em" }}>{label}</div>
+    <div style={{ position: "relative", height: 70, display: "flex", alignItems: "center", fontFamily: MONO_STACK, fontSize: 34, whiteSpace: "pre" }}>
       {value}
-      {caret ? <span style={{ width: 3, height: 38, marginLeft: 2, background: "oklch(0.55 0.13 255)", opacity: Math.floor(frame / 28) % 2 === 0 ? 1 : 0 }} /> : null}
+      {caret ? <span style={{ width: 3, height: 40, marginLeft: 3, background: COLOR.seal, boxShadow: `0 0 10px ${COLOR.seal}`, opacity: Math.floor(frame / 28) % 2 === 0 ? 1 : 0 }} /> : null}
+      <i style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: caret ? 2 : 1, background: caret ? COLOR.seal : "oklch(1 0 0 / 0.2)", boxShadow: caret ? `0 0 12px ${COLOR.seal}` : undefined }} />
     </div>
   </div>
 );

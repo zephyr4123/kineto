@@ -27,9 +27,9 @@ const LIFT_SCALE = 0.92;
 const LIFT_TO = { left: 150, top: 290 };
 
 const FACTS = [
-  { icon: UI.shield, text: "不上传" },
-  { icon: UI.key, text: "无需密钥" },
-  { icon: UI.wifiOff, text: "不联网" },
+  { icon: UI.shield, text: "不上传", note: "录音、文字不出本机" },
+  { icon: UI.key, text: "无需密钥", note: "不必注册任何服务" },
+  { icon: UI.wifiOff, text: "不联网", note: "断网照常可用" },
 ] as const;
 const factAt = (i: number) => T.facts + Math.round(i * b(0.5));
 
@@ -93,17 +93,17 @@ export const Privacy: React.FC = () => {
         />
       ) : null}
 
-      <div style={{ position: "absolute", left: LIFT_TO.left + 6, top: 540, display: "flex", flexDirection: "column", gap: 34, textShadow: SHADOW }}>
+      {/* 三条：细线隔开，左边图标和名目，右边一行小字 */}
+      <div style={{ position: "absolute", left: LIFT_TO.left, top: 520, width: ROW_CARD.w * LIFT_SCALE, textShadow: SHADOW }}>
         {FACTS.map((fact, i) => (
-          <div key={fact.text} style={{ display: "flex", alignItems: "center", gap: 22, fontSize: 52, fontWeight: 600, ...show(frame, factAt(i), undefined, 20) }}>
-            <Glyph icon={fact.icon} size={50} style={{ color: COLOR.seal }} />
-            {fact.text}
+          <div key={fact.text} style={{ position: "relative", height: 92, display: "flex", alignItems: "center", gap: 22, ...show(frame, factAt(i), undefined, 16) }}>
+            <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 1, background: "oklch(1 0 0 / 0.16)", transformOrigin: "0 0", transform: `scaleX(${prog(frame, factAt(i), 30, EASE.inOut)})` }} />
+            <Glyph icon={fact.icon} size={38} style={{ color: COLOR.seal, filter: `drop-shadow(0 0 10px oklch(0.8 0.07 255 / 0.5))` }} />
+            <span style={{ fontSize: 44, fontWeight: 500, letterSpacing: "0.04em" }}>{fact.text}</span>
+            <span style={{ marginLeft: "auto", fontSize: 24, fontWeight: 400, color: COLOR.ink2, letterSpacing: "0.08em" }}>{fact.note}</span>
           </div>
         ))}
-        <div style={{ display: "flex", alignItems: "center", gap: 22, fontSize: 40, fontWeight: 500, color: COLOR.ink2, marginTop: 10, ...show(frame, T.model, undefined, 20) }}>
-          <Glyph icon={UI.chip} size={42} />
-          本机模型 · 下载即用
-        </div>
+        <div style={{ marginTop: 30, fontSize: 26, fontWeight: 500, color: COLOR.ink2, letterSpacing: "0.12em", ...show(frame, T.model, undefined, 16) }}>本机模型 · 下载即用</div>
       </div>
 
       <Question frame={frame} text="顾虑数据隐私？" settle={T.settle} />
