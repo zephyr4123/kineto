@@ -1,6 +1,7 @@
-import { Composition } from "remotion";
+import { Composition, Still } from "remotion";
 import { staged } from "./components/Stage";
 import { COST_CAMERA, COST_FRAMES, Cost } from "./scenes/Cost";
+import { Cover, CoverPortrait } from "./scenes/Cover";
 import { CUSTOM_CAMERA, CUSTOM_FRAMES, Custom } from "./scenes/Custom";
 import { DEV_CAMERA, DEV_FRAMES, Dev } from "./scenes/Dev";
 import { DOWNLOAD_CAMERA, DOWNLOAD_FRAMES, Download } from "./scenes/Download";
@@ -30,7 +31,7 @@ const DownloadStaged = staged(Download, DOWNLOAD_CAMERA);
 const DevStaged = staged(Dev, DEV_CAMERA);
 const OutroStaged = staged(Outro, OUTRO_CAMERA);
 
-// 成片 + 每个场景各一个 composition，场景可在 Studio 里单独预览
+// 成片 + 每个场景各一个 composition，场景可在 Studio 里单独预览；另有横竖两张封面
 export const Compositions: React.FC = () => {
   return (
     <>
@@ -48,6 +49,8 @@ export const Compositions: React.FC = () => {
       <Composition id="speakmore-promo-2-download" component={DownloadStaged} durationInFrames={DOWNLOAD_FRAMES} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-2-dev" component={DevStaged} durationInFrames={DEV_FRAMES} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-2-outro" component={OutroStaged} durationInFrames={OUTRO_FRAMES} fps={FPS} width={W} height={H} />
+      <Still id="speakmore-promo-2-cover" component={Cover} width={W} height={H} />
+      <Still id="speakmore-promo-2-cover-portrait" component={CoverPortrait} width={1080} height={1440} />
     </>
   );
 };

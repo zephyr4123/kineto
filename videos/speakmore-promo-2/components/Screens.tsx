@@ -10,13 +10,19 @@ import { COLOR, SANS } from "../theme";
 const TASKBAR = 64;
 
 export const WinDesktop: React.FC<{ children?: React.ReactNode; running?: boolean }> = ({ children, running = true }) => (
-  <AbsoluteFill style={{ overflow: "hidden", fontFamily: SANS, background: "linear-gradient(165deg, oklch(0.36 0.1 262), oklch(0.2 0.07 280) 55%, oklch(0.14 0.05 285))" }}>
-    {/* 几块大而虚的光：偏青的一道、偏紫的一团，右上角一点亮 */}
+  <AbsoluteFill style={{ overflow: "hidden", fontFamily: SANS }}>
+    <WinWallpaper />
+    {children}
+    <Taskbar running={running} />
+  </AbsoluteFill>
+);
+
+/** Windows 那边的壁纸：深蓝紫的底上几块大而虚的光（偏青的一道、偏紫的一团，右上角一点亮）。按 1920×1080 画 */
+export const WinWallpaper: React.FC = () => (
+  <AbsoluteFill style={{ background: "linear-gradient(165deg, oklch(0.36 0.1 262), oklch(0.2 0.07 280) 55%, oklch(0.14 0.05 285))" }}>
     <div style={{ ...glow, left: 760, top: 160, width: 1100, height: 520, background: "oklch(0.66 0.14 235 / 0.75)", transform: "rotate(-18deg)" }} />
     <div style={{ ...glow, left: 300, top: 520, width: 1000, height: 560, background: "oklch(0.52 0.18 300 / 0.7)", transform: "rotate(12deg)" }} />
     <div style={{ ...glow, left: 1300, top: -160, width: 700, height: 460, background: "oklch(0.86 0.08 220 / 0.45)" }} />
-    {children}
-    <Taskbar running={running} />
   </AbsoluteFill>
 );
 
