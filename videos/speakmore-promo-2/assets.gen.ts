@@ -21,6 +21,7 @@ export const assets = {
   fontSans: "speakmore-promo-2/fontSans.ttf",
   fontSerif: "speakmore-promo-2/fontSerif.ttf",
   githubPage: "speakmore-promo-2/githubPage.jpg",
+  githubTop: "speakmore-promo-2/githubTop.png",
   logoAlibabaCloud: "speakmore-promo-2/logoAlibabaCloud.svg",
   logoAmd: "speakmore-promo-2/logoAmd.svg",
   logoApple: "speakmore-promo-2/logoApple.svg",

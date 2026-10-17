@@ -5,7 +5,7 @@
   "status": "draft",
   "tags": [],
   "createdAt": "2026-10-17T15:14:53.971Z",
-  "updatedAt": "2026-10-17T16:44:20.751Z",
+  "updatedAt": "2026-10-17T17:04:24.989Z",
   "assets": {
     "desktop": "sha256:991cdde9d25dbc94ff9811c9d4ed6fc53a880e4986a27fee0c3562b7da97afdf",
     "music": "sha256:f22e875346282fd101f5fcadcba222769742f0fb876683a375efd2d88382b6ea",
@@ -57,6 +57,7 @@
     "appWay": "sha256:5017d754c1449353e7acf6e61e8797127a8fcd324d682801be255d55c32a7bbf",
     "downloadSpeed": "sha256:170a9cedc3f17b917f124eea805efb33d1c79d0594035ef4dc4cf381f5429fa8",
     "appCost": "sha256:4b13cb64c738484af706527aac67ad284ec97e9f17f137cdf0d5aa7d386a101e",
-    "githubPage": "sha256:3929868262e9ad29656cf16189ea0a49ce06486e9cee5ef1616c207b89d4a7f8"
+    "githubPage": "sha256:7b523870c1d7b1d5d8e6bffbe4220b17bf6f555ec089cd8a011c83f1322cc946",
+    "githubTop": "sha256:cac0fb599a7ce319a57ffdfc64cf6b77ddb7f643b5f15850c8ee923e6033fffc"
   }
 }
