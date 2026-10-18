@@ -1,6 +1,6 @@
 import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
 import { clamp } from "../../../engine/motion";
-import { Flash, MotionBlurX, Sfx } from "../components/Fx";
+import { Sfx } from "../components/Fx";
 import { Question } from "../components/Question";
 import { Lift, type Rect, SHOTS, Shot } from "../components/Shot";
 import { deepCamera } from "../components/Stage";
@@ -15,7 +15,7 @@ import { COLOR, EASE, SANS, SHADOW, b } from "../theme";
 export const COST_FRAMES = b(16);
 export const COST_CAMERA = deepCamera(COST_FRAMES);
 
-const T = { settle: b(2.2), presets: b(2.4), paid: b(3.8), free: b(6.6), home: b(9), lift: b(10), note: b(11), out: b(15) };
+const T = { settle: b(2.2), presets: b(2.4), paid: b(3.8), free: b(6.6), home: b(9), lift: b(10), note: b(11) };
 
 // 推荐组合菜单里的两项（截图像素）：圈的是整项，抽出来的只要上半截（名字、说明、经过哪几个模型）
 const PAID: Rect = { x: 1040, y: 380, w: 1096, h: 280 };
@@ -33,11 +33,18 @@ const SPEND_TO = { left: 110, top: 300 };
 
 export const Cost: React.FC = () => {
   const frame = useCurrentFrame();
-  const whip = prog(frame, T.out, 22, EASE.inOut);
   const presetsIn = prog(frame, T.presets, 40);
   const presetsOut = prog(frame, T.home, 16, EASE.inOut);
   const homeIn = prog(frame, T.home + 10, 40);
   const spot = frame < T.free ? prog(frame, T.paid, 14) : 1;
+  // 圈出的那一项：从付费的滑到纯本机的
+  const move = prog(frame, T.free - 6, 24, EASE.inOut);
+  const spotRect: Rect = {
+    x: PAID.x + (FREE.x - PAID.x) * move,
+    y: PAID.y + (FREE.y - PAID.y) * move,
+    w: PAID.w + (FREE.w - PAID.w) * move,
+    h: PAID.h + (FREE.h - PAID.h) * move,
+  };
 
   // 花费那一块：从首页截图里它所在的位置飞出来，放大到左边
   const lift = prog(frame, T.lift, 40, EASE.inOut);
@@ -46,81 +53,76 @@ export const Cost: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ fontFamily: SANS, color: COLOR.ink }}>
-      <MotionBlurX id="cost-whip" amount={60 * Math.sin(Math.PI * whip)} />
-      <AbsoluteFill style={{ transform: `translateX(${1400 * whip}px)`, filter: whip > 0.01 && whip < 0.99 ? "url(#cost-whip)" : undefined, opacity: 1 - whip }}>
-        {/* 推荐组合：截图在右，圈出的那一项抽到左边，下面是每月多少 */}
-        {presetsIn > 0 && presetsOut < 1 ? (
-          <AbsoluteFill style={{ perspective: 2200, opacity: 1 - presetsOut, transform: `translateX(${-180 * presetsOut}px)` }}>
-            <Shot
-              shot={SHOTS.presets}
-              width={PRESETS_AT.width}
-              spot={{ rect: frame < T.free ? PAID : FREE, k: spot }}
-              style={{
-                left: PRESETS_AT.left,
-                top: PRESETS_AT.top,
-                opacity: presetsIn,
-                transformOrigin: "100% 50%",
-                transform: `translateX(${200 * (1 - presetsIn)}px) rotateY(${-16 + 10 * presetsIn}deg)`,
-              }}
-            />
-            <Plan frame={frame} at={T.paid} until={T.free} rect={PAID_TOP} price="¥2.63" note="每天 100 次" />
-            <Plan frame={frame} at={T.free} until={T.home} rect={FREE_TOP} price="¥0" note="纯本机 · 不上传" />
-          </AbsoluteFill>
-        ) : null}
+      {/* 推荐组合：截图在右，圈出的那一项抽到左边，下面是每月多少 */}
+      {presetsIn > 0 && presetsOut < 1 ? (
+        <AbsoluteFill style={{ perspective: 2200, opacity: 1 - presetsOut, transform: `translateX(${-180 * presetsOut}px)` }}>
+          <Shot
+            shot={SHOTS.presets}
+            width={PRESETS_AT.width}
+            spot={{ rect: spotRect, k: spot }}
+            style={{
+              left: PRESETS_AT.left,
+              top: PRESETS_AT.top,
+              opacity: presetsIn,
+              transformOrigin: "100% 50%",
+              transform: `translateX(${200 * (1 - presetsIn)}px) rotateY(${-16 + 10 * presetsIn}deg)`,
+            }}
+          />
+          <Plan frame={frame} at={T.paid} until={T.free} rect={PAID_TOP} price="¥2.63" note="每天 100 次" />
+          <Plan frame={frame} at={T.free} until={T.home} rect={FREE_TOP} price="¥0" note="纯本机 · 不上传" />
+        </AbsoluteFill>
+      ) : null}
 
-        {/* 首页：本月花费 */}
-        {homeIn > 0 ? (
-          <AbsoluteFill style={{ perspective: 2200 }}>
-            <Shot
+      {/* 首页：本月花费 */}
+      {homeIn > 0 ? (
+        <AbsoluteFill style={{ perspective: 2200 }}>
+          <Shot
+            shot={SHOTS.cost}
+            width={HOME_AT.width}
+            spot={{ rect: SPEND, k: prog(frame, T.lift - 10, 16) }}
+            style={{
+              left: HOME_AT.left,
+              top: HOME_AT.top,
+              opacity: homeIn,
+              transformOrigin: "100% 50%",
+              transform: `translateX(${200 * (1 - homeIn)}px) rotateY(${-16 + 10 * homeIn}deg)`,
+            }}
+          />
+          {lift > 0 ? (
+            <Lift
               shot={SHOTS.cost}
-              width={HOME_AT.width}
-              spot={{ rect: SPEND, k: prog(frame, T.lift - 10, 16) }}
+              rect={SPEND}
+              scale={SPEND_SCALE}
+              radius={22}
               style={{
-                left: HOME_AT.left,
-                top: HOME_AT.top,
-                opacity: homeIn,
-                transformOrigin: "100% 50%",
-                transform: `translateX(${200 * (1 - homeIn)}px) rotateY(${-16 + 10 * homeIn}deg)`,
+                left: interpolate(lift, [0, 1], [from.left, SPEND_TO.left]),
+                top: interpolate(lift, [0, 1], [from.top, SPEND_TO.top]),
+                transformOrigin: "0 0",
+                transform: `scale(${interpolate(lift, [0, 1], [from.k, 1])})`,
+                boxShadow: `0 0 0 1px oklch(0 0 0 / 0.08), 0 ${40 * lift}px ${100 * lift}px oklch(0 0 0 / ${0.55 * lift})`,
               }}
             />
-            {lift > 0 ? (
-              <Lift
-                shot={SHOTS.cost}
-                rect={SPEND}
-                scale={SPEND_SCALE}
-                radius={22}
-                style={{
-                  left: interpolate(lift, [0, 1], [from.left, SPEND_TO.left]),
-                  top: interpolate(lift, [0, 1], [from.top, SPEND_TO.top]),
-                  transformOrigin: "0 0",
-                  transform: `scale(${interpolate(lift, [0, 1], [from.k, 1])})`,
-                  boxShadow: `0 0 0 1px oklch(0 0 0 / 0.08), 0 ${40 * lift}px ${100 * lift}px oklch(0 0 0 / ${0.55 * lift})`,
-                }}
-              />
-            ) : null}
-            <div
-              style={{
-                position: "absolute",
-                left: SPEND_TO.left + 10,
-                top: SPEND_TO.top + SPEND.h * SPEND_SCALE + 50,
-                fontSize: 40,
-                fontWeight: 500,
-                color: COLOR.ink2,
-                letterSpacing: "0.06em",
-                textShadow: SHADOW,
-                ...show(frame, T.note),
-              }}
-            >
-              逐笔记录 · 按官方价
-            </div>
-          </AbsoluteFill>
-        ) : null}
+          ) : null}
+          <div
+            style={{
+              position: "absolute",
+              left: SPEND_TO.left + 10,
+              top: SPEND_TO.top + SPEND.h * SPEND_SCALE + 50,
+              fontSize: 40,
+              fontWeight: 500,
+              color: COLOR.ink2,
+              letterSpacing: "0.06em",
+              textShadow: SHADOW,
+              ...show(frame, T.note),
+            }}
+          >
+            逐笔记录 · 按官方价
+          </div>
+        </AbsoluteFill>
+      ) : null}
 
-        <Question frame={frame} text="订阅费用高昂？" settle={T.settle} />
-      </AbsoluteFill>
+      <Question frame={frame} text="订阅费用高昂？" settle={T.settle} />
 
-      <Flash frame={frame} at={[0]} strength={0.75} />
-      <Flash frame={frame} at={[T.free, T.lift + 30]} strength={0.2} dur={12} />
       <Sfx at={0} name="sfxFlash" volume={0.35} />
       <Sfx at={T.presets} name="sfxSwish" volume={0.35} />
       <Sfx at={T.paid} name="sfxTap" volume={0.24} />
@@ -129,7 +131,6 @@ export const Cost: React.FC = () => {
       <Sfx at={T.free + 8} name="sfxNote4" volume={0.26} />
       <Sfx at={T.home} name="sfxSwish" volume={0.35} />
       <Sfx at={T.lift + 30} name="sfxBlip" volume={0.4} />
-      <Sfx at={T.out} name="sfxSwish" volume={0.45} />
     </AbsoluteFill>
   );
 };

@@ -4,7 +4,7 @@ import { clamp } from "../../../engine/motion";
 import { assets } from "../assets.gen";
 import { Pointer } from "../components/Bits";
 import { Tile } from "../components/Brand";
-import { Flash, Sfx, swellBefore } from "../components/Fx";
+import { Sfx, swellBefore } from "../components/Fx";
 import { type Rect, SHOTS, Shot } from "../components/Shot";
 import { deepCamera } from "../components/Stage";
 import { UI } from "../icons";
@@ -30,7 +30,6 @@ const CHECK = { x: CARD.left + 56 + 70, y: CARD.top + 520 + 32 };
 
 export const Custom: React.FC = () => {
   const frame = useCurrentFrame();
-  const out = prog(frame, b(15.2), 26, EASE.inOut);
   const cardIn = prog(frame, T.card, 44);
   const ok = prog(frame, T.ok, 18);
   const pointerIn = prog(frame, T.pointer, 34);
@@ -42,7 +41,7 @@ export const Custom: React.FC = () => {
   const row = { left: KEYS_AT.left + CUSTOM_ROW.x * ks, top: KEYS_AT.top + CUSTOM_ROW.y * ks, width: CUSTOM_ROW.w * ks };
 
   return (
-    <AbsoluteFill style={{ fontFamily: SANS, color: COLOR.ink, transform: `scale(${1 + 0.1 * out})`, opacity: 1 - out }}>
+    <AbsoluteFill style={{ fontFamily: SANS, color: COLOR.ink }}>
       <div style={{ position: "absolute", left: 150, top: 268, textShadow: SHADOW }}>
         <div style={{ display: "flex", alignItems: "center", gap: 26, ...show(frame, 0) }}>
           <Glyph icon={UI.plug} size={92} />
@@ -135,7 +134,6 @@ export const Custom: React.FC = () => {
         opacity={pointerIn * (1 - prog(frame, T.ok + 20, 20))}
       />
 
-      <Flash frame={frame} at={[0]} strength={0.6} />
       <Sfx at={0} name="sfxFlash" volume={0.3} />
       <Sfx at={T.card} name="sfxSwish" volume={0.35} />
       <Sfx at={T.url} name="sfxKeys" volume={0.28} frames={T.urlFrames} />

@@ -1,6 +1,6 @@
 import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
 import { Glyph } from "../../../engine/Glyph";
-import { Flash, Sfx, swellBefore } from "../components/Fx";
+import { Sfx, swellBefore } from "../components/Fx";
 import { Question } from "../components/Question";
 import { Lift, type Rect, SHOTS, Shot } from "../components/Shot";
 import { deepCamera } from "../components/Stage";
@@ -15,7 +15,7 @@ import { COLOR, EASE, SANS, SHADOW, b } from "../theme";
 export const PRIVACY_FRAMES = b(16);
 export const PRIVACY_CAMERA = deepCamera(PRIVACY_FRAMES);
 
-const T = { settle: b(2.2), picker: b(2.4), spot: b(3.8), lift: b(4.2), facts: b(5.4), prepare: b(9), prepareSpot: b(10.2), model: b(10.6), out: b(15.2) };
+const T = { settle: b(2.2), picker: b(2.4), spot: b(3.8), lift: b(4.2), facts: b(5.4), prepare: b(9), prepareSpot: b(10.2), model: b(10.6) };
 
 // 选单里"数据隐私 · 使用中"那一项；首次引导页上的提示条和模型那一行（截图像素）
 const ROW: Rect = { x: 1276, y: 830, w: 844, h: 204 };
@@ -35,7 +35,6 @@ const factAt = (i: number) => T.facts + Math.round(i * b(0.5));
 
 export const Privacy: React.FC = () => {
   const frame = useCurrentFrame();
-  const out = prog(frame, T.out, 26, EASE.inOut);
   const pickerIn = prog(frame, T.picker, 40);
   const pickerOut = prog(frame, T.prepare, 16, EASE.inOut);
   const prepareIn = prog(frame, T.prepare + 10, 40);
@@ -44,7 +43,7 @@ export const Privacy: React.FC = () => {
   const from = { left: SHOT_AT.left + ROW_CARD.x * s, top: SHOT_AT.top + ROW_CARD.y * s, k: s / LIFT_SCALE };
 
   return (
-    <AbsoluteFill style={{ fontFamily: SANS, color: COLOR.ink, transform: `scale(${1 + 0.1 * out})`, opacity: 1 - out }}>
+    <AbsoluteFill style={{ fontFamily: SANS, color: COLOR.ink }}>
       <AbsoluteFill style={{ perspective: 2200 }}>
         {pickerIn > 0 && pickerOut < 1 ? (
           <Shot
@@ -108,8 +107,6 @@ export const Privacy: React.FC = () => {
 
       <Question frame={frame} text="顾虑数据隐私？" settle={T.settle} />
 
-      <Flash frame={frame} at={[0]} strength={0.75} />
-      <Flash frame={frame} at={[T.lift + 30]} strength={0.2} dur={12} />
       <Sfx at={0} name="sfxFlash" volume={0.35} />
       <Sfx at={T.picker} name="sfxSwish" volume={0.35} />
       <Sfx at={T.spot} name="sfxTap" volume={0.24} />

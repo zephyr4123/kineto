@@ -53,7 +53,8 @@ export const Hero: React.FC = () => {
   const py = interpolate(pointerIn, [0, 1], [1020, DIVE.y + 6]);
 
   const shotIn = prog(frame, T.shot, 46);
-  const fromBlack = 1 - prog(frame, 0, 22, EASE.outQuint);
+  // 从黑里慢慢亮成白色的页面：一下子亮起来太晃眼
+  const fromBlack = 1 - prog(frame, 0, 45, Easing.inOut(Easing.sin));
 
   return (
     <AbsoluteFill style={{ background: COLOR.paper, fontFamily: SANS, color: COLOR.paperInk, overflow: "hidden" }}>

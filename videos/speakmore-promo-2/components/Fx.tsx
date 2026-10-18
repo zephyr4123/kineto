@@ -1,9 +1,8 @@
 import { Audio } from "@remotion/media";
-import { AbsoluteFill, Sequence, staticFile } from "remotion";
+import { Sequence, staticFile } from "remotion";
 import { assets } from "../assets.gen";
-import { flash } from "../motion";
 
-// 声音和闪白：各章自己放，落在自己的拍点上。
+// 音效：各章自己放，落在自己的拍点上。sfxFlash 是章首那一声（名字沿用，画面上已经不闪白）。
 
 /** 每个音效文件的长度（帧）：Sequence 只开这么长 */
 const LENGTH = {
@@ -24,7 +23,7 @@ const LENGTH = {
   sfxBlip: 6,
 } as const;
 
-// 配乐压得很满：各处写的音量统一再乘这么多（上限 1），钟声和闪白才听得出来
+// 配乐压得很满：各处写的音量统一再乘这么多（上限 1），钟声和章首那一声才听得出来
 const GAIN = 1.7;
 
 /** 一处音效：at 帧起放；frames 给了就只放这么长（打字声按敲的长度截） */
@@ -45,19 +44,3 @@ export const Sfx: React.FC<{ at: number; name: keyof typeof LENGTH & keyof typeo
 
 /** 倒放的钟声要提前起：尾巴（最响处）正好落在 at 那一帧 */
 export const swellBefore = (at: number) => at - LENGTH.sfxSwell;
-
-/** 闪白：几处一起算，取最亮的那一下 */
-export const Flash: React.FC<{ frame: number; at: readonly number[]; strength?: number; dur?: number }> = ({ frame, at, strength = 0.85, dur }) => {
-  const k = Math.max(0, ...at.map((a) => flash(frame, a, dur)));
-  if (k <= 0.002) return null;
-  return <AbsoluteFill style={{ background: `oklch(0.99 0.01 60 / ${k * strength})`, pointerEvents: "none" }} />;
-};
-
-/** 横向的运动模糊（甩镜头用）：id 要在同一画面里唯一 */
-export const MotionBlurX: React.FC<{ id: string; amount: number }> = ({ id, amount }) => (
-  <svg width={0} height={0} style={{ position: "absolute" }}>
-    <filter id={id} x="-20%" y="-5%" width="140%" height="110%">
-      <feGaussianBlur stdDeviation={`${amount} 0`} />
-    </filter>
-  </svg>
-);

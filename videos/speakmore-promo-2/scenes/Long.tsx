@@ -2,7 +2,7 @@ import { AbsoluteFill, interpolate, random, useCurrentFrame, useVideoConfig } fr
 import { Counter } from "../../../engine/Counter";
 import { clamp } from "../../../engine/motion";
 import { Bar } from "../../../engine/speakmore/Bar";
-import { Flash, Sfx, swellBefore } from "../components/Fx";
+import { Sfx, swellBefore } from "../components/Fx";
 import { MacWindow } from "../components/Screens";
 import { deepCamera } from "../components/Stage";
 import { prog, punch, show } from "../motion";
@@ -17,7 +17,7 @@ export const LONG_CAMERA = deepCamera(LONG_FRAMES);
 
 const SECONDS = 172;
 // 停下后一拍拉远，副歌进来的那一拍（第 16 拍）开始扫，扫完落文稿
-const T = { rec: b(0.5), stop: b(15), tidy: b(16), doc: b(18), stats: b(18.6), whole: b(27), out: b(31.2) };
+const T = { rec: b(0.5), stop: b(15), tidy: b(16), doc: b(18), stats: b(18.6), whole: b(27) };
 
 type Block = { kind: "h1" | "h2" | "p" | "li"; text: string; n?: string };
 const DOC: readonly Block[] = [
@@ -67,14 +67,12 @@ const RAW = [
 export const Long: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const out = prog(frame, T.out, 26, EASE.inOut);
 
   return (
-    <AbsoluteFill style={{ fontFamily: SANS, color: COLOR.ink, transform: `scale(${1 + 0.08 * out})`, opacity: 1 - out }}>
+    <AbsoluteFill style={{ fontFamily: SANS, color: COLOR.ink }}>
       {frame < T.doc + 20 ? <Recording frame={frame} fps={fps} /> : null}
       {frame >= T.doc - 10 ? <Result frame={frame} /> : null}
 
-      <Flash frame={frame} at={[0, T.tidy]} strength={0.7} />
       <Sfx at={0} name="sfxFlash" volume={0.3} />
       <Sfx at={swellBefore(T.tidy)} name="sfxSwell" volume={0.32} />
       <Sfx at={T.stop} name="sfxClick" volume={0.24} />

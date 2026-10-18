@@ -2,7 +2,7 @@ import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from "remo
 import { clamp } from "../../../engine/motion";
 import { Bar } from "../../../engine/speakmore/Bar";
 import { Keycap } from "../components/Bits";
-import { Flash, MotionBlurX, Sfx } from "../components/Fx";
+import { Sfx } from "../components/Fx";
 import { Lift, type Rect, SHOTS } from "../components/Shot";
 import { deepCamera } from "../components/Stage";
 import { mix, prog, punch, show } from "../motion";
@@ -28,7 +28,6 @@ const T = {
   release: RELEASE,
   done: RELEASE + Math.round(TOTAL * 60),
   board: b(8.4),
-  out: b(14.6),
 };
 
 // 尺：0–2 秒铺满 1520 像素
@@ -62,146 +61,140 @@ export const Speed: React.FC = () => {
   );
   // 演示的东西（文稿、键帽、悬浮条、跟着光标的大数字）在板子出来时退场
   const demoOut = prog(frame, T.board, 20, EASE.inOut);
-  const whip = prog(frame, T.out, 22, EASE.inOut);
   const head = px(elapsed);
   const running = frame >= T.release - 10;
 
   return (
     <AbsoluteFill style={{ fontFamily: SANS, color: COLOR.ink }}>
-      <MotionBlurX id="speed-whip" amount={60 * Math.sin(Math.PI * whip)} />
-      <AbsoluteFill style={{ transform: `translateX(${-1400 * whip}px)`, filter: whip > 0.01 && whip < 0.99 ? "url(#speed-whip)" : undefined, opacity: 1 - whip }}>
-        {/* 尺下面一层很淡的光，托住整把尺 */}
-        <div style={{ position: "absolute", left: 200, right: 200, top: AXIS.y - 120, height: 240, borderRadius: "50%", background: "oklch(0.8 0.06 255 / 0.07)", filter: "blur(60px)", opacity: prog(frame, 0, 40) }} />
+      {/* 尺下面一层很淡的光，托住整把尺 */}
+      <div style={{ position: "absolute", left: 200, right: 200, top: AXIS.y - 120, height: 240, borderRadius: "50%", background: "oklch(0.8 0.06 255 / 0.07)", filter: "blur(60px)", opacity: prog(frame, 0, 40) }} />
 
-        <Ruler frame={frame} />
-        {running ? <Trail frame={frame} elapsed={elapsed} /> : null}
-        <Brackets frame={frame} elapsed={elapsed} />
+      <Ruler frame={frame} />
+      {running ? <Trail frame={frame} elapsed={elapsed} /> : null}
+      <Brackets frame={frame} elapsed={elapsed} />
 
-        {/* 光标：尺上一颗亮点，往上一道短光 */}
-        {running && demoOut < 1 ? (
-          <>
-            <div
-              style={{
-                position: "absolute",
-                left: head - 1,
-                top: AXIS.y - 70,
-                width: 2,
-                height: 86,
-                background: "linear-gradient(transparent, oklch(1 0 0 / 0.95) 70%, transparent)",
-                opacity: prog(frame, T.release - 10, 10) * (1 - demoOut),
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                left: head - 7,
-                top: AXIS.y - 7,
-                width: 14,
-                height: 14,
-                borderRadius: "50%",
-                background: "white",
-                boxShadow: `0 0 18px 6px ${frame < T.release + Math.round(SPLIT * 60) ? "oklch(0.8 0.07 255 / 0.8)" : "oklch(0.74 0.17 32 / 0.8)"}`,
-                opacity: prog(frame, T.release - 10, 10) * (1 - demoOut),
-                transform: `scale(${punch(frame, T.done, 0.6, 24)})`,
-              }}
-            />
-          </>
-        ) : null}
-
-        {/* 跟着光标走的大数字 */}
-        {demoOut < 1 ? (
+      {/* 光标：尺上一颗亮点，往上一道短光 */}
+      {running && demoOut < 1 ? (
+        <>
           <div
             style={{
               position: "absolute",
-              left: Math.min(1460, Math.max(460, head)),
-              top: 336,
-              transform: `translateX(-50%) scale(${punch(frame, T.done, 0.05)})`,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              opacity: (frame < T.board ? 1 : 1 - demoOut) * prog(frame, 8, 20),
-              filter: demoOut > 0.01 ? `blur(${8 * demoOut}px)` : undefined,
-              textShadow: SHADOW,
+              left: head - 1,
+              top: AXIS.y - 70,
+              width: 2,
+              height: 86,
+              background: "linear-gradient(transparent, oklch(1 0 0 / 0.95) 70%, transparent)",
+              opacity: prog(frame, T.release - 10, 10) * (1 - demoOut),
             }}
-          >
-            <div style={{ fontSize: 26, fontWeight: 500, color: COLOR.ink2, letterSpacing: "0.16em" }}>松开到出字</div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 14, marginTop: 4 }}>
-              <span
-                style={{
-                  fontSize: 210,
-                  fontWeight: 200,
-                  letterSpacing: "-0.03em",
-                  lineHeight: 1,
-                  fontVariantNumeric: "tabular-nums",
-                  opacity: frame < T.release ? 0.4 : 1,
-                  textShadow: frame >= T.done ? `0 0 40px oklch(0.74 0.17 32 / ${0.5 * prog(frame, T.done, 20)})` : SHADOW,
-                }}
-              >
-                {elapsed.toFixed(2)}
-              </span>
-              <span style={{ fontSize: 54, fontWeight: 400, color: COLOR.ink2 }}>秒</span>
-            </div>
-          </div>
-        ) : null}
-
-        {/* 文稿：一块深色玻璃，字整句落进去 */}
-        {demoOut < 1 ? (
+          />
           <div
             style={{
               position: "absolute",
-              left: 340,
-              top: 96,
-              width: 1240,
-              height: 132,
-              boxSizing: "border-box",
-              padding: "0 44px",
-              display: "flex",
-              alignItems: "center",
-              borderRadius: 26,
-              background: "oklch(0.2 0.012 255 / 0.5)",
-              boxShadow: `0 0 0 1px ${COLOR.line}, 0 30px 80px oklch(0 0 0 / 0.35)`,
-              backdropFilter: "blur(24px)",
-              fontSize: 40,
-              letterSpacing: "0.01em",
-              ...show(frame, 0, T.board, 24),
+              left: head - 7,
+              top: AXIS.y - 7,
+              width: 14,
+              height: 14,
+              borderRadius: "50%",
+              background: "white",
+              boxShadow: `0 0 18px 6px ${frame < T.release + Math.round(SPLIT * 60) ? "oklch(0.8 0.07 255 / 0.8)" : "oklch(0.74 0.17 32 / 0.8)"}`,
+              opacity: prog(frame, T.release - 10, 10) * (1 - demoOut),
+              transform: `scale(${punch(frame, T.done, 0.6, 24)})`,
             }}
-          >
-            {frame >= T.done ? (
-              <span style={{ color: mix(COLOR.ink, COLOR.cinnabar, prog(frame, T.done + 10, 40)), opacity: prog(frame, T.done, 8) }}>{SENTENCE}</span>
-            ) : (
-              <span style={{ display: "inline-block", width: 3, height: 46, background: COLOR.seal, opacity: Math.floor(frame / 30) % 2 === 0 ? 1 : 0 }} />
-            )}
-          </div>
-        ) : null}
+          />
+        </>
+      ) : null}
 
-        {demoOut < 1 ? (
-          <div style={{ position: "absolute", left: 0, right: 0, top: 846, display: "flex", justifyContent: "center", alignItems: "center", gap: 44, ...show(frame, 12, T.board, 30) }}>
-            <Keycap label="右 ⌥" press={keyPress} size={0.9} />
-            <Bar frame={frame} fps={fps} level={level} timing={{ press: T.release, finishing: T.release + 6, done: T.done }} />
-          </div>
-        ) : null}
-
-        {/* 同一把尺上的四个数 */}
-        {MARKS.map((mark) => (
-          <Marker key={mark.value} frame={frame} mark={mark} />
-        ))}
-        {/* 0.9 秒的出处：模型页里那一行，挂在尺下 */}
-        <Lift shot={SHOTS.transcribe} rect={QWEN_ROW} scale={ROW_SCALE} radius={12} style={{ left: px(0.9) - (QWEN_ROW.w * ROW_SCALE) / 2, top: 830, ...show(frame, MARKS[2].at + 10, undefined, 20) }} />
+      {/* 跟着光标走的大数字 */}
+      {demoOut < 1 ? (
         <div
           style={{
             position: "absolute",
-            left: px(0.9),
-            top: AXIS.y + 12,
-            width: 0,
-            height: 830 - AXIS.y - 12,
-            borderLeft: `1.5px dashed ${COLOR.seal}`,
-            opacity: 0.7 * prog(frame, MARKS[2].at + 6, 16),
+            left: Math.min(1460, Math.max(460, head)),
+            top: 336,
+            transform: `translateX(-50%) scale(${punch(frame, T.done, 0.05)})`,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            opacity: (frame < T.board ? 1 : 1 - demoOut) * prog(frame, 8, 20),
+            filter: demoOut > 0.01 ? `blur(${8 * demoOut}px)` : undefined,
+            textShadow: SHADOW,
           }}
-        />
-      </AbsoluteFill>
+        >
+          <div style={{ fontSize: 26, fontWeight: 500, color: COLOR.ink2, letterSpacing: "0.16em" }}>松开到出字</div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 14, marginTop: 4 }}>
+            <span
+              style={{
+                fontSize: 210,
+                fontWeight: 200,
+                letterSpacing: "-0.03em",
+                lineHeight: 1,
+                fontVariantNumeric: "tabular-nums",
+                opacity: frame < T.release ? 0.4 : 1,
+                textShadow: frame >= T.done ? `0 0 40px oklch(0.74 0.17 32 / ${0.5 * prog(frame, T.done, 20)})` : SHADOW,
+              }}
+            >
+              {elapsed.toFixed(2)}
+            </span>
+            <span style={{ fontSize: 54, fontWeight: 400, color: COLOR.ink2 }}>秒</span>
+          </div>
+        </div>
+      ) : null}
 
-      <Flash frame={frame} at={[0]} strength={0.7} />
-      <Flash frame={frame} at={[T.done]} strength={0.22} dur={12} />
+      {/* 文稿：一块深色玻璃，字整句落进去 */}
+      {demoOut < 1 ? (
+        <div
+          style={{
+            position: "absolute",
+            left: 340,
+            top: 96,
+            width: 1240,
+            height: 132,
+            boxSizing: "border-box",
+            padding: "0 44px",
+            display: "flex",
+            alignItems: "center",
+            borderRadius: 26,
+            background: "oklch(0.2 0.012 255 / 0.5)",
+            boxShadow: `0 0 0 1px ${COLOR.line}, 0 30px 80px oklch(0 0 0 / 0.35)`,
+            backdropFilter: "blur(24px)",
+            fontSize: 40,
+            letterSpacing: "0.01em",
+            ...show(frame, 0, T.board, 24),
+          }}
+        >
+          {frame >= T.done ? (
+            <span style={{ color: mix(COLOR.ink, COLOR.cinnabar, prog(frame, T.done + 10, 40)), opacity: prog(frame, T.done, 8) }}>{SENTENCE}</span>
+          ) : (
+            <span style={{ display: "inline-block", width: 3, height: 46, background: COLOR.seal, opacity: Math.floor(frame / 30) % 2 === 0 ? 1 : 0 }} />
+          )}
+        </div>
+      ) : null}
+
+      {demoOut < 1 ? (
+        <div style={{ position: "absolute", left: 0, right: 0, top: 846, display: "flex", justifyContent: "center", alignItems: "center", gap: 44, ...show(frame, 12, T.board, 30) }}>
+          <Keycap label="右 ⌥" press={keyPress} size={0.9} />
+          <Bar frame={frame} fps={fps} level={level} timing={{ press: T.release, finishing: T.release + 6, done: T.done }} />
+        </div>
+      ) : null}
+
+      {/* 同一把尺上的四个数 */}
+      {MARKS.map((mark) => (
+        <Marker key={mark.value} frame={frame} mark={mark} />
+      ))}
+      {/* 0.9 秒的出处：模型页里那一行，挂在尺下 */}
+      <Lift shot={SHOTS.transcribe} rect={QWEN_ROW} scale={ROW_SCALE} radius={12} style={{ left: px(0.9) - (QWEN_ROW.w * ROW_SCALE) / 2, top: 830, ...show(frame, MARKS[2].at + 10, undefined, 20) }} />
+      <div
+        style={{
+          position: "absolute",
+          left: px(0.9),
+          top: AXIS.y + 12,
+          width: 0,
+          height: 830 - AXIS.y - 12,
+          borderLeft: `1.5px dashed ${COLOR.seal}`,
+          opacity: 0.7 * prog(frame, MARKS[2].at + 6, 16),
+        }}
+      />
+
       <Sfx at={0} name="sfxFlash" volume={0.35} />
       <Sfx at={T.start} name="sfxClick" volume={0.32} />
       <Sfx at={T.release} name="sfxClick" volume={0.32} />
@@ -211,7 +204,6 @@ export const Speed: React.FC = () => {
       {MARKS.slice(1).map((mark, i) => (
         <Sfx key={mark.value} at={mark.at} name={(["sfxNote1", "sfxNote2", "sfxNote3"] as const)[i]} volume={0.26} />
       ))}
-      <Sfx at={T.out} name="sfxSwish" volume={0.45} />
     </AbsoluteFill>
   );
 };

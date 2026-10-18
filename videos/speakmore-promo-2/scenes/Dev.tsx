@@ -2,7 +2,7 @@ import { AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame } from "rem
 import { Glyph } from "../../../engine/Glyph";
 import { clamp } from "../../../engine/motion";
 import { assets } from "../assets.gen";
-import { Flash, Sfx } from "../components/Fx";
+import { Sfx } from "../components/Fx";
 import { deepCamera } from "../components/Stage";
 import { UI } from "../icons";
 import { prog, show, typed } from "../motion";
@@ -29,7 +29,7 @@ const CMDS: readonly Cmd[] = [
   { at: b(4.5), tab: 1, cmd: "scripts/dev/win-screenshot.sh desktop.png", out: [{ text: "desktop.png", tone: "faint" }] },
 ];
 const TAB_SWITCH = b(3);
-const T = { caption: b(1.2), github: b(5.8), open: b(7), scroll: b(6.6), out: b(15.4) };
+const T = { caption: b(1.2), github: b(5.8), open: b(7), scroll: b(6.6) };
 // 浏览器窗口和里面的长图：图 1800 像素宽，按窗口宽缩；往下滑到 README 的"五项自由"露出来
 const BROWSER = { left: 860, top: 90, width: 980, height: 900, bar: 58 };
 const PAGE = { w: 1800, h: 4584 };
@@ -39,12 +39,11 @@ const TERM = { left: 150, top: 240, width: 1080, height: 560 };
 export const Dev: React.FC = () => {
   const frame = useCurrentFrame();
   const gh = prog(frame, T.github, 46);
-  const out = prog(frame, T.out, 26, EASE.inOut);
   const tab = frame >= TAB_SWITCH ? 1 : 0;
   const termBack = prog(frame, T.github, 40, EASE.inOut);
 
   return (
-    <AbsoluteFill style={{ fontFamily: SANS, color: COLOR.ink, transform: `scale(${1 + 0.06 * out})`, opacity: 1 - out }}>
+    <AbsoluteFill style={{ fontFamily: SANS, color: COLOR.ink }}>
       <div
         style={{
           position: "absolute",
@@ -158,7 +157,6 @@ export const Dev: React.FC = () => {
         开源 · MIT
       </div>
 
-      <Flash frame={frame} at={[0]} strength={0.6} />
       <Sfx at={0} name="sfxFlash" volume={0.3} />
       {CMDS.map((c) => (
         <Sfx key={c.cmd} at={c.at} name="sfxKeys" volume={0.28} frames={TYPE} />

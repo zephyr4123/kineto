@@ -2,12 +2,12 @@ import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
 import { clamp } from "../../../engine/motion";
 import { assets } from "../assets.gen";
 import { Logo } from "../components/Brand";
-import { Flash, Sfx, swellBefore } from "../components/Fx";
+import { Sfx, swellBefore } from "../components/Fx";
 import { deepCamera } from "../components/Stage";
 import { mix, prog, punch, show } from "../motion";
 import { COLOR, EASE, SANS, SHADOW, b } from "../theme";
 
-// 硬件：副歌一进来就一拍一切。处理器 → Apple、Intel、AMD → 直接运行；显卡 → NVIDIA、AMD、Intel → 自动加速；
+// 硬件：副歌一进来就一拍一切（前后两切快速叠化，不闪白）。处理器 → Apple、Intel、AMD → 直接运行；显卡 → NVIDIA、AMD、Intel → 自动加速；
 // 最后六家并成两行，排在两道细线上，一束光沿线扫过、逐家亮起。只有词，没有句子。
 
 export const HARDWARE_FRAMES = b(16);
@@ -41,20 +41,16 @@ const MATRIX = 12;
 
 export const Hardware: React.FC = () => {
   const frame = useCurrentFrame();
-  const cut = CUTS.find((c) => frame >= b(c.from) && frame < b(c.to));
-  const out = prog(frame, b(15.2), 26, EASE.inOut);
+  // 上一切在拍点后 SWAP 帧内淡掉，和这一切叠一下，不硬切
+  const cuts = CUTS.filter((c) => frame >= b(c.from) && frame < b(c.to) + SWAP);
 
   return (
     <AbsoluteFill style={{ fontFamily: SANS, color: COLOR.ink }}>
-      {cut ? <Cut frame={frame} cut={cut} /> : null}
-      {frame >= b(MATRIX) ? (
-        <AbsoluteFill style={{ transform: `scale(${1 + 0.12 * out})`, opacity: 1 - out, filter: out > 0.01 ? `blur(${8 * out}px)` : undefined }}>
-          <Matrix frame={frame} />
-        </AbsoluteFill>
-      ) : null}
+      {cuts.map((cut) => (
+        <Cut key={cut.from} frame={frame} cut={cut} />
+      ))}
+      {frame >= b(MATRIX) ? <Matrix frame={frame} /> : null}
 
-      <Flash frame={frame} at={[0, b(6)]} strength={0.8} />
-      <Flash frame={frame} at={[b(1), b(2), b(3), b(4), b(7), b(8), b(9), b(10), b(MATRIX)]} strength={0.22} dur={10} />
       <Sfx at={0} name="sfxFlash" volume={0.4} />
       <Sfx at={b(6)} name="sfxFlash" volume={0.35} />
       {(["sfxNote0", "sfxNote1", "sfxNote2"] as const).map((name, i) => (
@@ -71,12 +67,19 @@ export const Hardware: React.FC = () => {
   );
 };
 
+/** 一切换到下一切时，两边交叠淡入淡出的帧数 */
+const SWAP = 8;
+
 const Cut: React.FC<{ frame: number; cut: (typeof CUTS)[number] }> = ({ frame, cut }) => {
   const at = b(cut.from);
   const k = punch(frame, at, 0.07, 24);
-  const sharp = prog(frame, at, 8);
+  const sharp = prog(frame, at, SWAP);
+  const gone = prog(frame, b(cut.to), SWAP, EASE.outQuint);
+  const blur = 6 * (1 - sharp) + 6 * gone;
   return (
-    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", transform: `scale(${k})`, filter: sharp < 0.99 ? `blur(${6 * (1 - sharp)}px)` : undefined }}>
+    <AbsoluteFill
+      style={{ alignItems: "center", justifyContent: "center", opacity: sharp * (1 - gone), transform: `scale(${k})`, filter: blur > 0.05 ? `blur(${blur}px)` : undefined }}
+    >
       {"word" in cut ? (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 70 }}>
           <div style={{ fontSize: "row" in cut ? 150 : 190, fontWeight: 700, letterSpacing: "0.04em", textShadow: SHADOW }}>{cut.word}</div>

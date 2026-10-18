@@ -1,7 +1,7 @@
 import { AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame } from "remotion";
 import { clamp } from "../../../engine/motion";
 import { assets } from "../assets.gen";
-import { Flash, Sfx } from "../components/Fx";
+import { Sfx } from "../components/Fx";
 import { Question } from "../components/Question";
 import { Lift, type Rect, SHOTS, Shot } from "../components/Shot";
 import { deepCamera } from "../components/Stage";
@@ -15,7 +15,7 @@ import { COLOR, EASE, SANS, SHADOW, b } from "../theme";
 export const DOWNLOAD_FRAMES = b(16);
 export const DOWNLOAD_CAMERA = deepCamera(DOWNLOAD_FRAMES);
 
-const T = { settle: b(2.2), settings: b(2.4), spot: b(3.8), lift: b(4.2), note: b(5.2), chart: b(6.6), faster: b(9.4), guide: b(11), guideSpot: b(12), out: b(15.2) };
+const T = { settle: b(2.2), settings: b(2.4), spot: b(3.8), lift: b(4.2), note: b(5.2), chart: b(6.6), faster: b(9.4), guide: b(11), guideSpot: b(12) };
 
 // 设置里下载源那一行、它的下拉框；首次引导页上模型那一行（截图像素）
 const SOURCE_ROW: Rect = { x: 780, y: 756, w: 1164, h: 92 };
@@ -33,7 +33,6 @@ const GUIDE_AT = { left: 940, top: 150, width: 900 };
 
 export const Download: React.FC = () => {
   const frame = useCurrentFrame();
-  const out = prog(frame, T.out, 26, EASE.inOut);
   const settingsIn = prog(frame, T.settings, 40);
   const stage1Out = prog(frame, T.chart - 10, 26, EASE.inOut);
   const lift = prog(frame, T.lift, 40, EASE.inOut);
@@ -52,7 +51,7 @@ export const Download: React.FC = () => {
   const guideIn = prog(frame, T.guide + 8, 40);
 
   return (
-    <AbsoluteFill style={{ fontFamily: SANS, color: COLOR.ink, transform: `scale(${1 + 0.1 * out})`, opacity: 1 - out }}>
+    <AbsoluteFill style={{ fontFamily: SANS, color: COLOR.ink }}>
       {/* 设置：下载源 */}
       {settingsIn > 0 && stage1Out < 1 ? (
         <AbsoluteFill style={{ perspective: 2200, opacity: 1 - stage1Out, transform: `translateX(${-200 * stage1Out}px)` }}>
@@ -147,8 +146,6 @@ export const Download: React.FC = () => {
 
       <Question frame={frame} text="模型下载缓慢？" settle={T.settle} />
 
-      <Flash frame={frame} at={[0]} strength={0.75} />
-      <Flash frame={frame} at={[T.faster]} strength={0.25} dur={12} />
       <Sfx at={0} name="sfxFlash" volume={0.35} />
       <Sfx at={T.settings} name="sfxSwish" volume={0.35} />
       <Sfx at={T.spot} name="sfxTap" volume={0.24} />

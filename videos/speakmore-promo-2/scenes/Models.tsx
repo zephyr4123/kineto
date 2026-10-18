@@ -3,7 +3,7 @@ import { Counter } from "../../../engine/Counter";
 import { clamp } from "../../../engine/motion";
 import { assets } from "../assets.gen";
 import { Tile } from "../components/Brand";
-import { Flash, Sfx, swellBefore } from "../components/Fx";
+import { Sfx, swellBefore } from "../components/Fx";
 import { SHOTS, Shot } from "../components/Shot";
 import { deepCamera } from "../components/Stage";
 import { mix, prog, punch, show } from "../motion";
@@ -48,7 +48,6 @@ export const Models: React.FC = () => {
   const frame = useCurrentFrame();
   const page = prog(frame, PAGE, 46, EASE.outExpo);
   const ringOut = prog(frame, PAGE - 6, 34, EASE.inOut);
-  const out = prog(frame, b(15.2), 26, EASE.inOut);
 
   // 中间那组（数字和三个分类）拉开后挪到左边
   const groupX = interpolate(page, [0, 1], [0, -560]);
@@ -57,7 +56,7 @@ export const Models: React.FC = () => {
   const speed = Math.abs(value - interpolate(frame - 1, [COUNT, COUNT + b(1)], [0, 29], { ...clamp, easing: EASE.outQuint }));
 
   return (
-    <AbsoluteFill style={{ fontFamily: SANS, color: COLOR.ink, transform: `scale(${1 + 0.1 * out})`, opacity: 1 - out }}>
+    <AbsoluteFill style={{ fontFamily: SANS, color: COLOR.ink }}>
       {/* 一圈九家 */}
       {VENDORS.map((v, i) => {
         const angle = -Math.PI / 2 + (i / VENDORS.length) * Math.PI * 2;
@@ -157,8 +156,6 @@ export const Models: React.FC = () => {
         </AbsoluteFill>
       ) : null}
 
-      <Flash frame={frame} at={[0]} strength={0.6} />
-      <Flash frame={frame} at={[COUNT + b(1)]} strength={0.25} dur={12} />
       <Sfx at={0} name="sfxFlash" volume={0.3} />
       {VENDORS.map((v, i) => (
         <Sfx key={v.name} at={tileAt(i)} name={(["sfxNote0", "sfxNote1", "sfxNote2", "sfxNote3", "sfxNote4", "sfxNote5"] as const)[i % 6]} volume={0.22} />

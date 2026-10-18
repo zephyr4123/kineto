@@ -3,20 +3,20 @@ import type { Camera } from "../../../engine/camera";
 import { Glyph } from "../../../engine/Glyph";
 import { clamp } from "../../../engine/motion";
 import { Bar } from "../../../engine/speakmore/Bar";
-import { Flash, Sfx } from "../components/Fx";
+import { Sfx } from "../components/Fx";
 import { MacWindow, ScreenCard, WinDesktop, WinWindow, WindowsMark } from "../components/Screens";
 import { Desktop } from "../components/Stage";
 import { UI } from "../icons";
 import { prog, show } from "../motion";
 import { COLOR, EASE, SANS, SHADOW, b } from "../theme";
 
-// 两个系统：从 Windows 桌面亮起来，悬浮条听写一句，字落进窗口；镜头往后拉，Mac 的桌面从左边进来，
+// 两个系统：开场的镜头扎进了深色的下载按钮，Windows 桌面从按钮的颜色里慢慢显出来；悬浮条听写一句，字落进窗口；镜头往后拉，Mac 的桌面从左边进来，
 // 两块屏幕并排，同一句话。字幕只两行：Mac 与 Windows / 体验如一。
 
 export const SYSTEMS_FRAMES = b(16);
 
 const SENTENCE = "后天的会议改到周五下午，大家记得把上个月的数据带上。";
-const T = { win: 8, bar: 24, press: 100, done: 138, pull: b(7.5), title: b(8.6), labels: b(9.4), out: b(15) };
+const T = { win: 8, bar: 24, press: 100, done: 138, pull: b(7.5), title: b(8.6), labels: b(9.4) };
 // 两块屏幕并排时的位置
 const CARD = { scale: 0.43, y: 336, left: 112, right: 1920 - 112 - 1920 * 0.43 };
 
@@ -29,7 +29,6 @@ export const Systems: React.FC = () => {
   const pull = prog(frame, T.pull, 50);
   const macIn = prog(frame, T.pull + 6, 50);
   const enter = prog(frame, 0, 40);
-  const out = prog(frame, T.out, 30, EASE.inOut);
 
   // Windows 那块：先铺满（亮起时从略大落回来），拉开后缩到右边
   const winScale = interpolate(pull, [0, 1], [1 + 0.08 * (1 - enter), CARD.scale]);
@@ -48,7 +47,7 @@ export const Systems: React.FC = () => {
   const lit = prog(frame, T.done + 16, 40);
 
   return (
-    <AbsoluteFill style={{ fontFamily: SANS, transform: `scale(${1 + 0.08 * out})`, opacity: 1 - out }}>
+    <AbsoluteFill style={{ fontFamily: SANS }}>
       {/* Mac：从左边进来，窗口里已经是同一句话 */}
       {macIn > 0 ? (
         <ScreenCard x={macX} y={CARD.y + float(0)} scale={CARD.scale}>
@@ -91,7 +90,8 @@ export const Systems: React.FC = () => {
         Windows
       </Label>
 
-      <Flash frame={frame} at={[0]} strength={0.9} />
+      {/* 开场最后一帧是铺满的按钮色：从这里接上，再慢慢退开 */}
+      <AbsoluteFill style={{ background: COLOR.paperInk, opacity: 1 - prog(frame, 0, 40, EASE.inOut), pointerEvents: "none" }} />
       <Sfx at={0} name="sfxFlash" volume={0.35} />
       <Sfx at={T.press} name="sfxClick" volume={0.32} />
       <Sfx at={T.done} name="sfxDing" volume={0.4} />

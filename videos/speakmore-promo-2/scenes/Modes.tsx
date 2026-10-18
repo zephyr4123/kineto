@@ -1,7 +1,7 @@
 import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
 import { Glyph } from "../../../engine/Glyph";
 import { clamp } from "../../../engine/motion";
-import { Flash, Sfx, swellBefore } from "../components/Fx";
+import { Sfx, swellBefore } from "../components/Fx";
 import { Lift, type Rect, SHOTS, Shot } from "../components/Shot";
 import { deepCamera } from "../components/Stage";
 import { UI } from "../icons";
@@ -36,17 +36,16 @@ const liftAt = (i: number) => b(2 + 2 * i);
 /** 抽出来落定之后，光点从录音走到成稿 */
 const travelAt = (i: number) => liftAt(i) + 34;
 const TRAVEL = b(1.6);
-const T = { again: b(10), caption: b(10.4), out: b(15.2) };
+const T = { again: b(10), caption: b(10.4) };
 
 export const Modes: React.FC = () => {
   const frame = useCurrentFrame();
-  const out = prog(frame, T.out, 26, EASE.inOut);
   const shotIn = prog(frame, 6, 44);
   const current = WAYS.reduce((n, _, i) => (frame >= liftAt(i) ? i : n), -1);
   const shotScale = SHOT_AT.width / SHOTS.way.w;
 
   return (
-    <AbsoluteFill style={{ fontFamily: SANS, color: COLOR.ink, transform: `scale(${1 + 0.1 * out})`, opacity: 1 - out }}>
+    <AbsoluteFill style={{ fontFamily: SANS, color: COLOR.ink }}>
       <div style={{ position: "absolute", left: 150, top: 96, textShadow: SHADOW }}>
         <div style={{ fontSize: 78, fontWeight: 700, ...show(frame, 0) }}>三种识别方式</div>
         <div style={{ marginTop: 8, fontSize: 36, fontWeight: 500, color: COLOR.ink2, letterSpacing: "0.12em", ...show(frame, 10) }}>平级可选 · 一键切换</div>
@@ -96,7 +95,6 @@ export const Modes: React.FC = () => {
         首页切换 · 即刻生效 · 配置分别保存
       </div>
 
-      <Flash frame={frame} at={[0]} strength={0.7} />
       <Sfx at={0} name="sfxFlash" volume={0.3} />
       {WAYS.map((_, i) => (
         <Sfx key={`l${i}`} at={liftAt(i)} name="sfxSwish" volume={0.28} />

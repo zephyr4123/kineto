@@ -20,13 +20,6 @@ export const show = (frame: number, inAt: number, outAt = Number.POSITIVE_INFINI
   };
 };
 
-/** 闪白：at 那一帧最亮（前两帧升上去），之后按指数很快退掉 */
-export const flash = (frame: number, at: number, dur = 18) => {
-  if (frame < at - 2 || frame > at + dur) return 0;
-  if (frame < at) return (frame - at + 2) / 2;
-  return Math.exp(-(frame - at) / (dur / 3.5));
-};
-
 /** 拍点上的一下"顶"：放大一点再回来 */
 export const punch = (frame: number, at: number, amount = 0.05, dur = 20) =>
   frame < at ? 1 : 1 + amount * Math.exp(-(frame - at) / (dur / 3.5));

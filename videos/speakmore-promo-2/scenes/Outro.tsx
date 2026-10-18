@@ -5,7 +5,7 @@ import { clamp } from "../../../engine/motion";
 import { Seal } from "../../../engine/speakmore/Seal";
 import { DownloadPill } from "../components/Brand";
 import { GitHubStar, type StarTiming, starPresence } from "../components/GitHubStar";
-import { Flash, Sfx, swellBefore } from "../components/Fx";
+import { Sfx, swellBefore } from "../components/Fx";
 import { UI } from "../icons";
 import { prog, punch, show } from "../motion";
 import { COLOR, EASE, SANS, SERIF, SHADOW, b } from "../theme";
@@ -70,7 +70,8 @@ export const Outro: React.FC = () => {
 
       {frame >= T.bars ? (
         <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
-          <div style={{ marginTop: -150 }}>
+          {/* 印底落下时整方印轻轻一顶，分量靠它，不靠闪白 */}
+          <div style={{ marginTop: -150, transform: `scale(${punch(frame, IMPACT, 0.04, 30)})` }}>
             <Seal
               size={230}
               bars={[0, 1, 2, 3, 4].map((i) => prog(frame, T.bars + i * 7, 30, EASE.outQuint))}
@@ -88,7 +89,6 @@ export const Outro: React.FC = () => {
       <GitHubStar frame={frame} t={STAR} origin={{ x: 960, y: 700 }} />
 
       <AbsoluteFill style={{ background: `oklch(0 0 0 / ${fade})` }} />
-      <Flash frame={frame} at={[IMPACT]} strength={0.3} dur={20} />
       <Sfx at={T.pills} name="sfxNote0" volume={0.2} />
       <Sfx at={T.site} name="sfxNote2" volume={0.2} />
       <Sfx at={STAR.from} name="sfxSwish" volume={0.32} />
