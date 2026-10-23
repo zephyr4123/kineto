@@ -6,24 +6,24 @@ import { Sub } from "../components/kit";
 import { assets } from "../assets.gen";
 import { COLOR, DISPLAY, EASE, b } from "../theme";
 
-// 引导四步（第 160–184 拍，原曲接着放的副歌）：首次打开的四页引导（0.17.0 的真截图：功能、快捷键、权限、引擎）排成一条，
+// 引导四步（第 164–188 拍，原曲接着放的副歌）：首次打开的四页引导（0.17.0 的真截图：功能、快捷键、权限、引擎）排成一条，
 // 镜头一页一页滑过去，上方是和引导里一样的四段进度条；最后拉远看全四页，"Ready to go"；夜色的圆从中间涨满，进暗场。
-const START = 160;
+const START = 164;
 const at = (n: number) => b(n - START);
 export const SETUP_FRAMES = b(24);
 
 const PAGE = { w: 1160, h: 830, gap: 200 };
 const STEPS = [
-  { src: assets.onbFeatures, name: "Features", at: at(161.6) },
-  { src: assets.onbKeys, name: "Hotkeys", at: at(165.6) },
-  { src: assets.onbPermissions, name: "Permissions", at: at(169.6) },
-  { src: assets.onbEngine, name: "Engine", at: at(173.6) },
+  { src: assets.onbFeatures, name: "Features", at: at(165.6) },
+  { src: assets.onbKeys, name: "Hotkeys", at: at(169.6) },
+  { src: assets.onbPermissions, name: "Permissions", at: at(173.6) },
+  { src: assets.onbEngine, name: "Engine", at: at(177.6) },
 ] as const;
 const PLANE = { w: STEPS.length * PAGE.w + (STEPS.length - 1) * PAGE.gap, h: PAGE.h };
 /** 第 i 页中心在整条上的横向位置（占宽的比例） */
 const cx = (i: number) => (i * (PAGE.w + PAGE.gap) + PAGE.w / 2) / PLANE.w;
 const VIEW: ViewKeys = [
-  [at(160), { fx: 0.3, fy: 0.5, s: 0.36, rx: 30, ry: 22, rz: -3 }],
+  [at(164), { fx: 0.3, fy: 0.5, s: 0.36, rx: 30, ry: 22, rz: -3 }],
   ...STEPS.flatMap((step, i) => {
     const tilt = i % 2 ? -10 : 10;
     return [
@@ -31,18 +31,18 @@ const VIEW: ViewKeys = [
       [step.at + b(2.8), { fx: cx(i), fy: 0.5, s: 1.05, rx: 6, ry: tilt * 0.7 }],
     ] as const;
   }),
-  [at(178.4), { fx: 0.5, fy: 0.5, s: 0.34, rx: 18, ry: -14 }],
-  [at(184), { fx: 0.5, fy: 0.5, s: 0.4, rx: 12, ry: -20 }],
+  [at(182.4), { fx: 0.5, fy: 0.5, s: 0.34, rx: 18, ry: -14 }],
+  [at(188), { fx: 0.5, fy: 0.5, s: 0.4, rx: 12, ry: -20 }],
 ];
 
 export const Setup: React.FC = () => {
   const frame = useCurrentFrame();
-  const bar = prog(frame, at(161.2), 16) * (1 - prog(frame, at(177.6), 14));
-  const iris = prog(frame, at(182), b(2), EASE.inOut);
+  const bar = prog(frame, at(165.2), 16) * (1 - prog(frame, at(181.6), 14));
+  const iris = prog(frame, at(186), b(2), EASE.inOut);
 
   return (
     <AbsoluteFill>
-      <Glass w={PLANE.w} h={PLANE.h} keys={VIEW} at={at(160)} bare y={50}>
+      <Glass w={PLANE.w} h={PLANE.h} keys={VIEW} at={at(164)} bare y={50}>
         <div style={{ position: "relative", width: PLANE.w, height: PLANE.h }}>
           {STEPS.map((step, i) => (
             <div key={step.name} style={{ position: "absolute", left: i * (PAGE.w + PAGE.gap), top: 0 }}>
@@ -53,14 +53,14 @@ export const Setup: React.FC = () => {
       </Glass>
 
       {/* 开头一句、结尾一句 */}
-      <Line out={at(161.2)} y={-440}>
-        <Focus value="Set up in four steps" at={at(160.2)} size={72} />
+      <Line out={at(165.2)} y={-440}>
+        <Focus value="Set up in four steps" at={at(164.2)} size={72} />
       </Line>
-      <Line y={-440} out={at(182)}>
-        <Focus value="Ready to go" at={at(178.2)} size={72} color={COLOR.cinnabar} />
+      <Line y={-440} out={at(186)}>
+        <Focus value="Ready to go" at={at(182.2)} size={72} color={COLOR.cinnabar} />
       </Line>
-      <Line y={-365} out={at(182)}>
-        <Sub text="四步引导　装好就能用" at={at(178.8)} size={30} />
+      <Line y={-365} out={at(186)}>
+        <Sub text="四步引导　装好就能用" at={at(182.8)} size={30} />
       </Line>
 
       {/* 四段进度条：和引导页顶上那条一样，走到哪段哪段亮 */}

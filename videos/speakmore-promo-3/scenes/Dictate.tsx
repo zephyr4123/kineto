@@ -12,12 +12,12 @@ import { Chat, Mail, type Message, Notes, Workspace } from "../components/window
 import { assets } from "../assets.gen";
 import { COLOR, DISPLAY, EASE, b } from "../theme";
 
-// 语音输入（第 32–64 拍）：开场卡（右⌥）→ 镜头贴着团队频道的空输入框，说一句带语气词和改口的话，再按一次热键，
+// 语音输入（第 36–92 拍）：开场卡（右⌥）→ 镜头贴着团队频道的空输入框，说一句带语气词和改口的话，再按一次热键，
 // 浅灰的几段炸散、空隙合拢，成句落进输入框，镜头拉远看整窗 → 口述三件事，备忘录里自动分条 →
 // 同一句落进邮件、聊天、备忘录（光标在哪就写到哪）→ 三种识别方式并排、依次点亮（原生直出、转写加润色、本地直接跑，各讲特色），
 // 引擎页真截图上三行一一亮过 → 硬件：处理器直接运行、显卡自动加速，各家标志依次亮起。
 // 成品都是 App 的真实输出（混合方式整理那一步的 dictate 任务，DeepSeek V4.1 Flash，2026-10-23）。
-const START = 32;
+const START = 36;
 const at = (n: number) => b(n - START);
 export const DICTATE_FRAMES = b(56);
 
@@ -43,72 +43,72 @@ const LIST_OUT = ["明天要做三件事：", "1. 改一下 README", "2. 发 0.6
 
 const WS = { w: 1400, h: 860 };
 const WS_VIEW: ViewKeys = [
-  [at(34.4), { fx: 0.5, fy: 0.95, s: 1.7, rx: 18, ry: -16, rz: -2 }],
-  [at(41.6), { fx: 0.6, fy: 0.93, s: 1.62, rx: 12, ry: -9, rz: -1 }],
-  [at(43.4), { fx: 0.5, fy: 0.56, s: 0.9, rx: 8, ry: -12 }],
-  [at(44.8), { fx: 0.48, fy: 0.55, s: 0.86, rx: 6, ry: -16 }],
+  [at(38.4), { fx: 0.5, fy: 0.95, s: 1.7, rx: 18, ry: -16, rz: -2 }],
+  [at(45.6), { fx: 0.6, fy: 0.93, s: 1.62, rx: 12, ry: -9, rz: -1 }],
+  [at(47.4), { fx: 0.5, fy: 0.56, s: 0.9, rx: 8, ry: -12 }],
+  [at(48.8), { fx: 0.48, fy: 0.55, s: 0.86, rx: 6, ry: -16 }],
 ];
 const NOTES = { w: 1200, h: 820 };
 const NOTES_VIEW: ViewKeys = [
-  [at(44.4), { fx: 0.3, fy: 0.25, s: 0.6, rx: 26, ry: 34 }],
-  [at(46), { fx: 0.4, fy: 0.3, s: 1.05, rx: 12, ry: 12, rz: 1 }],
-  [at(50.6), { fx: 0.42, fy: 0.38, s: 1.16, rx: 8, ry: 6 }],
+  [at(48.4), { fx: 0.3, fy: 0.25, s: 0.6, rx: 26, ry: 34 }],
+  [at(50), { fx: 0.4, fy: 0.3, s: 1.05, rx: 12, ry: 12, rz: 1 }],
+  [at(54.6), { fx: 0.42, fy: 0.38, s: 1.16, rx: 8, ry: 6 }],
 ];
 const ENGINE = { w: 2160, h: 1500 };
 const ENGINE_VIEW: ViewKeys = [
-  [at(76.2), { fx: 0.3, fy: 0.75, s: 0.7, rx: 40, ry: 18 }],
-  [at(77.6), { fx: 0.27, fy: 0.58, s: 1.35, rx: 16, ry: 10, rz: 1 }],
-  [at(80.2), { fx: 0.3, fy: 0.56, s: 1.6, rx: 10, ry: 4 }],
+  [at(80.2), { fx: 0.3, fy: 0.75, s: 0.7, rx: 40, ry: 18 }],
+  [at(81.6), { fx: 0.27, fy: 0.58, s: 1.35, rx: 16, ry: 10, rz: 1 }],
+  [at(84.2), { fx: 0.3, fy: 0.56, s: 1.6, rx: 10, ry: 4 }],
 ];
 /** 硬件：第 n 家亮起的帧（每半拍一家） */
-const hwLit = (n: number) => at(81.2) + n * b(0.5);
+const hwLit = (n: number) => at(85.2) + n * b(0.5);
 
 const HISTORY: Message[] = [{ from: "them", name: "林晓", lines: ["新版的数据看板做好了，大家看一下。"], at: -100 }];
 
 export const Dictate: React.FC = () => {
   const frame = useCurrentFrame();
-  const meetLanded = frame >= at(42);
-  const meetSent = frame >= at(43.2);
-  const messages: Message[] = meetSent ? [...HISTORY, { from: "me", name: "我", lines: [MEET_OUT], at: at(43.2) }] : HISTORY;
+  const meetLanded = frame >= at(46);
+  const meetSent = frame >= at(47.2);
+  const messages: Message[] = meetSent ? [...HISTORY, { from: "me", name: "我", lines: [MEET_OUT], at: at(47.2) }] : HISTORY;
 
   // 光标在哪就写到哪：三扇窗围成一道弧，整组慢慢转；一拍落一扇
-  const orbit = prog(frame, at(50.4), at(56) - at(50.4), (t) => t);
+  const orbit = prog(frame, at(54.4), at(60) - at(54.4), (t) => t);
   const fan = [
-    { x: -600, ry: 24, z: -100, land: at(51.4), kind: "mail" },
-    { x: 0, ry: 0, z: 40, land: at(52.4), kind: "chat" },
-    { x: 600, ry: -24, z: -100, land: at(53.4), kind: "notes" },
+    { x: -600, ry: 24, z: -100, land: at(55.4), kind: "mail" },
+    { x: 0, ry: 0, z: 40, land: at(56.4), kind: "chat" },
+    { x: 600, ry: -24, z: -100, land: at(57.4), kind: "notes" },
   ] as const;
-  const fanIn = prog(frame, at(50.4), 26, EASE.outExpo);
-  const fanOut = prog(frame, at(55.4), 16, EASE.inOut);
+  const fanIn = prog(frame, at(54.4), 26, EASE.outExpo);
+  const fanOut = prog(frame, at(59.4), 16, EASE.inOut);
 
   return (
     <AbsoluteFill>
-      <Chapter keys={["右 ⌥"]} name="Voice input" zh="语音输入" at={0} press={at(33)} out={at(34.4)} />
+      <Chapter keys={["右 ⌥"]} name="Voice input" zh="语音输入" at={0} press={at(37)} out={at(38.4)} />
 
       {/* 团队频道：镜头贴着空输入框 → 成句落下、发出 → 拉远 */}
-      <Glass w={WS.w} h={WS.h} keys={WS_VIEW} at={at(34.4)} out={at(44.4)} y={140} fadeIn={12}>
+      <Glass w={WS.w} h={WS.h} keys={WS_VIEW} at={at(38.4)} out={at(48.4)} y={140} fadeIn={12}>
         <Workspace w={WS.w} h={WS.h} frame={frame} channel="general" messages={messages} input={meetLanded && !meetSent ? MEET_OUT : ""} placeholder="发送到 #general" caret />
         {meetLanded && !meetSent ? (
-          <div style={{ position: "absolute", left: 250 + 24, right: 24, bottom: 24, height: 64, borderRadius: 20, boxShadow: `0 0 0 3px oklch(0.55 0.17 33 / ${Math.exp(-(frame - at(42)) / 12)})` }} />
+          <div style={{ position: "absolute", left: 250 + 24, right: 24, bottom: 24, height: 64, borderRadius: 20, boxShadow: `0 0 0 3px oklch(0.55 0.17 33 / ${Math.exp(-(frame - at(46)) / 12)})` }} />
         ) : null}
       </Glass>
-      <Line out={at(41.6)} y={-440}>
-        <Typewriter value="Speak naturally" at={at(34.8)} frames={20} size={64} />
+      <Line out={at(45.6)} y={-440}>
+        <Typewriter value="Speak naturally" at={at(38.8)} frames={20} size={64} />
       </Line>
-      <Said parts={MEET} at={at(35)} speak={at(35.6)} stop={at(40)} burst={at(40.6)} land={at(41.8)} seed="meet" />
-      <Line out={at(44.2)} y={-440}>
-        <Typewriter value="Read polished text" at={at(42)} frames={22} size={64} />
+      <Said parts={MEET} at={at(39)} speak={at(39.6)} stop={at(44)} burst={at(44.6)} land={at(45.8)} seed="meet" />
+      <Line out={at(48.2)} y={-440}>
+        <Typewriter value="Read polished text" at={at(46)} frames={22} size={64} />
       </Line>
 
       {/* 口述三件事 → 备忘录里自动分条 */}
-      <Glass w={NOTES.w} h={NOTES.h} keys={NOTES_VIEW} at={at(44.4)} out={at(50.2)} y={120}>
-        <Notes w={NOTES.w} h={NOTES.h} frame={frame} title="待办" lines={LIST_OUT.map((text, i) => ({ text, at: at(48.4) + i * b(0.5) }))} caret />
+      <Glass w={NOTES.w} h={NOTES.h} keys={NOTES_VIEW} at={at(48.4)} out={at(54.2)} y={120}>
+        <Notes w={NOTES.w} h={NOTES.h} frame={frame} title="待办" lines={LIST_OUT.map((text, i) => ({ text, at: at(52.4) + i * b(0.5) }))} caret />
       </Glass>
-      <Said parts={LIST} at={at(44.6)} speak={at(45)} stop={at(47.2)} burst={at(47.6)} land={at(48.2)} size={40} seed="list" />
-      <Line out={at(50.2)} y={-440}>
+      <Said parts={LIST} at={at(48.6)} speak={at(49)} stop={at(51.2)} burst={at(51.6)} land={at(52.2)} size={40} seed="list" />
+      <Line out={at(54.2)} y={-440}>
         <span style={{ display: "inline-flex", gap: 0 }}>
           {["Spoken lists ", "numbered"].map((w, i) => (
-            <span key={w} style={{ fontFamily: DISPLAY, fontSize: 64, fontWeight: 600, letterSpacing: "-0.025em", whiteSpace: "pre", color: i ? COLOR.cinnabar : COLOR.ink, opacity: prog(frame, at(48.4) + i * 10, 12), transform: `translateY(${-30 * (1 - prog(frame, at(48.4) + i * 10, 16))}px)` }}>
+            <span key={w} style={{ fontFamily: DISPLAY, fontSize: 64, fontWeight: 600, letterSpacing: "-0.025em", whiteSpace: "pre", color: i ? COLOR.cinnabar : COLOR.ink, opacity: prog(frame, at(52.4) + i * 10, 12), transform: `translateY(${-30 * (1 - prog(frame, at(52.4) + i * 10, 16))}px)` }}>
               {w}
             </span>
           ))}
@@ -116,9 +116,9 @@ export const Dictate: React.FC = () => {
       </Line>
 
       <Keycaps
-        inAt={at(34.6)}
-        outAt={at(49.4)}
-        caps={[{ label: "右 ⌥", presses: [[at(35.4), at(36.2)], [at(40), at(40.8)], [at(44.8), at(45.6)], [at(47.2), at(48)]] }]}
+        inAt={at(38.6)}
+        outAt={at(53.4)}
+        caps={[{ label: "右 ⌥", presses: [[at(39.4), at(40.2)], [at(44), at(44.8)], [at(48.8), at(49.6)], [at(51.2), at(52)]] }]}
       />
 
       {/* 光标在哪，字就写到哪：邮件、聊天、备忘录围成一道弧 */}
@@ -140,34 +140,34 @@ export const Dictate: React.FC = () => {
           </AbsoluteFill>
         </AbsoluteFill>
       ) : null}
-      <Line out={at(55.4)} y={-450}>
-        <Typewriter value="Wherever the cursor is" at={at(50.6)} frames={24} size={64} />
+      <Line out={at(59.4)} y={-450}>
+        <Typewriter value="Wherever the cursor is" at={at(54.6)} frames={24} size={64} />
       </Line>
 
       {/* 三种识别方式：三列平级，依次点亮，最后一起亮 */}
-      <Line out={at(79.8)} y={-440}>
-        <Focus value="Three modes" at={at(55.6)} size={72} />
+      <Line out={at(83.8)} y={-440}>
+        <Focus value="Three modes" at={at(59.6)} size={72} />
       </Line>
-      <Line out={at(79.8)} y={-365}>
-        <Sub text="三种识别方式　随时切换" at={at(56.2)} size={30} />
+      <Line out={at(83.8)} y={-365}>
+        <Sub text="三种识别方式　随时切换" at={at(60.2)} size={30} />
       </Line>
-      <Modes at={at(55.8)} lights={[at(58), at(63.4), at(68.8)]} all={at(74.2)} out={at(76.2)} />
+      <Modes at={at(59.8)} lights={[at(62), at(67.4), at(72.8)]} all={at(78.2)} out={at(80.2)} />
       {/* 引擎页真截图：识别方式那一栏三行依次亮过 */}
-      <Glass w={ENGINE.w} h={ENGINE.h} keys={ENGINE_VIEW} at={at(76.2)} out={at(79.8)} fadeOut={14} y={70}>
+      <Glass w={ENGINE.w} h={ENGINE.h} keys={ENGINE_VIEW} at={at(80.2)} out={at(83.8)} fadeOut={14} y={70}>
         <Screen src={assets.appEngine} w={ENGINE.w} h={ENGINE.h} />
-        <Halo x={484} y={698} w={322} h={101} at={at(77.4)} />
-        <Halo x={484} y={954} w={322} h={104} at={at(78)} />
-        <Halo x={484} y={828} w={322} h={99} at={at(78.6)} />
+        <Halo x={484} y={698} w={322} h={101} at={at(81.4)} />
+        <Halo x={484} y={954} w={322} h={104} at={at(82)} />
+        <Halo x={484} y={828} w={322} h={99} at={at(82.6)} />
       </Glass>
 
       {/* 硬件：不挑显卡、不挑硬件 */}
-      <Line out={at(87.4)} y={-430}>
-        <Focus value="No GPU required" at={at(80.2)} size={72} />
+      <Line out={at(91.4)} y={-430}>
+        <Focus value="No GPU required" at={at(84.2)} size={72} />
       </Line>
-      <Line out={at(87.4)} y={-355}>
-        <Sub text="不挑显卡　不挑硬件" at={at(80.8)} size={30} />
+      <Line out={at(91.4)} y={-355}>
+        <Sub text="不挑显卡　不挑硬件" at={at(84.8)} size={30} />
       </Line>
-      <Hardware at={at(80.4)} lit={hwLit} out={at(87.4)} />
+      <Hardware at={at(84.4)} lit={hwLit} out={at(91.4)} />
     </AbsoluteFill>
   );
 };

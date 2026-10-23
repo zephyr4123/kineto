@@ -7,11 +7,11 @@ import { Browser } from "../components/windows";
 import { assets } from "../assets.gen";
 import { COLOR, DISPLAY, EASE, SANS, b } from "../theme";
 
-// 落版（第 244–281 拍，原曲最后一段和结尾）：
+// 落版（第 248–285 拍，原曲最后一段和结尾）：
 // GitHub 仓库页（真截图，2026-10-23 时 139 星）：指针点 Star，星亮起、139 变 140，一颗大星带着数字弹出来 → "Star on GitHub"
 // → 官网下载区（真截图）：点"下载 Apple 芯片版"，底下弹出下载条 → "Download for free"（字母一个个落下来）
-// → 图标、speakmore、三项功能、两个网址；第 272 拍乐队停、清唱收尾，只留图标在静音里，到片尾。
-const START = 244;
+// → 图标、speakmore、三项功能、两个网址；第 276 拍乐队停、清唱收尾，只留图标在静音里，到片尾。
+const START = 248;
 const at = (n: number) => b(n - START);
 export const OUTRO_FRAMES = b(37);
 
@@ -31,21 +31,21 @@ const path = (frame: number, at: number, dur: number, from: { x: number; y: numb
 
 export const Outro: React.FC = () => {
   const frame = useCurrentFrame();
-  const starClick = at(248);
+  const starClick = at(252);
   const starred = frame >= starClick + 2;
-  const p1 = path(frame, at(245.4), 50, { x: 860, y: 620 }, STAR);
-  const dlClick = at(257);
-  const p2 = path(frame, at(254.4), 50, { x: 1100, y: 760 }, MAC);
+  const p1 = path(frame, at(249.4), 50, { x: 860, y: 620 }, STAR);
+  const dlClick = at(261);
+  const p2 = path(frame, at(258.4), 50, { x: 1100, y: 760 }, MAC);
   const count = frame < starClick + 6 ? 139 : 140;
-  const badge = prog(frame, starClick + 4, 18, EASE.outExpo) * (1 - prog(frame, at(252), 12));
+  const badge = prog(frame, starClick + 4, 18, EASE.outExpo) * (1 - prog(frame, at(256), 12));
   const toast = prog(frame, dlClick + 4, 18, EASE.outExpo);
   const fill = prog(frame, dlClick + 10, b(3.4), (t) => t);
-  const silence = prog(frame, at(272), b(1.5), EASE.inOut);
+  const silence = prog(frame, at(276), b(1.5), EASE.inOut);
 
   return (
     <AbsoluteFill>
       {/* GitHub：点 Star */}
-      <Shot y={70} w={W} h={GH_H} enter={0} leave={at(252.6)} rotY={-8} how="far" kick={starClick}>
+      <Shot y={70} w={W} h={GH_H} enter={0} leave={at(256.6)} rotY={-8} how="far" kick={starClick}>
         <Browser w={W} h={GH_H} url="github.com/zephyr4123/speakmore">
           <div style={{ position: "absolute", inset: 0, overflow: "hidden", background: "oklch(1 0 0)" }}>
             <Img src={staticFile(assets.githubPage)} style={{ width: W, marginTop: -72 * K, display: "block" }} />
@@ -61,7 +61,7 @@ export const Outro: React.FC = () => {
             <span style={{ padding: "0 6px", borderRadius: 8, background: "oklch(0.9 0.006 255)" }}>{count}</span>
           </div>
         ) : null}
-        {frame < at(252.4) ? <Pointer x={p1.x} y={p1.y} press={starClick} /> : null}
+        {frame < at(256.4) ? <Pointer x={p1.x} y={p1.y} press={starClick} /> : null}
       </Shot>
       {/* 一颗大星带着数字从按钮那里弹出来，星屑四散 */}
       {badge > 0 ? (
@@ -85,12 +85,12 @@ export const Outro: React.FC = () => {
           })}
         </AbsoluteFill>
       ) : null}
-      <Line out={at(252.4)} y={-440}>
-        <Assemble value="Star on GitHub" at={at(244.6)} size={96} seed="star" />
+      <Line out={at(256.4)} y={-440}>
+        <Assemble value="Star on GitHub" at={at(248.6)} size={96} seed="star" />
       </Line>
 
       {/* 官网：点下载 */}
-      <Shot y={60} w={W} h={SITE_H} enter={at(252.6)} leave={at(261.6)} rotY={8} how="whip" kick={dlClick}>
+      <Shot y={60} w={W} h={SITE_H} enter={at(256.6)} leave={at(265.6)} rotY={8} how="whip" kick={dlClick}>
         <Browser w={W} h={SITE_H} url="speakmore.zephyrxiang.com">
           <div style={{ position: "absolute", inset: 0, overflow: "hidden", background: "oklch(0.99 0.002 255)" }}>
             <Img src={staticFile(assets.siteDownload)} style={{ width: W, display: "block" }} />
@@ -99,7 +99,7 @@ export const Outro: React.FC = () => {
         {frame >= dlClick && frame < dlClick + 10 ? (
           <div style={{ position: "absolute", left: MAC.x - MAC.w / 2, top: MAC.y - MAC.h / 2, width: MAC.w, height: MAC.h, borderRadius: 999, background: "oklch(1 0 0 / 0.25)" }} />
         ) : null}
-        {frame < at(261.4) ? <Pointer x={p2.x} y={p2.y} press={dlClick} /> : null}
+        {frame < at(265.4) ? <Pointer x={p2.x} y={p2.y} press={dlClick} /> : null}
         {/* 下载条 */}
         {toast > 0 ? (
           <div style={{ position: "absolute", left: W / 2 - 300, bottom: 40, width: 600, padding: "22px 28px", borderRadius: 22, background: "oklch(1 0 0)", boxShadow: "0 24px 60px -20px oklch(0.2 0.03 260 / 0.45), 0 0 0 1px oklch(0.9 0.006 255)", opacity: toast, transform: `translateY(${80 * (1 - toast)}px)`, display: "flex", alignItems: "center", gap: 20, fontFamily: SANS }}>
@@ -113,11 +113,11 @@ export const Outro: React.FC = () => {
           </div>
         ) : null}
       </Shot>
-      <Line out={at(261.4)} y={-450}>
+      <Line out={at(265.4)} y={-450}>
         <span style={{ display: "inline-flex", fontFamily: DISPLAY, fontSize: 96, fontWeight: 600, letterSpacing: "-0.025em", color: COLOR.ink }}>
           {[..."Download for free"].map((ch, i) => {
             // 下载：字母一个个从上面落下来、落定时轻轻一弹
-            const t = prog(frame, at(253.2) + i * 1.3, 16, EASE.outQuint);
+            const t = prog(frame, at(257.2) + i * 1.3, 16, EASE.outQuint);
             const bounce = Math.sin(Math.min(1, t) * Math.PI) * 0.12;
             return (
               <span key={`${ch}-${i}`} style={{ display: "inline-block", whiteSpace: "pre", opacity: Math.min(1, t * 3), transform: `translateY(${-160 * (1 - t)}px) scaleY(${1 - bounce})`, color: i >= 13 ? COLOR.cinnabar : undefined }}>
@@ -129,29 +129,29 @@ export const Outro: React.FC = () => {
       </Line>
 
       {/* 落版：图标、speakmore、三项功能、两个网址；乐队停了以后只留图标 */}
-      {frame >= at(261.8) ? (
+      {frame >= at(265.8) ? (
         <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
-          <div style={{ position: "relative", display: "grid", placeItems: "center", transform: `translateY(${-150 + 150 * silence}px) scale(${(0.6 + 0.4 * prog(frame, at(261.8), 20, EASE.outExpo)) * (1 + 0.5 * silence)})`, opacity: prog(frame, at(261.8), 12) }}>
+          <div style={{ position: "relative", display: "grid", placeItems: "center", transform: `translateY(${-150 + 150 * silence}px) scale(${(0.6 + 0.4 * prog(frame, at(265.8), 20, EASE.outExpo)) * (1 + 0.5 * silence)})`, opacity: prog(frame, at(265.8), 12) }}>
             <AppIcon size={190} style={{ filter: "drop-shadow(0 24px 40px oklch(0.2 0.05 260 / 0.35))" }} />
           </div>
           <div style={{ position: "absolute", top: 600, width: "100%", display: "flex", flexDirection: "column", alignItems: "center", opacity: 1 - silence }}>
             <div style={{ position: "relative" }}>
-              <Assemble value="speakmore" at={at(262.4)} size={140} weight={650} seed="end" style={{ letterSpacing: "-0.04em" }} />
-              <div style={{ position: "absolute", left: "100%", top: 14, marginLeft: 20, ...rise(frame, at(263.6), undefined, 12) }}>
+              <Assemble value="speakmore" at={at(266.4)} size={140} weight={650} seed="end" style={{ letterSpacing: "-0.04em" }} />
+              <div style={{ position: "absolute", left: "100%", top: 14, marginLeft: 20, ...rise(frame, at(267.6), undefined, 12) }}>
                 <Version />
               </div>
             </div>
             <div style={{ marginTop: 14, display: "flex", gap: 30, alignItems: "center", fontFamily: DISPLAY, fontSize: 42, fontWeight: 500, letterSpacing: "-0.015em", color: COLOR.ink2 }}>
               {["Voice input", "Voice translation", "Selection translation"].map((f, i) => (
-                <span key={f} style={{ display: "inline-flex", gap: 30, alignItems: "center", opacity: prog(frame, at(264) + i * 10, 14) }}>
+                <span key={f} style={{ display: "inline-flex", gap: 30, alignItems: "center", opacity: prog(frame, at(268) + i * 10, 14) }}>
                   {i > 0 ? <span style={{ width: 7, height: 7, borderRadius: 4, background: COLOR.cinnabar }} /> : null}
                   {f}
                 </span>
               ))}
             </div>
             <div style={{ marginTop: 40, display: "flex", gap: 60, fontFamily: DISPLAY, fontSize: 30, color: COLOR.ink }}>
-              <Typewriter value="speakmore.zephyrxiang.com" at={at(266)} frames={22} size={30} weight={500} />
-              <Typewriter value="github.com/zephyr4123/speakmore" at={at(267)} frames={26} size={30} weight={500} />
+              <Typewriter value="speakmore.zephyrxiang.com" at={at(270)} frames={22} size={30} weight={500} />
+              <Typewriter value="github.com/zephyr4123/speakmore" at={at(271)} frames={26} size={30} weight={500} />
             </div>
           </div>
         </AbsoluteFill>
