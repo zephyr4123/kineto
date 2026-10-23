@@ -45,3 +45,21 @@ export const sumShakes = (...shakes: { x: number; y: number }[]) =>
     x: 0,
     y: 0,
   });
+
+/** from 起 dur 帧内从 0 走到 1（默认先快后慢） */
+export const prog = (frame: number, from: number, dur: number, easing: (t: number) => number = outExpo) =>
+  interpolate(frame, [from, from + dur], [0, 1], { ...clamp, easing });
+
+/** 拍点上的一下"顶"：放大一点再回来 */
+export const punch = (frame: number, at: number, amount = 0.05, dur = 20) =>
+  frame < at ? 1 : 1 + amount * Math.exp(-(frame - at) / (dur / 3.5));
+
+/** 打字：at 起 frames 帧内敲完，返回已经敲出来的那一截 */
+export const typed = (text: string, frame: number, at: number, frames: number) => {
+  const chars = [...text];
+  return chars.slice(0, Math.floor(interpolate(frame, [at, at + frames], [0, chars.length], clamp))).join("");
+};
+
+/** 在 oklab 里混两种颜色：t=1 全是 to */
+export const mix = (to: string, from: string, t: number) =>
+  `color-mix(in oklab, ${to} ${(Math.min(1, Math.max(0, t)) * 100).toFixed(1)}%, ${from})`;

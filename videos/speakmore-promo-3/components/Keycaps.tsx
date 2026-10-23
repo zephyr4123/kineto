@@ -3,14 +3,17 @@ import { tween } from "../../../engine/motion";
 import { COLOR, EASE, SANS } from "../theme";
 
 // 画面右下的一组键帽：热键按下的那一下就是节拍。按下时键帽沉下去，朱砂的一圈光从键边漾开。
-export type Keycap = { label: string; downAt: number; upAt: number };
+/** 一个键帽：presses 是每次按下、松开的帧 */
+export type Keycap = { label: string; presses: readonly (readonly [number, number])[] };
 
 const SIZE = 84;
 
 const Cap: React.FC<{ cap: Keycap }> = ({ cap }) => {
   const frame = useCurrentFrame();
-  const down = tween(frame, [cap.downAt, cap.downAt + 4], [0, 1], EASE.outQuint) * (1 - tween(frame, [cap.upAt, cap.upAt + 8], [0, 1], EASE.outQuint));
-  const ringT = frame - cap.downAt;
+  const down = Math.max(0, ...cap.presses.map(([d, u]) => tween(frame, [d, d + 4], [0, 1], EASE.outQuint) * (1 - tween(frame, [u, u + 8], [0, 1], EASE.outQuint))));
+  // 光圈跟着最近一次按下
+  const last = [...cap.presses].reverse().find(([d]) => frame >= d);
+  const ringT = last ? frame - last[0] : -1;
   const ring = ringT >= 0 && ringT < 30 ? ringT / 30 : null;
   return (
     <div style={{ position: "relative" }}>
@@ -51,7 +54,7 @@ const Cap: React.FC<{ cap: Keycap }> = ({ cap }) => {
 };
 
 /** inAt 帧浮上来，outAt 帧沉下去淡掉 */
-export const Keycaps: React.FC<{ caps: readonly Keycap[]; inAt: number; outAt: number }> = ({ caps, inAt, outAt }) => {
+export const Keycaps: React.FC<{ caps: readonly Keycap[]; inAt: number; outAt: number; style?: React.CSSProperties }> = ({ caps, inAt, outAt, style }) => {
   const frame = useCurrentFrame();
   const a = tween(frame, [inAt, inAt + 22], [0, 1], EASE.outExpo);
   const z = tween(frame, [outAt, outAt + 18], [0, 1], EASE.outQuint);
@@ -67,6 +70,7 @@ export const Keycaps: React.FC<{ caps: readonly Keycap[]; inAt: number; outAt: n
         opacity: a * (1 - z),
         transform: `translateY(${40 * (1 - a) + 30 * z}px)`,
         filter: a < 1 || z > 0 ? `blur(${8 * (1 - a) + 8 * z}px)` : undefined,
+        ...style,
       }}
     >
       {caps.map((cap) => (

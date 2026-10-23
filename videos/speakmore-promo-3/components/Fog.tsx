@@ -8,7 +8,8 @@ const BLOBS = [
   { color: COLOR.fogLilac, x: 0.6, y: 0.12, r: 900, ax: 100, ay: 40, speed: 0.013, phase: 4.2 },
 ] as const;
 
-export const Fog: React.FC = () => {
+/** dark：0 是浅色的雾，1 是暗场的夜色（深靛底上两团极淡的霓虹光） */
+export const Fog: React.FC<{ dark?: number }> = ({ dark = 0 }) => {
   const frame = useCurrentFrame();
   return (
     <AbsoluteFill style={{ background: COLOR.paper, overflow: "hidden" }}>
@@ -31,6 +32,12 @@ export const Fog: React.FC = () => {
           />
         );
       })}
+      {dark > 0 ? (
+        <AbsoluteFill style={{ opacity: dark, background: COLOR.night }}>
+          <div style={{ position: "absolute", left: -300 + Math.sin(frame * 0.01) * 80, top: -200, width: 1300, height: 1100, borderRadius: "50%", background: `radial-gradient(closest-side, color-mix(in oklab, ${COLOR.neonIndigo} 22%, transparent), transparent)` }} />
+          <div style={{ position: "absolute", right: -300 + Math.cos(frame * 0.008) * 80, bottom: -300, width: 1200, height: 1000, borderRadius: "50%", background: `radial-gradient(closest-side, color-mix(in oklab, ${COLOR.neonCinnabar} 14%, transparent), transparent)` }} />
+        </AbsoluteFill>
+      ) : null}
     </AbsoluteFill>
   );
 };
