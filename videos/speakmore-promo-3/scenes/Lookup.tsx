@@ -15,7 +15,7 @@ import { COLOR, EASE, SANS, b } from "../theme";
 
 // 划词翻译（第 123–164 拍）：开场卡的键在第 124 拍砸下时按下（右⌥ 回车）→ 网页（镜头贴着段落，拖选、卡片从选区下长出，拉远）
 // → PDF 实拍（镜头飞过）→ terminal（拖选、卡片）→ 组合着用：团队频道里同事发来日文，划词看懂，再用语音翻译回一句日文
-// → 一组实拍压暗退后，"No plug-ins" / "Any app" 上下两行。
+// → 一组实拍压暗退后，"No plug-ins" / "Any APP" 上下两行。
 // 译文都是 App 的真实输出（DeepSeek V4.1 Flash，2026-10-23；terminal 那段是 README 实拍里的同一段）。
 const START = 123;
 const at = (n: number) => b(n - START);
@@ -172,7 +172,7 @@ export const Lookup: React.FC = () => {
       </Line>
       <Line out={at(161.6)} y={30}>
         <Focus value="Any " at={at(158.6)} size={110} />
-        <Reel words={["browser", "PDF", "terminal", "chat", "app"]} at={at(158.7)} hold={6} size={110} land={COLOR.cinnabar} />
+        <Reel words={["browser", "PDF", "terminal", "chat", "APP"]} at={at(158.7)} hold={6} size={110} land={COLOR.cinnabar} />
       </Line>
       <Line out={at(161.6)} y={150}>
         <Sub text="无需插件　不挑应用" at={at(159.6)} size={34} />

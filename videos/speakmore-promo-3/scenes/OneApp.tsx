@@ -8,7 +8,7 @@ import { assets } from "../assets.gen";
 import { COLOR, DISPLAY, EASE, SANS, b } from "../theme";
 
 // 暗场（第 188–220 拍，原曲的过门、低音全撤）：
-// "One app" / "Three features" 上下两行霓虹描字，压在首页深色真截图上 → 三行霓虹键帽：右⌥ 语音输入、右⌥ 空格 语音翻译、右⌥ 回车 划词翻译
+// "One APP" / "Three features" 上下两行霓虹描字，压在首页深色真截图上 → 三行霓虹键帽：右⌥ 语音输入、右⌥ 空格 语音翻译、右⌥ 回车 划词翻译
 // → "Rebind any key"（key 滚过 ⌥ ⌘ F5 Caps）配设置·快捷键的真截图 → "Choose any model"：各家标志排成一列往深处退，DeepSeek 打头，一家家走到前面
 // → "One key" "Ready"：密钥面板的真截图，一把密钥粘进去、打勾 → 第 218 拍起一切收向中间，等第 220 拍砸下。
 const START = 188;
@@ -57,10 +57,10 @@ export const OneApp: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ transform: `scale(${1 - 0.85 * gather})`, opacity: 1 - gather, filter: gather > 0 ? `blur(${12 * gather}px)` : undefined }}>
-      {/* One app / Three features：上下两行，压在首页深色真截图上，推近到顶上那排热键 */}
+      {/* One APP / Three features：上下两行，压在首页深色真截图上，推近到顶上那排热键 */}
       <Panel fadeIn={30} src={assets.appHomeDark} w={1240} h={(1240 * 1500) / 2160} y={190} rotY={-12} rotX={8} at={0} out={at(192.4)} neon={COLOR.neonIndigo} zoom={{ at: at(190), dur: 40, rect: { x: 0.24, y: 0.07, w: 0.56, h: 0.16 } }} />
       <Line out={at(192.2)} y={-440}>
-        <Neon value="One app" at={at(188.4)} glow={COLOR.neonIndigo} size={96} />
+        <Neon value="One APP" at={at(188.4)} glow={COLOR.neonIndigo} size={96} />
       </Line>
       <Line out={at(192.2)} y={-335}>
         <Neon value="Three features" at={at(189.6)} glow={COLOR.neonCinnabar} size={96} color={COLOR.nightInk2} />

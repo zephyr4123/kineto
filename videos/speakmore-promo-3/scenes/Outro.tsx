@@ -9,7 +9,7 @@ import { COLOR, DISPLAY, EASE, SANS, b } from "../theme";
 
 // 落版（第 248–285 拍，原曲最后一段和结尾）：
 // GitHub 仓库页（真截图，2026-10-23 时 139 星）：指针点 Star，星亮起、139 变 140，一颗大星带着数字弹出来 → "Star on GitHub"
-// → 官网下载区（真截图）：点"下载 Apple 芯片版"，底下弹出下载条 → "Download for free"（字母一个个落下来）
+// → 官网首屏（真截图）：点"下载 Apple 芯片版"，底下弹出下载条 → "Download for free"（字母一个个落下来）
 // → 图标、speakmore、三项功能、两个网址；第 276 拍乐队停、清唱收尾，只留图标在静音里，到片尾。
 const START = 248;
 const at = (n: number) => b(n - START);
@@ -21,7 +21,7 @@ const GH_H = 800;
 const SITE_H = 860;
 // 截图里的位置（1920×1080 截的），换成窗口里的坐标：标题栏 52，GitHub 的黑色顶栏 72 裁掉
 const STAR = { x: ((1466 + 1568) / 2) * K, y: 52 + ((192 + 220) / 2 - 72) * K };
-const MAC = { x: ((722 + 954) / 2) * K, y: 52 + ((587 + 635) / 2) * K, w: (954 - 722) * K, h: (635 - 587) * K };
+const MAC = { x: ((722 + 954) / 2) * K, y: 52 + ((440 + 488) / 2) * K, w: (954 - 722) * K, h: (488 - 440) * K };
 
 /** 指针从 from 移到 to：at 帧起 dur 帧 */
 const path = (frame: number, at: number, dur: number, from: { x: number; y: number }, to: { x: number; y: number }) => {
@@ -93,7 +93,7 @@ export const Outro: React.FC = () => {
       <Shot y={60} w={W} h={SITE_H} enter={at(256.6)} leave={at(265.6)} rotY={8} how="whip" kick={dlClick}>
         <Browser w={W} h={SITE_H} url="speakmore.zephyrxiang.com">
           <div style={{ position: "absolute", inset: 0, overflow: "hidden", background: "oklch(0.99 0.002 255)" }}>
-            <Img src={staticFile(assets.siteDownload)} style={{ width: W, display: "block" }} />
+            <Img src={staticFile(assets.siteHero)} style={{ width: W, display: "block" }} />
           </div>
         </Browser>
         {frame >= dlClick && frame < dlClick + 10 ? (

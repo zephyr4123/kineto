@@ -41,7 +41,6 @@ export const assets = {
   photoPdf: "speakmore-promo-3/photoPdf.webp",
   photoTerminal: "speakmore-promo-3/photoTerminal.webp",
   photoWeb: "speakmore-promo-3/photoWeb.webp",
-  siteDownload: "speakmore-promo-3/siteDownload.png",
   siteHero: "speakmore-promo-3/siteHero.png",
   song: "speakmore-promo-3/song.mp3",
 } as const;

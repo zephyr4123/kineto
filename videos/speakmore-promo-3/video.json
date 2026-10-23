@@ -5,7 +5,7 @@
   "status": "draft",
   "tags": [],
   "createdAt": "2026-10-23T07:55:22.129Z",
-  "updatedAt": "2026-10-23T09:36:03.531Z",
+  "updatedAt": "2026-10-23T10:24:14.825Z",
   "assets": {
     "fontSans": "sha256:a3041811a78c361b1de50f953c805e0244951c21c5bd412f7232ef0d899af0da",
     "fontMono": "sha256:48715a42ec242c21e9f02692891e147d022299a52e48d5e413e1a942193ffeda",
@@ -20,8 +20,6 @@
     "appSetTranslate": "sha256:3c71195725f9c4244305f5312618d291cbed0c56ad905b5b1a7d8a9b6e8607d2",
     "appSetLookup": "sha256:921ce97acbe63e1903bece47ee224658dc947b96219b7008feea619c6d701c56",
     "appHistory": "sha256:af5c8d36306f90137f344ae12d64169a6fd21ec4d40781c37c96e1a5b048ffac",
-    "siteHero": "sha256:64bbb6d97c208c2abcbd52a4a0698b3b45a1bf445dede0f67bcae6b2a16f9a9d",
-    "siteDownload": "sha256:aef3c942fc61f888c59e9fed8a47786b0c41f4ee3b51b9ed1ccac1429096bb6f",
     "githubPage": "sha256:9c9dfc588b066b0b688800a6a404c1e8daa3c8481342f4f76cfdc4d15cd87fc2",
     "photoWeb": "sha256:0b2822d88a717532999ae9212d6cc7e248c502f86d3212bf544dfdc77e88882a",
     "photoPdf": "sha256:4e3446a2e4a0ba6cd718227b81826415ce5e892edde7f087b8ef46d6380b0f86",
@@ -48,6 +46,7 @@
     "onbFeatures": "sha256:1f25940bb1b1dd0f32c068dd9a3c750d86362f4f332f1176af6110e778dac3d1",
     "onbKeys": "sha256:9bdf50d342b13d24a2d57e658a4ea5b9ae14ec55c1b5aba100e5097bfa79871d",
     "onbPermissions": "sha256:e74eee4b4bb0e4e63a73ac19877bd98002f7c466578ccf996cec62afba094575",
-    "onbEngine": "sha256:0c1253262e9a8781ce54ba3ae48ade7f0eff3e524a5bd88edfee389934f81c2e"
+    "onbEngine": "sha256:0c1253262e9a8781ce54ba3ae48ade7f0eff3e524a5bd88edfee389934f81c2e",
+    "siteHero": "sha256:332e8d74b03aeeb3bbc8cfa139a370036742abe0996e75e35d3445d5d4298e94"
   }
 }
