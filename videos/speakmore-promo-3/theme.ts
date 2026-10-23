@@ -33,12 +33,12 @@ const SONG_BEAT0 = 0.4225;
 export const songFrame = (k: number) => Math.round((SONG_BEAT0 + k * 0.4) * FPS);
 /** 配乐的剪法：片子第 at 拍起，接原曲第 song 拍，放 beats 拍 */
 export const MUSIC = [
-  { at: 0, song: 8, beats: 24 }, // 前奏：三个词，各配一段小演示
-  { at: 24, song: 128, beats: 84 }, // 抽空三拍（字碎成粒子），第 28 拍砸下拼成 speakmore；第 36 拍起语音输入（含三种识别方式、硬件），第 92 拍起语音翻译
-  { at: 108, song: 244, beats: 140 }, // 第 123 拍抽空、124 拍砸下进划词翻译；第 164 拍引导四步；第 188 拍起原曲过门（暗场），第 220 拍砸下进高潮
-  { at: 248, song: 452, beats: 37 }, // 原曲最后一段和结尾：点星、下载、落版，第 276 拍乐队停
+  { at: 0, song: 4, beats: 28 }, // 前奏：三个词，各配一段小演示
+  { at: 28, song: 128, beats: 84 }, // 抽空三拍（字碎成粒子），第 32 拍砸下拼成 speakmore；第 40 拍起语音输入（含三种识别方式、硬件），第 96 拍起语音翻译
+  { at: 112, song: 244, beats: 140 }, // 第 127 拍抽空、128 拍砸下进划词翻译；第 168 拍引导四步；第 192 拍起原曲过门（暗场），第 224 拍砸下进高潮
+  { at: 252, song: 452, beats: 37 }, // 原曲最后一段和结尾：点星、下载、落版，第 280 拍乐队停
 ] as const;
-export const TOTAL_BEATS = 285;
+export const TOTAL_BEATS = 289;
 export const VIDEO_FRAMES = b(TOTAL_BEATS);
 
 export const COLOR = {

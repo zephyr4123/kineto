@@ -18,17 +18,17 @@ import { MUSIC, VIDEO_FRAMES, b, songFrame } from "./theme";
 // 配乐按 theme.ts 的 MUSIC 剪拼原曲，每个剪点在小节头上，两边各交叉 XF 帧，免得咔哒一声。
 export const SCENES = [
   { name: "Opening", Scene: Opening, from: 0, frames: OPENING_FRAMES },
-  { name: "Dictate", Scene: Dictate, from: b(36), frames: DICTATE_FRAMES },
-  { name: "Translate", Scene: Translate, from: b(92), frames: TRANSLATE_FRAMES },
-  { name: "Lookup", Scene: Lookup, from: b(123), frames: LOOKUP_FRAMES },
-  { name: "Setup", Scene: Setup, from: b(164), frames: SETUP_FRAMES },
-  { name: "OneApp", Scene: OneApp, from: b(188), frames: ONEAPP_FRAMES },
-  { name: "Climax", Scene: Climax, from: b(220), frames: CLIMAX_FRAMES },
-  { name: "Outro", Scene: Outro, from: b(248), frames: OUTRO_FRAMES },
+  { name: "Dictate", Scene: Dictate, from: b(40), frames: DICTATE_FRAMES },
+  { name: "Translate", Scene: Translate, from: b(96), frames: TRANSLATE_FRAMES },
+  { name: "Lookup", Scene: Lookup, from: b(127), frames: LOOKUP_FRAMES },
+  { name: "Setup", Scene: Setup, from: b(168), frames: SETUP_FRAMES },
+  { name: "OneApp", Scene: OneApp, from: b(192), frames: ONEAPP_FRAMES },
+  { name: "Climax", Scene: Climax, from: b(224), frames: CLIMAX_FRAMES },
+  { name: "Outro", Scene: Outro, from: b(252), frames: OUTRO_FRAMES },
 ] as const;
 
-/** 暗场：第 188 拍起是夜色（上一段的夜色圆盖着切换）；高潮那一页夜色翻走时，底下的夜色用将近三拍慢慢亮回浅色，不闪白 */
-const darkAt = (frame: number) => interpolate(frame, [b(187.6), b(188), b(245.6), b(249.4)], [0, 1, 1, 0], clamp);
+/** 暗场：第 192 拍起是夜色（上一段的夜色圆盖着切换）；高潮那一页夜色翻走时，底下的夜色用将近三拍慢慢亮回浅色，不闪白 */
+const darkAt = (frame: number) => interpolate(frame, [b(191.6), b(192), b(249.6), b(253.4)], [0, 1, 1, 0], clamp);
 
 const VOLUME = 0.55;
 const XF = 3;

@@ -3,19 +3,53 @@ import { prog } from "../../../engine/motion";
 import { COLOR, EASE, SANS } from "../theme";
 import { Glass, type ViewKeys } from "./Glass";
 import { LookupCard } from "./LookupCard";
+import { Said, type SaidPart } from "./Said";
 import { TalkBar } from "./TalkBar";
 import { IBeam, PULL_FATAL, Terminal, cardAnchor, selectTotal, selectionHead, termSize } from "./Terminal";
-import { Chat, type Message } from "./windows";
+import { Chat, type Message, Notes } from "./windows";
 
-// 开场三个主角词下面各演一小段 App 用起来的样子（每段两秒多，只留最要紧的一步，细节留给后面的章节）：
-// 说话（悬浮条浮起、声波跳，再按一次热键，成品落进聊天输入框）、语音翻译（同样一段，说的中文以字幕逐字出现，落下来的是英文）、
-// 终端里划选一行报错，卡片从选区下长出来给出译文。画面上方留给主角词，窗口居中斜放，悬浮条在最下面。
+// 开场三个主角词下面各演一小段 App 用起来的样子（只留最要紧的一步，细节留给后面的章节）：
+// 语音输入（说一大段，字幕逐字出来，语气词炸散、空隙合拢，备忘录里落成编号的几条）、
+// 语音翻译（说的中文以字幕逐字出现，聊天输入框里落下来的是英文）、终端里划选一行报错，卡片从选区下长出来给出译文。
+// 画面上方留给主角词，窗口居中斜放，悬浮条在最下面。
+
+const NOTES = { w: 760, h: 450 };
+
+export type DictateTiming = {
+  /** 窗口和悬浮条进场 */
+  at: number;
+  /** 开始说、再按一次热键、语气词炸散、字幕沉下去（成品一条条落进备忘录）、整段退场 */
+  speak: number;
+  stop: number;
+  burst: number;
+  land: number;
+  out: number;
+};
+
+/** 语音输入：上面是说的话（Said：浅灰的语气词炸散、空隙合拢），下面备忘录里落成几条；lines 是 App 整理出的成品，一行一条 */
+export const DictateGlimpse: React.FC<{ parts: readonly SaidPart[]; title: string; lines: readonly string[]; timing: DictateTiming }> = ({ parts, title, lines, timing: t }) => {
+  const frame = useCurrentFrame();
+  if (frame < t.at || frame > t.out + 20) return null;
+  const keys: ViewKeys = [
+    [t.at, { fx: 0.5, fy: 0.5, s: 1.2, rx: 14, ry: -14, rz: -1.2 }],
+    [t.land, { fx: 0.5, fy: 0.52, s: 1.3, rx: 8, ry: -8, rz: -0.4 }],
+    [t.out + 14, { fx: 0.5, fy: 0.53, s: 1.34, rx: 6, ry: -5 }],
+  ];
+  return (
+    <>
+      <Glass w={NOTES.w} h={NOTES.h} keys={keys} at={t.at} out={t.out} fadeIn={14} y={130}>
+        <Notes w={NOTES.w} h={NOTES.h} frame={frame} title={title} lines={lines.map((text, i) => ({ text, at: t.land + 6 + i * 10 }))} caret />
+      </Glass>
+      {frame < t.out ? <Said parts={parts} at={t.at + 6} speak={t.speak} stop={t.stop} burst={t.burst} land={t.land} size={36} y={-205} seed="glimpse" /> : null}
+    </>
+  );
+};
 
 const CHAT = { w: 940, h: 340 };
 /** 聊天窗口里输入框的位置（Chat 的输入框贴底，左右下各留 24） */
 const INPUT = { inset: 24, h: 68 };
 
-export type TalkTiming = {
+export type TranslateTiming = {
   /** 窗口和悬浮条进场 */
   at: number;
   /** 开始说、再按一次热键、打勾、成品落进输入框、整段退场 */
@@ -26,24 +60,16 @@ export type TalkTiming = {
   out: number;
 };
 
-/** 斜放的窗口慢慢转正、推近一点；side 是往哪边斜（1 右、-1 左） */
-const drift = (t: TalkTiming, side: 1 | -1): ViewKeys => [
-  [t.at, { fx: 0.5, fy: 0.56, s: 1.38, rx: 14, ry: -16 * side, rz: -1.5 * side }],
-  [t.land, { fx: 0.5, fy: 0.6, s: 1.5, rx: 8, ry: -8 * side, rz: -0.5 * side }],
-  [t.out + 14, { fx: 0.5, fy: 0.62, s: 1.55, rx: 6, ry: -5 * side }],
-];
-
-/** 说一句话：聊天窗口 + 悬浮条；said 给了就在悬浮条上方逐字出字幕（语音翻译时说的中文），chip 是译成哪种语言 */
-export const TalkGlimpse: React.FC<{
+/** 语音翻译：聊天窗口 + 悬浮条，说的中文在悬浮条上方逐字出字幕，chip 是译成哪种语言，result 是落进输入框的译文 */
+export const TranslateGlimpse: React.FC<{
   name: string;
   avatar: string;
   incoming: string;
-  said?: string;
-  chip?: string;
+  said: string;
+  chip: string;
   result: string;
-  timing: TalkTiming;
-  side: 1 | -1;
-}> = ({ name, avatar, incoming, said, chip, result, timing: t, side }) => {
+  timing: TranslateTiming;
+}> = ({ name, avatar, incoming, said, chip, result, timing: t }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   if (frame < t.at || frame > t.out + 20) return null;
@@ -51,15 +77,21 @@ export const TalkGlimpse: React.FC<{
   const level = talking ? 0.55 + 0.35 * Math.abs(Math.sin(frame / 5.3)) * (0.6 + 0.4 * Math.sin(frame / 13)) : 0;
   const landed = frame >= t.land;
   const messages: Message[] = [{ from: "them", lines: [incoming], at: t.at + 8 }];
+  // 斜放的窗口慢慢转正、推近一点（和语音输入那段往反方向斜）
+  const keys: ViewKeys = [
+    [t.at, { fx: 0.5, fy: 0.56, s: 1.38, rx: 14, ry: 16, rz: 1.5 }],
+    [t.land, { fx: 0.5, fy: 0.6, s: 1.5, rx: 8, ry: 8, rz: 0.5 }],
+    [t.out + 14, { fx: 0.5, fy: 0.62, s: 1.55, rx: 6, ry: 5 }],
+  ];
   return (
     <>
-      <Glass w={CHAT.w} h={CHAT.h} keys={drift(t, side)} at={t.at} out={t.out} fadeIn={14} y={40}>
+      <Glass w={CHAT.w} h={CHAT.h} keys={keys} at={t.at} out={t.out} fadeIn={14} y={40}>
         <Chat w={CHAT.w} h={CHAT.h} frame={frame} name={name} avatar={avatar} messages={messages} input={landed ? result : ""} placeholder="发送消息" caret />
         {landed ? (
           <div style={{ position: "absolute", left: INPUT.inset, right: INPUT.inset, bottom: INPUT.inset, height: INPUT.h, borderRadius: 20, boxShadow: `0 0 0 3px oklch(0.55 0.17 33 / ${Math.exp(-(frame - t.land) / 12)})` }} />
         ) : null}
       </Glass>
-      {said ? <Caption text={said} speak={t.speak} stop={t.stop} out={t.land} /> : null}
+      <Caption text={said} speak={t.speak} stop={t.stop} out={t.land} />
       <div style={{ position: "absolute", left: 0, right: 0, bottom: 70, display: "flex", justifyContent: "center" }}>
         <TalkBar frame={frame} fps={fps} at={t.at + 6} out={t.land + 6} chip={chip} level={level} timing={{ press: t.stop, finishing: t.stop + 4, done: t.done }} />
       </div>
