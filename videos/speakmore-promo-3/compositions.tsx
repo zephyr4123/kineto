@@ -1,9 +1,10 @@
-import { AbsoluteFill, Composition } from "remotion";
+import { AbsoluteFill, Composition, Still } from "remotion";
 import { Fog } from "./components/Fog";
 import { SCENES, VIDEO_FRAMES, Video } from "./Video";
+import { Cover, CoverPortrait } from "./scenes/Cover";
 import { FPS, H, W } from "./theme";
 
-// 成片 + 每段各一个 composition（段落在 Studio 里可单独预览，垫着浅色的雾）
+// 成片 + 每段各一个 composition（段落在 Studio 里可单独预览，垫着浅色的雾）+ 横竖两张封面
 const staged = (Scene: React.FC) => {
   const Staged: React.FC = () => (
     <AbsoluteFill>
@@ -35,6 +36,8 @@ export const Compositions: React.FC = () => {
       <Composition id="speakmore-promo-3-oneapp" component={OneAppStaged} durationInFrames={oneApp.frames} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-3-climax" component={ClimaxStaged} durationInFrames={climax.frames} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-3-outro" component={OutroStaged} durationInFrames={outro.frames} fps={FPS} width={W} height={H} />
+      <Still id="speakmore-promo-3-cover" component={Cover} width={W} height={H} />
+      <Still id="speakmore-promo-3-cover-portrait" component={CoverPortrait} width={1080} height={1440} />
     </>
   );
 };
