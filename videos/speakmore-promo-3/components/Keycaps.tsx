@@ -6,9 +6,9 @@ import { COLOR, EASE, SANS } from "../theme";
 /** 一个键帽：presses 是每次按下、松开的帧 */
 export type Keycap = { label: string; presses: readonly (readonly [number, number])[] };
 
-const SIZE = 84;
-
-const Cap: React.FC<{ cap: Keycap }> = ({ cap }) => {
+/** 一个键帽；size 是键帽的高（右下角那组 84，功能开场卡上的大键帽更大） */
+export const Cap: React.FC<{ cap: Keycap; size?: number }> = ({ cap, size = 84 }) => {
+  const k = size / 84;
   const frame = useCurrentFrame();
   const down = Math.max(0, ...cap.presses.map(([d, u]) => tween(frame, [d, d + 4], [0, 1], EASE.outQuint) * (1 - tween(frame, [u, u + 8], [0, 1], EASE.outQuint))));
   // 光圈跟着最近一次按下
@@ -22,8 +22,8 @@ const Cap: React.FC<{ cap: Keycap }> = ({ cap }) => {
           style={{
             position: "absolute",
             inset: 0,
-            borderRadius: 22,
-            boxShadow: `0 0 0 2px ${COLOR.cinnabar}`,
+            borderRadius: 22 * k,
+            boxShadow: `0 0 0 ${2 * k}px ${COLOR.cinnabar}`,
             opacity: 0.55 * (1 - ring),
             transform: `scale(${1 + 0.45 * EASE.outExpo(ring)})`,
           }}
@@ -31,20 +31,21 @@ const Cap: React.FC<{ cap: Keycap }> = ({ cap }) => {
       ) : null}
       <div
         style={{
-          height: SIZE,
-          minWidth: SIZE,
-          padding: "0 26px",
+          height: size,
+          minWidth: size,
+          padding: `0 ${26 * k}px`,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          borderRadius: 22,
+          borderRadius: 22 * k,
           background: "oklch(1 0 0)",
           color: COLOR.ink,
           fontFamily: SANS,
-          fontSize: 32,
+          fontSize: 32 * k,
           fontWeight: 500,
-          transform: `translateY(${6 * down}px)`,
-          boxShadow: `0 0 0 1.5px ${COLOR.line}, 0 ${7 * (1 - down) + 1}px 0 ${COLOR.line}, 0 ${24 * (1 - down) + 6}px 48px -20px oklch(0.2 0.02 255 / ${0.35 - 0.15 * down})`,
+          whiteSpace: "nowrap",
+          transform: `translateY(${6 * k * down}px)`,
+          boxShadow: `0 0 0 ${1.5 * k}px ${COLOR.line}, 0 ${(7 * (1 - down) + 1) * k}px 0 ${COLOR.line}, 0 ${(24 * (1 - down) + 6) * k}px ${48 * k}px ${-20 * k}px oklch(0.2 0.02 255 / ${0.35 - 0.15 * down})`,
         }}
       >
         {cap.label}

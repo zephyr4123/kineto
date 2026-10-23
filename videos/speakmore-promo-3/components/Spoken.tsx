@@ -4,7 +4,7 @@ import { COLOR, DISPLAY, SANS } from "../theme";
 import { TalkBar } from "./TalkBar";
 import { rise } from "./kit";
 
-// 语音翻译时画面右边那一栏：上面 "Spoken · 口述" 和说出来的那句中文（说的时候一个字一个字出现，整理时口头禅淡下去），下面是带语言胶囊的悬浮条。
+// 语音翻译时画面右边那一栏：上面 "Spoken" 和说出来的那句中文（说的时候一个字一个字出现，整理时口头禅淡下去），下面是带语言胶囊的悬浮条。
 // 时间都是场景里的帧：at 出现；speak 起说、stop 再按一次热键（悬浮条转整理）；done 打勾；land 译文落下、这一栏往左淡出。
 export type SaidPart = { text: string; cut?: boolean };
 
@@ -32,7 +32,6 @@ export const Spoken: React.FC<{
       <div style={{ position: "absolute", left: x, top: y, width: 620, opacity: 1 - out, transform: `translateX(${-120 * out}px)`, filter: out > 0 ? `blur(${6 * out}px)` : undefined }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 14, ...rise(frame, at) }}>
           <span style={{ fontFamily: DISPLAY, fontSize: 36, fontWeight: 600, color: COLOR.ink }}>Spoken</span>
-          <span style={{ fontFamily: SANS, fontSize: 22, letterSpacing: "0.14em", color: COLOR.ink2 }}>口述</span>
         </div>
         <p style={{ margin: "22px 0 0", fontFamily: SANS, fontSize: 46, lineHeight: 1.5, fontWeight: 500, color: COLOR.ink }}>
           {parts.map((part) => {

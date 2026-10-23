@@ -203,3 +203,59 @@ export const Line: React.FC<{ out?: number; y?: number; children: React.ReactNod
     </AbsoluteFill>
   );
 };
+
+/** 声波：字母像一段声音一样上下起伏，起伏从左往右传过去，慢慢平息（Speak） */
+export const Wave: React.FC<Base & { value: string; at: number; amp?: number }> = ({ value, at, amp = 0.3, size = 110, weight = 600, color = COLOR.ink, style }) => {
+  const frame = useCurrentFrame();
+  if (frame < at) return null;
+  return (
+    <span style={{ display: "inline-flex", ...text(size, weight, color), ...style }}>
+      {[...value].map((ch, i) => {
+        const t = frame - at - i * 2;
+        const a = prog(frame, at + i * 2, 10);
+        const env = t > 0 ? Math.exp(-t / 46) : 0;
+        const s = Math.sin(t / 5.2);
+        return (
+          <span key={`${ch}-${i}`} style={{ display: "inline-block", whiteSpace: "pre", opacity: a, transform: `translateY(${-amp * size * s * env}px) scaleY(${1 + 0.22 * s * env})` }}>
+            {ch}
+          </span>
+        );
+      })}
+    </span>
+  );
+};
+
+// 每个字母在几种语言里的近亲写法（拉丁重音、西里尔、希腊），宽度和原字相近；没有的就不翻
+const KIN: Record<string, string> = { T: "ŤТΤŢ", r: "ŕřгŗ", a: "áäаαå", n: "ñńпηň", s: "śšѕş", l: "ĺłľļ", t: "ťţтŧ", e: "éëеεè", S: "ŚŠЅŞ", p: "рρþ", k: "ķкκ" };
+
+/** 多语：每个字母先在几种文字之间翻，再从左往右依次落成自己（Translate） */
+export const Polyglot: React.FC<Base & { value: string; at: number; step?: number }> = ({ value, at, step = 3, size = 110, weight = 600, color = COLOR.ink, style }) => {
+  const frame = useCurrentFrame();
+  if (frame < at) return null;
+  return (
+    <span style={{ display: "inline-flex", ...text(size, weight, color), ...style }}>
+      {[...value].map((ch, i) => {
+        const show = at + i;
+        const lock = at + 10 + i * step;
+        if (frame < show) return <span key={`${ch}-${i}`} style={{ display: "inline-block", whiteSpace: "pre", opacity: 0 }}>{ch}</span>;
+        const kin = KIN[ch];
+        if (frame < lock && kin) {
+          const g = [...kin][Math.floor(random(`pg-${i}-${Math.floor(frame / 3)}`) * [...kin].length)];
+          return (
+            // 翻动中的字占着原字的宽，免得整行抖
+            <span key={`${ch}-${i}`} style={{ position: "relative", display: "inline-block", whiteSpace: "pre" }}>
+              <span style={{ opacity: 0 }}>{ch}</span>
+              <span style={{ position: "absolute", left: "50%", top: 0, transform: "translateX(-50%)", color: "oklch(0.55 0.15 265)", opacity: 0.9 }}>{g}</span>
+            </span>
+          );
+        }
+        const t = prog(frame, lock, 10);
+        return (
+          <span key={`${ch}-${i}`} style={{ display: "inline-block", whiteSpace: "pre", transform: `translateY(${-14 * (1 - t)}px)` }}>
+            {ch}
+          </span>
+        );
+      })}
+    </span>
+  );
+};

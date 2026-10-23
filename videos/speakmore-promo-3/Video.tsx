@@ -4,23 +4,22 @@ import { clamp } from "../../engine/motion";
 import { assets } from "./assets.gen";
 import { Fog } from "./components/Fog";
 import { CLIMAX_FRAMES, Climax } from "./scenes/Climax";
-import { LANGUAGES_FRAMES, Languages } from "./scenes/Languages";
+import { DICTATE_FRAMES, Dictate } from "./scenes/Dictate";
 import { LOOKUP_FRAMES, Lookup } from "./scenes/Lookup";
 import { ONEAPP_FRAMES, OneApp } from "./scenes/OneApp";
 import { OPENING_FRAMES, Opening } from "./scenes/Opening";
 import { OUTRO_FRAMES, Outro } from "./scenes/Outro";
-import { REPLY_FRAMES, Reply } from "./scenes/Reply";
-import { REVEAL_FRAMES, Reveal } from "./scenes/Reveal";
+import { TRANSLATE_FRAMES, Translate } from "./scenes/Translate";
 import { MUSIC, VIDEO_FRAMES, b, songFrame } from "./theme";
 
-// 成片的时间线：只排场景和配乐。场景按拍起止，相邻两段在转场处叠一点，转场的动作由两段各自做（上一段推穿、下一段迎上来）。
+// 成片的时间线：只排场景和配乐。三项功能平级，各占一段、各有一张一样的开场卡。
+// 场景按拍起止，相邻两段在转场处叠一点，转场的动作由两段各自做（上一段推穿、下一段迎上来）。
 // 配乐按 theme.ts 的 MUSIC 剪拼原曲，每个剪点在小节头上，两边各交叉 XF 帧，免得咔哒一声。
 export const SCENES = [
   { name: "Opening", Scene: Opening, from: 0, frames: OPENING_FRAMES },
-  { name: "Reveal", Scene: Reveal, from: b(24), frames: REVEAL_FRAMES },
-  { name: "Lookup", Scene: Lookup, from: b(32), frames: LOOKUP_FRAMES },
-  { name: "Reply", Scene: Reply, from: b(64), frames: REPLY_FRAMES },
-  { name: "Languages", Scene: Languages, from: b(100), frames: LANGUAGES_FRAMES },
+  { name: "Dictate", Scene: Dictate, from: b(32), frames: DICTATE_FRAMES },
+  { name: "Translate", Scene: Translate, from: b(64), frames: TRANSLATE_FRAMES },
+  { name: "Lookup", Scene: Lookup, from: b(95), frames: LOOKUP_FRAMES },
   { name: "OneApp", Scene: OneApp, from: b(136), frames: ONEAPP_FRAMES },
   { name: "Climax", Scene: Climax, from: b(168), frames: CLIMAX_FRAMES },
   { name: "Outro", Scene: Outro, from: b(188), frames: OUTRO_FRAMES },

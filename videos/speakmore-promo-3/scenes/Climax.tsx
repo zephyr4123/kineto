@@ -1,12 +1,12 @@
 import { AbsoluteFill, Img, staticFile, useCurrentFrame } from "remotion";
 import { easeIn, prog, punch } from "../../../engine/motion";
 import { Collide, Focus, Line, Scramble } from "../components/Type";
-import { Ring, Sub } from "../components/kit";
+import { Ring } from "../components/kit";
 import { assets } from "../assets.gen";
 import { COLOR, DISPLAY, EASE, SANS, b } from "../theme";
 
 // 高潮（第 168–188 拍，过门之后砸下）：三个发光圆环依次点亮——语音输入、语音翻译、划词翻译——每拍脉动一下；
-// 然后 "Open source."（解码）、"Free."（顶一下）、"macOS & Windows."（两边对撞）；接着六张 App 真截图围成一圈转，中间 SpeakMore；
+// 然后 "Open source."（解码）、"Free."（顶一下）、"macOS & Windows."（两边对撞）；接着六张 App 真截图围成一圈转，中间 speakmore；
 // 最后这一整页夜色像翻书一样从右往左翻走，露出底下浅色的雾，进落版。
 const START = 168;
 const at = (n: number) => b(n - START);
@@ -64,11 +64,8 @@ export const Climax: React.FC = () => {
         <Line out={at(177.8)} y={-20}>
           <Collide left="macOS" mid="&" right="Windows" at={at(176)} size={150} />
         </Line>
-        <Line out={at(177.8)} y={110}>
-          <Sub text={frame < at(174) ? "开源" : frame < at(176) ? "免费" : "Mac 与 Windows"} at={at(172.4)} size={36} color={COLOR.nightInk2} />
-        </Line>
 
-        {/* 六张真截图围成一圈转，中间 SpeakMore */}
+        {/* 六张真截图围成一圈转，中间 speakmore */}
         {carouselIn > 0 ? (
           <AbsoluteFill style={{ perspective: 2600, alignItems: "center", justifyContent: "center" }}>
             <div style={{ position: "relative", width: 0, height: 0, transformStyle: "preserve-3d", transform: `translateZ(-900px) rotateX(-8deg) rotateY(${-40 - 110 * spin}deg)` }}>
@@ -100,7 +97,7 @@ export const Climax: React.FC = () => {
         ) : null}
         <Line y={-10}>
           <span style={{ textShadow: `0 0 30px ${COLOR.night}, 0 0 60px ${COLOR.night}, 0 0 120px ${COLOR.night}` }}>
-            <Focus value="SpeakMore" at={at(179)} frames={20} size={200} weight={650} color={COLOR.nightInk} style={{ letterSpacing: "-0.035em" }} />
+            <Focus value="speakmore" at={at(179)} frames={20} size={200} weight={650} color={COLOR.nightInk} style={{ letterSpacing: "-0.04em" }} />
           </span>
         </Line>
       </AbsoluteFill>

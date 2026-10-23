@@ -2,7 +2,7 @@ import { AbsoluteFill, useCurrentFrame } from "remotion";
 import { easeIn, prog } from "../../../engine/motion";
 import { Panel } from "../components/Panel";
 import { Line, Neon, Reel, Scramble } from "../components/Type";
-import { Sub, Tag } from "../components/kit";
+import { Sub } from "../components/kit";
 import { assets } from "../assets.gen";
 import { COLOR, DISPLAY, EASE, SANS, b } from "../theme";
 
@@ -57,7 +57,7 @@ export const OneApp: React.FC = () => {
   return (
     <AbsoluteFill style={{ transform: `scale(${1 - 0.85 * gather})`, opacity: 1 - gather, filter: gather > 0 ? `blur(${12 * gather}px)` : undefined }}>
       {/* One app.：首页深色真截图，推近到顶上那排热键 */}
-      <Panel src={assets.appHomeDark} w={1300} h={(1300 * 1500) / 2160} y={60} rotY={-12} rotX={8} at={0} out={at(141.4)} neon={COLOR.neonIndigo} zoom={{ at: at(138.6), dur: 40, rect: { x: 0.24, y: 0.07, w: 0.56, h: 0.16 } }} />
+      <Panel fadeIn={30} src={assets.appHomeDark} w={1300} h={(1300 * 1500) / 2160} y={60} rotY={-12} rotX={8} at={0} out={at(141.4)} neon={COLOR.neonIndigo} zoom={{ at: at(138.6), dur: 40, rect: { x: 0.24, y: 0.07, w: 0.56, h: 0.16 } }} />
       <Line out={at(141.4)} y={-400}>
         <Neon value="One app." at={at(136.4)} glow={COLOR.neonIndigo} size={110} />
         <span style={{ width: 40 }} />
@@ -85,30 +85,27 @@ export const OneApp: React.FC = () => {
       ) : null}
 
       {/* Rebind any key.：设置 · 快捷键 */}
-      <Panel src={assets.appSetHotkeys} w={1180} h={(1180 * 1500) / 2160} y={90} rotY={12} rotX={7} from="left" at={at(147.8)} out={at(151.6)} neon={COLOR.neonCinnabar} spot={{ at: at(149), rect: { x: 0.26, y: 0.12, w: 0.72, h: 0.3 }, dark: true }} />
+      <Panel fadeIn={30} src={assets.appSetHotkeys} w={1180} h={(1180 * 1500) / 2160} y={90} rotY={12} rotX={7} from="left" at={at(147.8)} out={at(151.6)} neon={COLOR.neonCinnabar} spot={{ at: at(149), rect: { x: 0.26, y: 0.12, w: 0.72, h: 0.3 }, dark: true }} />
       <Line out={at(151.4)} y={-410}>
         <span style={{ fontFamily: DISPLAY, fontSize: 104, fontWeight: 600, letterSpacing: "-0.025em", color: COLOR.nightInk, whiteSpace: "pre", opacity: prog(frame, at(148), 10) }}>Rebind any </span>
         <Reel words={["⌥", "⌘", "F5", "Caps", "key."]} at={at(148.2)} hold={6} size={104} color={COLOR.nightInk} land={COLOR.neonCinnabar} />
       </Line>
-      <Tag text="Hotkeys" sub="快捷键，随意改绑" dark at={at(148.6)} out={at(151.4)} style={{ left: 140, bottom: 90 }} />
 
       {/* Choose any model.：引擎页 */}
-      <Panel src={assets.appEngine} w={1240} h={(1240 * 1500) / 2160} y={90} rotY={-12} rotX={7} from="right" at={at(151.8)} out={at(155.6)} neon={COLOR.neonIndigo} spot={{ at: at(153), rect: { x: 0.2, y: 0.25, w: 0.58, h: 0.55 }, dark: true }} />
+      <Panel fadeIn={30} src={assets.appEngine} w={1240} h={(1240 * 1500) / 2160} y={90} rotY={-12} rotX={7} from="right" at={at(151.8)} out={at(155.6)} neon={COLOR.neonIndigo} spot={{ at: at(153), rect: { x: 0.2, y: 0.25, w: 0.58, h: 0.55 }, dark: true }} />
       <Line out={at(155.4)} y={-410}>
         <span style={{ fontFamily: DISPLAY, fontSize: 104, fontWeight: 600, letterSpacing: "-0.025em", color: COLOR.nightInk, whiteSpace: "pre", opacity: prog(frame, at(152), 10) }}>Choose any </span>
         <Reel words={["Gemini", "GPT", "DeepSeek", "Qwen", "Kimi", "GLM", "model."]} at={at(152.2)} hold={5} size={104} color={COLOR.nightInk} land={COLOR.neonIndigo} />
       </Line>
-      <Tag text="Engine" sub="引擎，模型自由选择" dark at={at(152.6)} out={at(155.4)} style={{ left: 140, bottom: 90 }} />
 
       {/* Presets.：推荐组合，一键启用 */}
-      <Panel src={assets.appPresets} w={1240} h={(1240 * 1500) / 2160} y={90} rotY={10} rotX={7} from="below" at={at(155.8)} out={at(159.6)} neon={COLOR.ochre} spot={{ at: at(157), rect: { x: 0.46, y: 0.08, w: 0.33, h: 0.66 }, dark: true }} />
+      <Panel fadeIn={30} src={assets.appPresets} w={1240} h={(1240 * 1500) / 2160} y={90} rotY={10} rotX={7} from="below" at={at(155.8)} out={at(159.6)} neon={COLOR.ochre} spot={{ at: at(157), rect: { x: 0.46, y: 0.08, w: 0.33, h: 0.66 }, dark: true }} />
       <Line out={at(159.4)} y={-410}>
         <Scramble value="Presets. One click." at={at(156)} frames={20} size={104} color={COLOR.nightInk} />
       </Line>
-      <Tag text="Presets" sub="推荐组合，一键启用" dark at={at(156.6)} out={at(159.4)} style={{ left: 140, bottom: 90 }} />
 
       {/* One key. Ready.：密钥面板，粘进一把密钥 */}
-      <Panel src={assets.appKeys} w={1240} h={(1240 * 1500) / 2160} y={90} rotY={-10} rotX={7} at={at(159.8)} out={at(166.4)} neon={COLOR.neonCinnabar} spot={{ at: at(160.6), rect: { x: 0.52, y: 0.02, w: 0.47, h: 0.96 }, dark: true }} />
+      <Panel fadeIn={30} src={assets.appKeys} w={1240} h={(1240 * 1500) / 2160} y={90} rotY={-10} rotX={7} at={at(159.8)} out={at(166.4)} neon={COLOR.neonCinnabar} spot={{ at: at(160.6), rect: { x: 0.52, y: 0.02, w: 0.47, h: 0.96 }, dark: true }} />
       {frame >= at(161) ? (
         <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
           <div

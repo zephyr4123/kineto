@@ -2,7 +2,7 @@ import { AbsoluteFill, Img, random, staticFile, useCurrentFrame } from "remotion
 import { prog, punch } from "../../../engine/motion";
 import { Shot } from "../components/Shot";
 import { Assemble, Line, Typewriter } from "../components/Type";
-import { AppIcon, Pointer, Ring, Sub } from "../components/kit";
+import { AppIcon, Pointer, Ring } from "../components/kit";
 import { Browser } from "../components/windows";
 import { assets } from "../assets.gen";
 import { COLOR, DISPLAY, EASE, SANS, b } from "../theme";
@@ -10,7 +10,7 @@ import { COLOR, DISPLAY, EASE, SANS, b } from "../theme";
 // 落版（第 188–225 拍，原曲最后一段和结尾）：
 // GitHub 仓库页（真截图，2026-10-23 时 139 星）：指针点 Star，星亮起、139 变 140，一颗大星带着数字弹出来 → "Star on GitHub."
 // → 官网下载区（真截图）：点"下载 Apple 芯片版"，底下弹出下载条 → "Download for free."（字母一个个落下来）
-// → 图标、SpeakMore、口号、两个网址；第 216 拍乐队停、清唱收尾，只留图标在静音里，到片尾。
+// → 图标、speakmore、三项功能、两个网址；第 216 拍乐队停、清唱收尾，只留图标在静音里，到片尾。
 const START = 188;
 const at = (n: number) => b(n - START);
 export const OUTRO_FRAMES = b(37);
@@ -88,9 +88,6 @@ export const Outro: React.FC = () => {
       <Line out={at(196.4)} y={-440}>
         <Assemble value="Star on GitHub." at={at(188.6)} size={96} seed="star" />
       </Line>
-      <Line out={at(196.4)} y={-350}>
-        <Sub text="在 GitHub 点亮一颗星" at={at(189.6)} size={32} />
-      </Line>
 
       {/* 官网：点下载 */}
       <Shot y={60} w={W} h={SITE_H} enter={at(196.6)} leave={at(205.6)} rotY={8} how="whip" kick={dlClick}>
@@ -130,11 +127,8 @@ export const Outro: React.FC = () => {
           })}
         </span>
       </Line>
-      <Line out={at(205.4)} y={-360}>
-        <Sub text="官网免费下载 · macOS 与 Windows" at={at(198.4)} size={32} />
-      </Line>
 
-      {/* 落版：图标、SpeakMore、口号、两个网址；乐队停了以后只留图标 */}
+      {/* 落版：图标、speakmore、三项功能、两个网址；乐队停了以后只留图标 */}
       {frame >= at(205.8) ? (
         <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
           <div style={{ position: "relative", display: "grid", placeItems: "center", transform: `translateY(${-150 + 150 * silence}px) scale(${(0.6 + 0.4 * prog(frame, at(205.8), 20, EASE.outExpo)) * (1 + 0.5 * silence)})`, opacity: prog(frame, at(205.8), 12) }}>
@@ -142,9 +136,15 @@ export const Outro: React.FC = () => {
             <AppIcon size={190} style={{ filter: "drop-shadow(0 24px 40px oklch(0.2 0.05 260 / 0.35))" }} />
           </div>
           <div style={{ position: "absolute", top: 600, width: "100%", display: "flex", flexDirection: "column", alignItems: "center", opacity: 1 - silence }}>
-            <Assemble value="SpeakMore" at={at(206.4)} size={140} weight={650} seed="end" style={{ letterSpacing: "-0.035em" }} />
-            <div style={{ marginTop: 10, fontFamily: DISPLAY, fontSize: 46, fontWeight: 500, letterSpacing: "-0.015em", color: COLOR.ink2, opacity: prog(frame, at(208), 14) }}>Speak it written. Select to translate.</div>
-            <Sub text="口述成文，划词即译" at={at(208.6)} size={30} />
+            <Assemble value="speakmore" at={at(206.4)} size={140} weight={650} seed="end" style={{ letterSpacing: "-0.04em" }} />
+            <div style={{ marginTop: 14, display: "flex", gap: 30, alignItems: "center", fontFamily: DISPLAY, fontSize: 42, fontWeight: 500, letterSpacing: "-0.015em", color: COLOR.ink2 }}>
+              {["Voice input", "Voice translation", "Selection translation"].map((f, i) => (
+                <span key={f} style={{ display: "inline-flex", gap: 30, alignItems: "center", opacity: prog(frame, at(208) + i * 10, 14) }}>
+                  {i > 0 ? <span style={{ width: 7, height: 7, borderRadius: 4, background: COLOR.cinnabar }} /> : null}
+                  {f}
+                </span>
+              ))}
+            </div>
             <div style={{ marginTop: 40, display: "flex", gap: 60, fontFamily: DISPLAY, fontSize: 30, color: COLOR.ink }}>
               <Typewriter value="speakmore.zephyrxiang.com" at={at(210)} frames={22} size={30} weight={500} />
               <Typewriter value="github.com/zephyr4123/speakmore" at={at(211)} frames={26} size={30} weight={500} />

@@ -3,8 +3,10 @@ import { staticFile } from "remotion";
 import { inOutQuint, outExpo, outQuint } from "../../engine/motion";
 import { assets } from "./assets.gen";
 
-// SpeakMore 第三支：淡雾浅底，字是主角，界面斜放成悬浮的玻璃板；镜头一直在动，大转折踩在音乐的段落交界上。
-// 颜色只取印里的靛青和朱砂，朱砂点睛。点题的字英文为主、中文作副行（他说中文当主角太 low），措辞照官网英文版；都不带人称。品牌只写 SpeakMore。
+// SpeakMore 第三支：三位一体（语音输入、语音翻译、划词翻译平级，各介绍一段）。淡雾浅底，字是主角，界面斜放成悬浮的玻璃板，
+// 镜头贴着界面飞；大转折踩在音乐的段落交界上，揭幕用一次粒子。颜色只取印里的靛青和朱砂，朱砂点睛。
+// 点题的字英文为主、中文作副行（他说中文当主角太 low），普通标签不配中文；措辞照官网英文版，都不带人称。
+// 片子里的品牌字一律写小写的 speakmore（他定的，不用驼峰）；真实文件名、界面截图里的保持原样。
 
 export const SANS = "Noto Sans SC";
 export const MONO = "JetBrains Mono";
@@ -31,9 +33,9 @@ export const songFrame = (k: number) => Math.round((SONG_BEAT0 + k * 0.4) * FPS)
 /** 配乐的剪法：片子第 at 拍起，接原曲第 song 拍，放 beats 拍 */
 export const MUSIC = [
   { at: 0, song: 12, beats: 20 }, // 前奏
-  { at: 20, song: 128, beats: 44 }, // 抽空三拍，片子第 24 拍砸下：SpeakMore 出场、划词
-  { at: 64, song: 196, beats: 16 }, // 间奏：看懂只是一半
-  { at: 80, song: 244, beats: 56 }, // 蓄力，片子第 95 拍抽空、96 拍砸下：译文落进输入框
+  { at: 20, song: 128, beats: 44 }, // 抽空三拍（字碎成粒子），片子第 24 拍砸下：粒子拼成 speakmore；第 32 拍起语音输入
+  { at: 64, song: 196, beats: 16 }, // 语音翻译
+  { at: 80, song: 244, beats: 56 }, // 片子第 95 拍抽空、96 拍砸下：划词翻译的键按下
   { at: 136, song: 324, beats: 52 }, // 原曲的过门（暗场），片子第 168 拍砸下：三项功能点亮
   { at: 188, song: 452, beats: 37 }, // 原曲最后一段和结尾：点星、下载、落版，片子第 216 拍乐队停
 ] as const;

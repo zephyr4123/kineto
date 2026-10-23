@@ -13,12 +13,11 @@ const staged = (Scene: React.FC) => {
   );
   return Staged;
 };
-const [opening, reveal, lookup, reply, languages, oneApp, climax, outro] = SCENES;
+const [opening, dictate, translate, lookup, oneApp, climax, outro] = SCENES;
 const OpeningStaged = staged(opening.Scene);
-const RevealStaged = staged(reveal.Scene);
+const DictateStaged = staged(dictate.Scene);
+const TranslateStaged = staged(translate.Scene);
 const LookupStaged = staged(lookup.Scene);
-const ReplyStaged = staged(reply.Scene);
-const LanguagesStaged = staged(languages.Scene);
 const OneAppStaged = staged(oneApp.Scene);
 const ClimaxStaged = staged(climax.Scene);
 const OutroStaged = staged(outro.Scene);
@@ -28,10 +27,9 @@ export const Compositions: React.FC = () => {
     <>
       <Composition id="speakmore-promo-3" component={Video} durationInFrames={VIDEO_FRAMES} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-3-opening" component={OpeningStaged} durationInFrames={opening.frames} fps={FPS} width={W} height={H} />
-      <Composition id="speakmore-promo-3-reveal" component={RevealStaged} durationInFrames={reveal.frames} fps={FPS} width={W} height={H} />
+      <Composition id="speakmore-promo-3-dictate" component={DictateStaged} durationInFrames={dictate.frames} fps={FPS} width={W} height={H} />
+      <Composition id="speakmore-promo-3-translate" component={TranslateStaged} durationInFrames={translate.frames} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-3-lookup" component={LookupStaged} durationInFrames={lookup.frames} fps={FPS} width={W} height={H} />
-      <Composition id="speakmore-promo-3-reply" component={ReplyStaged} durationInFrames={reply.frames} fps={FPS} width={W} height={H} />
-      <Composition id="speakmore-promo-3-languages" component={LanguagesStaged} durationInFrames={languages.frames} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-3-oneapp" component={OneAppStaged} durationInFrames={oneApp.frames} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-3-climax" component={ClimaxStaged} durationInFrames={climax.frames} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-3-outro" component={OutroStaged} durationInFrames={outro.frames} fps={FPS} width={W} height={H} />

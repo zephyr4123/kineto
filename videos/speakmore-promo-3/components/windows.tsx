@@ -317,3 +317,30 @@ export const Mail: React.FC<{ w: number; h: number; frame: number; to: string; s
     </div>
   </Frame>
 );
+
+// ---- 备忘录 ----
+
+/** 一页备忘录：标题、正文。lines 按行给，"1. " 这样开头的行画成编号列表；每行 at 帧落下（不给就一直在） */
+export const Notes: React.FC<{ w: number; h: number; frame: number; title: string; lines: readonly { text: string; at?: number }[]; caret?: boolean }> = ({ w, h, frame, title, lines, caret }) => {
+  const shown = lines.filter((l) => l.at === undefined || frame >= l.at);
+  return (
+    <Frame w={w} h={h} title={title}>
+      <div style={{ position: "absolute", inset: 0, background: "oklch(0.995 0.003 85)", padding: "40px 60px", fontFamily: SANS, color: COLOR.ink }}>
+        <div style={{ fontSize: 40, fontWeight: 700, marginBottom: 26 }}>{title}</div>
+        <div style={{ fontSize: 30, lineHeight: "52px" }}>
+          {shown.map((l, i) => {
+            const t = l.at === undefined ? 1 : Math.min(1, (frame - l.at) / 10);
+            const item = /^(\d+)\. (.*)$/.exec(l.text);
+            return (
+              <div key={`${i}-${l.text}`} style={{ display: "flex", gap: 14, opacity: t, transform: `translateY(${-14 * (1 - t)}px)` }}>
+                {item ? <span style={{ width: 34, textAlign: "right", color: COLOR.cinnabar, fontWeight: 600 }}>{item[1]}.</span> : null}
+                <span>{item ? item[2] : l.text}</span>
+              </div>
+            );
+          })}
+          {caret ? <span style={{ display: "inline-block", width: 2.5, height: 34, marginTop: 6, background: COLOR.ink, opacity: Math.floor(frame / 20) % 2 ? 0.15 : 1 }} /> : null}
+        </div>
+      </div>
+    </Frame>
+  );
+};

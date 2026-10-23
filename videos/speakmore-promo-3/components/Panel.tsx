@@ -32,8 +32,10 @@ export const Panel: React.FC<{
   from?: "far" | "left" | "right" | "below";
   /** 图本身已带窗框和阴影（README 的实拍图）：不再加框 */
   bare?: boolean;
+  /** 透明度按线性在这么多帧里升满（暗场里浅色截图进场太快会让整屏亮度猛跳） */
+  fadeIn?: number;
   children?: React.ReactNode;
-}> = ({ src, w, h, x = 0, y = 0, rotX = 8, rotY = -14, drift = 5, at, out, zoom, spot, radius = 22, neon, from = "far", bare, children }) => {
+}> = ({ src, w, h, x = 0, y = 0, rotX = 8, rotY = -14, drift = 5, at, out, zoom, spot, radius = 22, neon, from = "far", bare, fadeIn, children }) => {
   const frame = useCurrentFrame();
   const a = prog(frame, at, 34);
   const z = out === undefined ? 0 : prog(frame, out, 22, EASE.inOut);
@@ -67,7 +69,7 @@ export const Panel: React.FC<{
         width: w,
         height: h,
         perspective: 2600,
-        opacity: Math.min(1, a * 2) * (1 - z) ** 2,
+        opacity: (fadeIn === undefined ? Math.min(1, a * 2) : prog(frame, at, fadeIn, (t) => t)) * (1 - z) ** 2,
         filter: blur > 0.05 ? `blur(${blur}px)` : undefined,
       }}
     >
