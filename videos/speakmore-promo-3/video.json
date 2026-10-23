@@ -1,0 +1,14 @@
+{
+  "id": "speakmore-promo-3",
+  "title": "SpeakMore 宣传片 · 第三支",
+  "description": "",
+  "status": "draft",
+  "tags": [],
+  "createdAt": "2026-10-23T07:55:22.129Z",
+  "updatedAt": "2026-10-23T08:07:38.264Z",
+  "assets": {
+    "fontSans": "sha256:a3041811a78c361b1de50f953c805e0244951c21c5bd412f7232ef0d899af0da",
+    "fontMono": "sha256:48715a42ec242c21e9f02692891e147d022299a52e48d5e413e1a942193ffeda",
+    "song": "sha256:7235ee0f8ea3001094ab609d526614c669be92712274b14e89bf2cd538417ec2"
+  }
+}
