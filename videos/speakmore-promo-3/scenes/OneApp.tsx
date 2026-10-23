@@ -2,6 +2,7 @@ import { AbsoluteFill, useCurrentFrame } from "remotion";
 import { easeIn, prog } from "../../../engine/motion";
 import { Panel } from "../components/Panel";
 import { Gallery } from "../components/Gallery";
+import { NeonKey, TRIO } from "../components/NeonKey";
 import { Line, Neon, Reel } from "../components/Type";
 import { Sub } from "../components/kit";
 import { assets } from "../assets.gen";
@@ -14,41 +15,6 @@ import { COLOR, DISPLAY, EASE, SANS, b } from "../theme";
 const START = 192;
 const at = (n: number) => b(n - START);
 export const ONEAPP_FRAMES = b(32);
-
-const ROWS = [
-  { keys: ["右 ⌥"], name: "Voice input", zh: "语音输入", color: COLOR.neonCinnabar },
-  { keys: ["右 ⌥", "空格"], name: "Voice translation", zh: "语音翻译", color: COLOR.neonIndigo },
-  { keys: ["右 ⌥", "回车"], name: "Selection translation", zh: "划词翻译", color: COLOR.ochre },
-] as const;
-
-const NeonKey: React.FC<{ label: string; color: string; press: number }> = ({ label, color, press }) => {
-  const frame = useCurrentFrame();
-  const t = frame - press;
-  const down = t >= 0 && t < 10 ? Math.sin((t / 10) * Math.PI) : 0;
-  const lit = prog(frame, press, 8);
-  return (
-    <span
-      style={{
-        height: 96,
-        minWidth: 96,
-        padding: "0 30px",
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        borderRadius: 24,
-        background: "oklch(0.2 0.03 275)",
-        color: COLOR.nightInk,
-        fontFamily: SANS,
-        fontSize: 36,
-        fontWeight: 500,
-        transform: `translateY(${6 * down}px)`,
-        boxShadow: `0 0 0 1.5px color-mix(in oklab, ${color} ${30 + 70 * lit}%, transparent), 0 0 ${10 + 40 * lit * (1 - down * 0.3)}px color-mix(in oklab, ${color} ${50 * lit}%, transparent), 0 ${8 - 6 * down}px 0 oklch(0.12 0.02 275)`,
-      }}
-    >
-      {label}
-    </span>
-  );
-};
 
 export const OneApp: React.FC = () => {
   const frame = useCurrentFrame();
@@ -69,7 +35,7 @@ export const OneApp: React.FC = () => {
       {/* 三行霓虹键帽，每拍按下一行 */}
       {frame >= at(196.4) && frame < at(200.6) ? (
         <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 40, opacity: 1 - prog(frame, at(199.8), 12) }}>
-          {ROWS.map((row, i) => {
+          {TRIO.map((row, i) => {
             const t = prog(frame, at(196.4) + i * 8, 18, EASE.outExpo);
             return (
               <div key={row.name} style={{ display: "flex", alignItems: "center", gap: 18, width: 1460, whiteSpace: "nowrap", opacity: t, transform: `translateX(${-200 * (1 - t)}px)`, filter: t < 1 ? `blur(${8 * (1 - t)}px)` : undefined }}>
