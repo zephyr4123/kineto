@@ -4,7 +4,7 @@ import { Glyph } from "../../../engine/Glyph";
 import { clamp } from "../../../engine/motion";
 import { Bar } from "../../../engine/speakmore/Bar";
 import { Sfx } from "../components/Fx";
-import { MacWindow, ScreenCard, WinDesktop, WinWindow, WindowsMark } from "../components/Screens";
+import { MacWindow, ScreenCard, WinDesktop, WinWindow, WindowsMark } from "../../../engine/speakmore/Screens";
 import { Desktop } from "../components/Stage";
 import { UI } from "../icons";
 import { prog, show } from "../motion";

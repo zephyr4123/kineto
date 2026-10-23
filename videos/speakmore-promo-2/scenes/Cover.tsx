@@ -3,7 +3,7 @@ import { Glyph } from "../../../engine/Glyph";
 import { Seal } from "../../../engine/speakmore/Seal";
 import { assets } from "../assets.gen";
 import { Tile } from "../components/Brand";
-import { WindowsMark, WinWallpaper } from "../components/Screens";
+import { WindowsMark, WinWallpaper } from "../../../engine/speakmore/Screens";
 import { Desktop } from "../components/Stage";
 import { UI } from "../icons";
 import { COLOR, SANS, SHADOW } from "../theme";

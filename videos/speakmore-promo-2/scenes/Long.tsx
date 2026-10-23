@@ -3,7 +3,7 @@ import { Counter } from "../../../engine/Counter";
 import { clamp } from "../../../engine/motion";
 import { Bar } from "../../../engine/speakmore/Bar";
 import { Sfx, swellBefore } from "../components/Fx";
-import { MacWindow } from "../components/Screens";
+import { MacWindow } from "../../../engine/speakmore/Screens";
 import { deepCamera } from "../components/Stage";
 import { prog, punch, show } from "../motion";
 import { COLOR, EASE, SANS, SHADOW, b } from "../theme";

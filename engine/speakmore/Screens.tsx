@@ -1,10 +1,15 @@
 import { AbsoluteFill } from "remotion";
-import { Glyph } from "../../../engine/Glyph";
-import { Seal } from "../../../engine/speakmore/Seal";
-import { UI } from "../icons";
-import { COLOR, SANS } from "../theme";
+import { Glyph } from "../Glyph";
+import { UI } from "./icons";
+import { Seal } from "./Seal";
 
-// 两个系统的桌面和窗口。Windows 那一块全部用代码画：壁纸是自己调的极光色块（不照搬系统壁纸），
+// 文字的颜色：任务栏上是浅色，窗口里是深色（取自第二支的 theme，两支一样）
+const LIGHT_INK = "oklch(0.97 0.004 255)";
+const DARK_INK = "oklch(0.21 0.02 255)";
+/** 两支片子的界面字都是思源黑体 */
+const SANS = "Noto Sans SC";
+
+// SpeakMore 宣传片里两个系统的桌面和窗口（第二、三支共用）。Windows 那一块全部用代码画：壁纸是自己调的极光色块（不照搬系统壁纸），
 // 任务栏照 Windows 11 的布局（图标居中、右边托盘和时间），图标只用通用的线性图标和 SpeakMore 自己的印。
 
 const TASKBAR = 64;
@@ -43,7 +48,7 @@ const Taskbar: React.FC<{ running: boolean }> = ({ running }) => (
       alignItems: "center",
       justifyContent: "center",
       gap: 10,
-      color: COLOR.ink,
+      color: LIGHT_INK,
     }}
   >
     <TaskIcon>
@@ -120,7 +125,7 @@ export const WinWindow: React.FC<{ title: string; width: number; height: number;
       ...style,
     }}
   >
-    <div style={{ height: 46, display: "flex", alignItems: "center", gap: 12, padding: "0 0 0 18px", background: "oklch(0.95 0.008 255)", color: COLOR.paperInk, fontSize: 17 }}>
+    <div style={{ height: 46, display: "flex", alignItems: "center", gap: 12, padding: "0 0 0 18px", background: "oklch(0.95 0.008 255)", color: DARK_INK, fontSize: 17 }}>
       <Glyph icon={UI.text} size={20} style={{ color: "oklch(0.55 0.12 250)" }} />
       <span style={{ flex: 1 }}>{title}</span>
       {[UI.minimize, UI.maximize, UI.close].map((icon, i) => (

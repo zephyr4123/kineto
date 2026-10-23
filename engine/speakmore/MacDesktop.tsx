@@ -18,6 +18,9 @@ export const fromShot = (l: Layout, x: number, y: number) => [l.x + x * l.k, l.y
 /** 程序坞的外框（截图像素）：桌面退后时它不跟着虚 */
 export type Rect = { left: number; top: number; right: number; bottom: number };
 
+/** 10-17 那张真屏幕截图（海上日落，素材名 desktop）里程序坞的外框；第二、三支都用这张 */
+export const SUNSET_DOCK: Rect = { left: 310, top: 1824, right: 2712, bottom: 1955 };
+
 const MENUS = ["文件", "编辑", "显示", "前往", "窗口", "帮助"];
 
 /**
