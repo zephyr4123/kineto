@@ -6,7 +6,7 @@ import { Keycaps } from "../components/Keycaps";
 import { LookupCard } from "../components/LookupCard";
 import { Panel } from "../components/Panel";
 import { Spoken } from "../components/Spoken";
-import { CARD_ANCHOR, IBeam, SELECT_TOTAL, TERM_H, TERM_W, Terminal, selectionHead } from "../components/Terminal";
+import { IBeam, MAN_PUSH, Terminal, cardAnchor, selectTotal, selectionHead, termSize } from "../components/Terminal";
 import { Focus, Line, Reel, Typewriter } from "../components/Type";
 import { Sub, Tag } from "../components/kit";
 import { Browser, type Message, SelLines, Workspace, selHead, totalChars } from "../components/windows";
@@ -41,6 +41,8 @@ const PDF_VIEW: ViewKeys = [
   [at(129.8), { fx: 0.48, fy: 0.5, s: 0.9, rx: 14, ry: 8, rz: 1 }],
   [at(132.4), { fx: 0.52, fy: 0.45, s: 1.0, rx: 10, ry: -4 }],
 ];
+const TERM = termSize(MAN_PUSH);
+const TERM_CARD = cardAnchor(MAN_PUSH);
 const TERM_VIEW: ViewKeys = [
   [at(132.2), { fx: 0.3, fy: 0.3, s: 1.4, rx: 16, ry: 18, rz: 1 }],
   [at(134.6), { fx: 0.55, fy: 0.42, s: 1.3, rx: 12, ry: 12 }],
@@ -64,8 +66,8 @@ export const Lookup: React.FC = () => {
   const webHead = selHead(WEB_LINES, webSel, 30 * 0.53, 48);
   const webBeam = prog(frame, at(122.9), 5) * (1 - prog(frame, at(125), 5));
   // ---- terminal ----
-  const termSel = Math.round(prog(frame, at(132.8), b(1.8), EASE.inOut) * SELECT_TOTAL);
-  const termHead = selectionHead(termSel);
+  const termSel = Math.round(prog(frame, at(132.8), b(1.8), EASE.inOut) * selectTotal(MAN_PUSH));
+  const termHead = selectionHead(MAN_PUSH, termSel);
   const termBeam = prog(frame, at(132.5), 6) * (1 - prog(frame, at(135), 6));
   // ---- 组合：划词看懂，语音回复 ----
   const satoSel = Math.round(prog(frame, at(139.4), b(1.2), EASE.inOut) * totalChars(SATO));
@@ -111,10 +113,10 @@ export const Lookup: React.FC = () => {
       <Tag text="PDF" at={at(128.8)} out={at(132)} style={{ left: 140, top: 96 }} />
 
       {/* terminal：拖选、卡片 */}
-      <Glass w={TERM_W} h={TERM_H} keys={TERM_VIEW} at={at(132.2)} out={at(138.4)} radius={18} fadeIn={12}>
-        <Terminal selected={termSel}>
+      <Glass w={TERM.w} h={TERM.h} keys={TERM_VIEW} at={at(132.2)} out={at(138.4)} radius={18} fadeIn={12}>
+        <Terminal page={MAN_PUSH} selected={termSel}>
           {termBeam > 0 ? <IBeam x={termHead.x} y={termHead.y} opacity={termBeam} /> : null}
-          <div style={{ position: "absolute", left: CARD_ANCHOR.x, top: CARD_ANCHOR.y }}>
+          <div style={{ position: "absolute", left: TERM_CARD.x, top: TERM_CARD.y }}>
             <LookupCard at={at(135.2)} textAt={at(135.2) + 18} language="简体中文" text={TERM_TEXT} />
           </div>
         </Terminal>

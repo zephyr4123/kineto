@@ -82,7 +82,8 @@ export const LookupCard: React.FC<{
           }}
         >
           {[...text].map((ch, i) => (
-            <span key={i} style={{ display: "inline-block", ...charStyle?.(i) }}>
+            // 每个字是 inline-block，空格要 pre 才占宽度
+            <span key={i} style={{ display: "inline-block", whiteSpace: "pre", ...charStyle?.(i) }}>
               {ch}
             </span>
           ))}
