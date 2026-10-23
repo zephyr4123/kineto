@@ -2,7 +2,7 @@ import { AbsoluteFill, Img, random, staticFile, useCurrentFrame } from "remotion
 import { prog, punch } from "../../../engine/motion";
 import { Shot } from "../components/Shot";
 import { Assemble, Line, Typewriter } from "../components/Type";
-import { AppIcon, Pointer, Ring, Version, rise } from "../components/kit";
+import { AppIcon, Pointer, Version, rise } from "../components/kit";
 import { Browser } from "../components/windows";
 import { assets } from "../assets.gen";
 import { COLOR, DISPLAY, EASE, SANS, b } from "../theme";
@@ -132,7 +132,6 @@ export const Outro: React.FC = () => {
       {frame >= at(261.8) ? (
         <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
           <div style={{ position: "relative", display: "grid", placeItems: "center", transform: `translateY(${-150 + 150 * silence}px) scale(${(0.6 + 0.4 * prog(frame, at(261.8), 20, EASE.outExpo)) * (1 + 0.5 * silence)})`, opacity: prog(frame, at(261.8), 12) }}>
-            <Ring size={260} color={COLOR.cinnabar} at={at(262)} period={b(2)} style={{ opacity: 0.6 * (1 - silence) }} />
             <AppIcon size={190} style={{ filter: "drop-shadow(0 24px 40px oklch(0.2 0.05 260 / 0.35))" }} />
           </div>
           <div style={{ position: "absolute", top: 600, width: "100%", display: "flex", flexDirection: "column", alignItems: "center", opacity: 1 - silence }}>

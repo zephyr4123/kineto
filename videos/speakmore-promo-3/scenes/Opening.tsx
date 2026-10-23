@@ -4,7 +4,7 @@ import { Glass, Halo, Screen, type ViewKeys } from "../components/Glass";
 import { Particles, type ParticleTiming, type TextLine, useTextBounds } from "../components/Particles";
 import { IBeam } from "../components/Terminal";
 import { Line, Polyglot, Wave } from "../components/Type";
-import { AppIcon, Ring, Version, rise } from "../components/kit";
+import { AppIcon, Version, rise } from "../components/kit";
 import { assets } from "../assets.gen";
 import { COLOR, DISPLAY, EASE, b } from "../theme";
 
@@ -123,7 +123,6 @@ export const Opening: React.FC = () => {
           </AbsoluteFill>
           <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", transform: "translateY(-260px)" }}>
             <div style={{ position: "relative", display: "grid", placeItems: "center", opacity: prog(frame, MARK_IN - 4, 10), transform: `scale(${0.4 + 0.6 * prog(frame, MARK_IN - 4, 26, EASE.outExpo)})` }}>
-              <Ring size={196} color={COLOR.cinnabar} at={MARK_IN} period={b(2)} style={{ opacity: 0.55 }} />
               <AppIcon size={150} style={{ filter: "drop-shadow(0 20px 36px oklch(0.2 0.05 260 / 0.3))" }} />
             </div>
           </AbsoluteFill>

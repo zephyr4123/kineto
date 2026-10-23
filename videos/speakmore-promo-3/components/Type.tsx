@@ -56,9 +56,11 @@ export const Reel: React.FC<Base & { words: readonly string[]; at: number; hold?
   const t = Math.min(1, (frame - at) / (hold * steps + 10));
   const eased = EASE.outQuint(t);
   const pos = eased * steps;
-  const widest = Math.max(...words.map((w) => w.length));
+  // 盒子里放一份看不见的最后那个词：宽度、基线都照落定后的样子，整行居中和同行别的字对齐都按它算。
+  // 不能用 overflow: hidden 裁（行内块一裁，基线就掉到盒底，字会被抬高），改用 clip-path 只裁上下、左右放开
   return (
-    <span style={{ position: "relative", display: "inline-block", height: lineH, overflow: "hidden", verticalAlign: "bottom", minWidth: `${widest * 0.56}em`, ...text(size, weight, color), ...style }}>
+    <span style={{ position: "relative", display: "inline-block", clipPath: "inset(-0.08em -3000px -0.12em -3000px)", ...text(size, weight, color), ...style }}>
+      <span style={{ visibility: "hidden" }}>{words[steps]}</span>
       {words.map((w, i) => {
         const d = i - pos;
         if (Math.abs(d) > 1.2) return null;
@@ -70,7 +72,6 @@ export const Reel: React.FC<Base & { words: readonly string[]; at: number; hold?
               position: "absolute",
               left: 0,
               top: 0,
-              lineHeight: `${lineH}px`,
               transform: `translateY(${d * lineH}px)`,
               opacity: 1 - Math.min(1, Math.abs(d)) * 0.7,
               filter: `blur(${Math.abs(d) * 6}px)`,

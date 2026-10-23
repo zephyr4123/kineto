@@ -53,7 +53,7 @@ const NeonKey: React.FC<{ label: string; color: string; press: number }> = ({ la
 export const OneApp: React.FC = () => {
   const frame = useCurrentFrame();
   const gather = prog(frame, at(214), b(2), easeIn);
-  const keyTyped = Math.floor(prog(frame, at(208.6), 26, (t) => t) * 24);
+  const keyTyped = Math.floor(prog(frame, at(208.6), 26, (t) => t) * 20);
 
   return (
     <AbsoluteFill style={{ transform: `scale(${1 - 0.85 * gather})`, opacity: 1 - gather, filter: gather > 0 ? `blur(${12 * gather}px)` : undefined }}>
@@ -101,13 +101,13 @@ export const OneApp: React.FC = () => {
       <Gallery at={at(196.2)} first={at(198.4)} step={16} out={at(206.6)} />
 
       {/* One key  Ready：密钥面板，粘进一把密钥 */}
-      <Panel fadeIn={30} src={assets.appKeys} w={1240} h={(1240 * 1500) / 2160} y={90} rotY={-10} rotX={7} at={at(206.8)} out={at(214.4)} neon={COLOR.neonCinnabar} spot={{ at: at(207.6), rect: { x: 0.52, y: 0.02, w: 0.47, h: 0.96 }, dark: true }} />
+      <Panel fadeIn={30} src={assets.appKeys} w={1180} h={(1180 * 1500) / 2160} y={170} rotY={-10} rotX={7} at={at(206.8)} out={at(214.4)} neon={COLOR.neonCinnabar} spot={{ at: at(207.6), rect: { x: 0.52, y: 0.02, w: 0.47, h: 0.96 }, dark: true }} />
       {frame >= at(208) ? (
         <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
           <div
             style={{
-              marginTop: 330,
-              width: 760,
+              marginTop: 400,
+              width: 900,
               padding: "26px 34px",
               borderRadius: 26,
               background: "oklch(0.2 0.03 275 / 0.92)",
@@ -123,7 +123,7 @@ export const OneApp: React.FC = () => {
           >
             <span style={{ fontSize: 26, color: COLOR.nightInk2, whiteSpace: "nowrap" }}>DeepSeek</span>
             <span style={{ flex: 1, fontSize: 34, letterSpacing: "0.12em", fontFamily: DISPLAY }}>{"•".repeat(keyTyped)}</span>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 10, fontSize: 26, fontWeight: 600, color: COLOR.green, opacity: prog(frame, at(211), 8) }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 10, fontSize: 26, fontWeight: 600, whiteSpace: "nowrap", flex: "none", color: COLOR.green, opacity: prog(frame, at(211), 8) }}>
               <svg width={34} height={34} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 6L9 17l-5-5" strokeDasharray={24} strokeDashoffset={24 * (1 - prog(frame, at(211), 14))} />
               </svg>
