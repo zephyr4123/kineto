@@ -4,7 +4,9 @@ import { Chapter } from "../components/Chapter";
 import { Glass, Halo, Screen, type ViewKeys } from "../components/Glass";
 import { Keycaps } from "../components/Keycaps";
 import { Said, type SaidPart } from "../components/Said";
-import { Line, Typewriter } from "../components/Type";
+import { Focus, Line, Typewriter } from "../components/Type";
+import { Hardware } from "../components/Hardware";
+import { Modes } from "../components/Modes";
 import { Sub } from "../components/kit";
 import { Chat, Mail, type Message, Notes, Workspace } from "../components/windows";
 import { assets } from "../assets.gen";
@@ -12,11 +14,12 @@ import { COLOR, DISPLAY, EASE, b } from "../theme";
 
 // 语音输入（第 32–64 拍）：开场卡（右⌥）→ 镜头贴着团队频道的空输入框，说一句带语气词和改口的话，再按一次热键，
 // 浅灰的几段炸散、空隙合拢，成句落进输入框，镜头拉远看整窗 → 口述三件事，备忘录里自动分条 →
-// 同一句落进邮件、聊天、备忘录（光标在哪就写到哪）→ 引擎页真截图：三种识别方式，离线方式完全在本机。
+// 同一句落进邮件、聊天、备忘录（光标在哪就写到哪）→ 三种识别方式并排、依次点亮（原生直出、转写加润色、本地直接跑，各讲特色），
+// 引擎页真截图上三行一一亮过 → 硬件：处理器直接运行、显卡自动加速，各家标志依次亮起。
 // 成品都是 App 的真实输出（混合方式整理那一步的 dictate 任务，DeepSeek V4.1 Flash，2026-10-23）。
 const START = 32;
 const at = (n: number) => b(n - START);
-export const DICTATE_FRAMES = b(32);
+export const DICTATE_FRAMES = b(56);
 
 const MEET: readonly SaidPart[] = [
   { text: "嗯，那个，", cut: true },
@@ -53,12 +56,12 @@ const NOTES_VIEW: ViewKeys = [
 ];
 const ENGINE = { w: 2160, h: 1500 };
 const ENGINE_VIEW: ViewKeys = [
-  [at(55.8), { fx: 0.28, fy: 0.75, s: 0.62, rx: 44, ry: 20 }],
-  [at(57.4), { fx: 0.3, fy: 0.58, s: 1.3, rx: 16, ry: 10, rz: 1 }],
-  [at(59.8), { fx: 0.58, fy: 0.5, s: 1.1, rx: 14, ry: -4 }],
-  [at(61.8), { fx: 0.8, fy: 0.46, s: 1.35, rx: 12, ry: -10, rz: -1 }],
-  [at(63.6), { fx: 0.85, fy: 0.46, s: 2.6, rx: 6, ry: -4 }],
+  [at(76.2), { fx: 0.3, fy: 0.75, s: 0.7, rx: 40, ry: 18 }],
+  [at(77.6), { fx: 0.27, fy: 0.58, s: 1.35, rx: 16, ry: 10, rz: 1 }],
+  [at(80.2), { fx: 0.3, fy: 0.56, s: 1.6, rx: 10, ry: 4 }],
 ];
+/** 硬件：第 n 家亮起的帧（每半拍一家） */
+const hwLit = (n: number) => at(81.2) + n * b(0.5);
 
 const HISTORY: Message[] = [{ from: "them", name: "林晓", lines: ["新版的数据看板做好了，大家看一下。"], at: -100 }];
 
@@ -80,7 +83,7 @@ export const Dictate: React.FC = () => {
 
   return (
     <AbsoluteFill>
-      <Chapter keys={["右 ⌥"]} name="Voice input." zh="语音输入" at={0} press={at(33)} out={at(34.4)} />
+      <Chapter keys={["右 ⌥"]} name="Voice input" zh="语音输入" at={0} press={at(33)} out={at(34.4)} />
 
       {/* 团队频道：镜头贴着空输入框 → 成句落下、发出 → 拉远 */}
       <Glass w={WS.w} h={WS.h} keys={WS_VIEW} at={at(34.4)} out={at(44.4)} y={140} fadeIn={12}>
@@ -90,11 +93,11 @@ export const Dictate: React.FC = () => {
         ) : null}
       </Glass>
       <Line out={at(41.6)} y={-440}>
-        <Typewriter value="Speak naturally." at={at(34.8)} frames={20} size={64} />
+        <Typewriter value="Speak naturally" at={at(34.8)} frames={20} size={64} />
       </Line>
       <Said parts={MEET} at={at(35)} speak={at(35.6)} stop={at(40)} burst={at(40.6)} land={at(41.8)} seed="meet" />
       <Line out={at(44.2)} y={-440}>
-        <Typewriter value="Read polished text." at={at(42)} frames={22} size={64} />
+        <Typewriter value="Read polished text" at={at(42)} frames={22} size={64} />
       </Line>
 
       {/* 口述三件事 → 备忘录里自动分条 */}
@@ -104,7 +107,7 @@ export const Dictate: React.FC = () => {
       <Said parts={LIST} at={at(44.6)} speak={at(45)} stop={at(47.2)} burst={at(47.6)} land={at(48.2)} size={40} seed="list" />
       <Line out={at(50.2)} y={-440}>
         <span style={{ display: "inline-flex", gap: 0 }}>
-          {["Lists, ", "numbered."].map((w, i) => (
+          {["Spoken lists ", "numbered"].map((w, i) => (
             <span key={w} style={{ fontFamily: DISPLAY, fontSize: 64, fontWeight: 600, letterSpacing: "-0.025em", whiteSpace: "pre", color: i ? COLOR.cinnabar : COLOR.ink, opacity: prog(frame, at(48.4) + i * 10, 12), transform: `translateY(${-30 * (1 - prog(frame, at(48.4) + i * 10, 16))}px)` }}>
               {w}
             </span>
@@ -138,25 +141,33 @@ export const Dictate: React.FC = () => {
         </AbsoluteFill>
       ) : null}
       <Line out={at(55.4)} y={-450}>
-        <Typewriter value="Wherever the cursor is." at={at(50.6)} frames={24} size={64} />
+        <Typewriter value="Wherever the cursor is" at={at(50.6)} frames={24} size={64} />
       </Line>
 
-      {/* 引擎页真截图：三种识别方式，离线方式完全在本机 */}
-      <Glass w={ENGINE.w} h={ENGINE.h} keys={ENGINE_VIEW} at={at(55.8)} out={at(63)} fadeOut={18} y={60}>
+      {/* 三种识别方式：三列平级，依次点亮，最后一起亮 */}
+      <Line out={at(79.8)} y={-440}>
+        <Focus value="Three modes" at={at(55.6)} size={72} />
+      </Line>
+      <Line out={at(79.8)} y={-365}>
+        <Sub text="三种识别方式　随时切换" at={at(56.2)} size={30} />
+      </Line>
+      <Modes at={at(55.8)} lights={[at(58), at(63.4), at(68.8)]} all={at(74.2)} out={at(76.2)} />
+      {/* 引擎页真截图：识别方式那一栏三行依次亮过 */}
+      <Glass w={ENGINE.w} h={ENGINE.h} keys={ENGINE_VIEW} at={at(76.2)} out={at(79.8)} fadeOut={14} y={70}>
         <Screen src={assets.appEngine} w={ENGINE.w} h={ENGINE.h} />
-        <Halo x={484} y={698} w={322} h={101} at={at(57.6)} out={at(58.6)} color="oklch(0.55 0.12 260)" />
-        <Halo x={484} y={954} w={322} h={104} at={at(58)} out={at(58.6)} color="oklch(0.55 0.12 260)" />
-        <Halo x={484} y={828} w={322} h={99} at={at(58.6)} />
-        <Halo x={1350} y={648} w={286} h={95} at={at(60.4)} />
-        <Halo x={1730} y={641} w={378} h={97} at={at(61.2)} />
+        <Halo x={484} y={698} w={322} h={101} at={at(77.4)} />
+        <Halo x={484} y={954} w={322} h={104} at={at(78)} />
+        <Halo x={484} y={828} w={322} h={99} at={at(78.6)} />
       </Glass>
-      <Line out={at(62.8)} y={-450}>
-        <span style={{ fontFamily: DISPLAY, fontSize: 64, fontWeight: 600, letterSpacing: "-0.025em", whiteSpace: "pre", color: COLOR.ink, opacity: prog(frame, at(56.6), 14), filter: `blur(${10 * (1 - prog(frame, at(56.6), 18))}px)` }}>Three modes. </span>
-        <span style={{ fontFamily: DISPLAY, fontSize: 64, fontWeight: 600, letterSpacing: "-0.025em", whiteSpace: "pre", color: COLOR.cinnabar, opacity: prog(frame, at(58.6), 14), filter: `blur(${10 * (1 - prog(frame, at(58.6), 18))}px)` }}>One fully offline.</span>
+
+      {/* 硬件：不挑显卡、不挑硬件 */}
+      <Line out={at(87.4)} y={-430}>
+        <Focus value="No GPU required" at={at(80.2)} size={72} />
       </Line>
-      <Line out={at(62.8)} y={-370}>
-        <Sub text="离线方式完全在本机运行，不需要密钥" at={at(59.2)} size={30} />
+      <Line out={at(87.4)} y={-355}>
+        <Sub text="不挑显卡　不挑硬件" at={at(80.8)} size={30} />
       </Line>
+      <Hardware at={at(80.4)} lit={hwLit} out={at(87.4)} />
     </AbsoluteFill>
   );
 };

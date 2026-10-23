@@ -5,7 +5,7 @@
   "status": "draft",
   "tags": [],
   "createdAt": "2026-10-23T07:55:22.129Z",
-  "updatedAt": "2026-10-23T08:32:08.944Z",
+  "updatedAt": "2026-10-23T09:36:03.531Z",
   "assets": {
     "fontSans": "sha256:a3041811a78c361b1de50f953c805e0244951c21c5bd412f7232ef0d899af0da",
     "fontMono": "sha256:48715a42ec242c21e9f02692891e147d022299a52e48d5e413e1a942193ffeda",
@@ -27,6 +27,27 @@
     "photoPdf": "sha256:4e3446a2e4a0ba6cd718227b81826415ce5e892edde7f087b8ef46d6380b0f86",
     "photoTerminal": "sha256:29430237eb45b657b41464f482e0b0a6f41987904064879b514664a2c9acf0d0",
     "photoApp": "sha256:dc49457568efd06dc0563b935814c856d869c2a05ce10b4d21930ba6e7265a7e",
-    "fontLatin": "sha256:29160a80ff49ddcab2c97711247e08b1fab27a484a329ce8b813d820dc559031"
+    "fontLatin": "sha256:29160a80ff49ddcab2c97711247e08b1fab27a484a329ce8b813d820dc559031",
+    "desktop": "sha256:991cdde9d25dbc94ff9811c9d4ed6fc53a880e4986a27fee0c3562b7da97afdf",
+    "logoGemini": "sha256:8ab0a9bafec11f7e69bcb9fc4ffd8f1bc927d1ddcbbb6ff36dee5ae8b5a9d602",
+    "logoOpenai": "sha256:a595df6b423920c67a7f8f73c063e4bfb72d415948097b6cac063a2366bb5186",
+    "logoQwen": "sha256:77f5768c66d08ce1d3d14e73373975c1bc0454be88c81523ddd0ffd7e2974029",
+    "logoBailian": "sha256:5cc26dc961b2ecd0912f4e023c8ce745bcc52ac45b1c4baeadd7201f6b60de25",
+    "logoDeepseek": "sha256:deba5f98a5c1796e20fcac3149bcd7eb8a32f0bdd04d048819400b1f28bd1439",
+    "logoKimi": "sha256:74a7292aeb0220445d14c5d397d75760e2e8c6ed6a9e5fe4f3023471bf62a9ff",
+    "logoZhipu": "sha256:8174e65ff71647d5c705c920c953a82bd723d9e3e42887bdd4ffc9dfe51207a0",
+    "logoMinimax": "sha256:7f7187fa6d9b341ac5f22f6c5a970523afb439dc45566d64eb4f4b9b604d6b01",
+    "logoAlibabaCloud": "sha256:73ea97baf919edb3d888a77cd45b21574e190a80124a59e199ea6953a28a959c",
+    "logoOllama": "sha256:3a268218fb2e6e81fa31df70f70b51331625047794db81db21d35359428fae7a",
+    "logoLmstudio": "sha256:4a575e8382b52ce742ac5d21d361a7d2a08cea7c12390ee1bbb755ef7d3cc25b",
+    "logoNvidia": "sha256:8c941e4eb8b782eccaaea1240c059d20be33ab8eda28d7c9ed9b53ac802fe683",
+    "logoIntel": "sha256:ff84925ecb1e7d1aa27617aa78a68f840b10e5f1059a165bef37328b4aa088c8",
+    "logoAmd": "sha256:511b0d65b89e45eee26958a9ffdeaebccc876d8b7a183d948c6cbcfd6e95048b",
+    "logoApple": "sha256:319c9d9732be88d8b9431c13bdfb2db25fecb30b11616e2f40edfb0a30ae9921",
+    "logoWindows": "sha256:d90dbd07f60867de6388b3491ac39dec5fe20e2ee4a2b6fa12beec42f1e0f774",
+    "onbFeatures": "sha256:1f25940bb1b1dd0f32c068dd9a3c750d86362f4f332f1176af6110e778dac3d1",
+    "onbKeys": "sha256:9bdf50d342b13d24a2d57e658a4ea5b9ae14ec55c1b5aba100e5097bfa79871d",
+    "onbPermissions": "sha256:e74eee4b4bb0e4e63a73ac19877bd98002f7c466578ccf996cec62afba094575",
+    "onbEngine": "sha256:0c1253262e9a8781ce54ba3ae48ade7f0eff3e524a5bd88edfee389934f81c2e"
   }
 }

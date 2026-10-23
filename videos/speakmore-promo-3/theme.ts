@@ -6,6 +6,7 @@ import { assets } from "./assets.gen";
 // SpeakMore 第三支：三位一体（语音输入、语音翻译、划词翻译平级，各介绍一段）。淡雾浅底，字是主角，界面斜放成悬浮的玻璃板，
 // 镜头贴着界面飞；大转折踩在音乐的段落交界上，揭幕用一次粒子。颜色只取印里的靛青和朱砂，朱砂点睛。
 // 点题的字英文为主、中文作副行（他说中文当主角太 low），普通标签不配中文；措辞照官网英文版，都不带人称。
+// 字幕一律不带句号、逗号这类点号：两句就换行或一前一后接上；中文副行里分句用全角空格。开场三个主角词全大写。
 // 片子里的品牌字一律写小写的 speakmore（他定的，不用驼峰）；真实文件名、界面截图里的保持原样。
 
 export const SANS = "Noto Sans SC";
@@ -22,7 +23,7 @@ export const H = 1080;
 export const FPS = 60;
 
 // 配乐：Midnight Riot《That New Thing》，参考片（Gemini 发布片）用的就是这首。150 拍/分整，60 帧下一拍正好 24 帧，第一拍在 0.4225 秒。
-// 照参考片的做法按画面剪拼原曲，剪点都在小节头上（4 拍一小节）。几处要紧的拍：
+// 照参考片的做法按画面剪拼原曲，剪点都在小节头上（4 拍一小节），段内尽量连着放。几处要紧的拍：
 //   原曲 129–131 拍低音抽空、132 拍砸下；259 拍抽空、260 拍砸下；324–355 拍是原曲自带的过门（低音全撤）、356 拍砸下；480 拍乐队停、清唱收尾。
 export const BEAT = 24;
 /** 片子里第 n 拍的那一帧 */
@@ -32,14 +33,12 @@ const SONG_BEAT0 = 0.4225;
 export const songFrame = (k: number) => Math.round((SONG_BEAT0 + k * 0.4) * FPS);
 /** 配乐的剪法：片子第 at 拍起，接原曲第 song 拍，放 beats 拍 */
 export const MUSIC = [
-  { at: 0, song: 12, beats: 20 }, // 前奏
-  { at: 20, song: 128, beats: 44 }, // 抽空三拍（字碎成粒子），片子第 24 拍砸下：粒子拼成 speakmore；第 32 拍起语音输入
-  { at: 64, song: 196, beats: 16 }, // 语音翻译
-  { at: 80, song: 244, beats: 56 }, // 片子第 95 拍抽空、96 拍砸下：划词翻译的键按下
-  { at: 136, song: 324, beats: 52 }, // 原曲的过门（暗场），片子第 168 拍砸下：三项功能点亮
-  { at: 188, song: 452, beats: 37 }, // 原曲最后一段和结尾：点星、下载、落版，片子第 216 拍乐队停
+  { at: 0, song: 12, beats: 20 }, // 前奏：三个词
+  { at: 20, song: 128, beats: 84 }, // 抽空三拍（字碎成粒子），第 24 拍砸下拼成 speakmore；第 32 拍起语音输入（含三种识别方式、硬件），第 88 拍起语音翻译
+  { at: 104, song: 244, beats: 140 }, // 第 119 拍抽空、120 拍砸下进划词翻译；第 160 拍引导四步；第 184 拍起原曲过门（暗场），第 216 拍砸下进高潮
+  { at: 244, song: 452, beats: 37 }, // 原曲最后一段和结尾：点星、下载、落版，第 272 拍乐队停
 ] as const;
-export const TOTAL_BEATS = 225;
+export const TOTAL_BEATS = 281;
 export const VIDEO_FRAMES = b(TOTAL_BEATS);
 
 export const COLOR = {
@@ -78,3 +77,6 @@ export const COLOR = {
 } as const;
 
 export const EASE = { outExpo, outQuint, inOut: inOutQuint } as const;
+
+/** 片子里写的版本号：SpeakMore 当前发布的版本（2026-10-23 的 0.17.0） */
+export const VERSION = "v0.17.0";

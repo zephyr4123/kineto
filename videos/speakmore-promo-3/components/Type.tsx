@@ -226,7 +226,7 @@ export const Wave: React.FC<Base & { value: string; at: number; amp?: number }> 
 };
 
 // 每个字母在几种语言里的近亲写法（拉丁重音、西里尔、希腊），宽度和原字相近；没有的就不翻
-const KIN: Record<string, string> = { T: "ŤТΤŢ", r: "ŕřгŗ", a: "áäаαå", n: "ñńпηň", s: "śšѕş", l: "ĺłľļ", t: "ťţтŧ", e: "éëеεè", S: "ŚŠЅŞ", p: "рρþ", k: "ķкκ" };
+const KIN: Record<string, string> = { T: "ŤТΤŢ", R: "ŘŔЯŖ", A: "ÁÄАΑÅ", N: "ÑŃΝŇ", S: "ŚŠЅŞ", L: "ĹŁĽĻ", E: "ÉËЕΕÈ", P: "РΡÞ", K: "ĶКΚ", C: "ÇČСĆ" };
 
 /** 多语：每个字母先在几种文字之间翻，再从左往右依次落成自己（Translate） */
 export const Polyglot: React.FC<Base & { value: string; at: number; step?: number }> = ({ value, at, step = 3, size = 110, weight = 600, color = COLOR.ink, style }) => {

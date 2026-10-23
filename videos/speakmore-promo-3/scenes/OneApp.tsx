@@ -1,16 +1,17 @@
 import { AbsoluteFill, useCurrentFrame } from "remotion";
 import { easeIn, prog } from "../../../engine/motion";
 import { Panel } from "../components/Panel";
-import { Line, Neon, Reel, Scramble } from "../components/Type";
+import { Gallery } from "../components/Gallery";
+import { Line, Neon, Reel } from "../components/Type";
 import { Sub } from "../components/kit";
 import { assets } from "../assets.gen";
 import { COLOR, DISPLAY, EASE, SANS, b } from "../theme";
 
-// 暗场（第 136–168 拍，原曲的过门、低音全撤）：
-// "One app."（霓虹描字）压在首页深色真截图上，推近到首页顶上那排热键 → 三行霓虹键帽：右⌥ 语音输入、右⌥ 空格 语音翻译、右⌥ 回车 划词翻译
-// → "Rebind any key."（key 滚过 ⌥ ⌘ F5 Caps）配设置·快捷键的真截图 → "Choose any model."（model 滚过各家模型）配引擎页真截图
-// → "One key. Ready."：密钥面板的真截图，一把密钥粘进去、乱码解成星号、打勾 → 第 166 拍起一切收向中间，等第 168 拍砸下。
-const START = 136;
+// 暗场（第 184–216 拍，原曲的过门、低音全撤）：
+// "One app" / "Three features" 上下两行霓虹描字，压在首页深色真截图上 → 三行霓虹键帽：右⌥ 语音输入、右⌥ 空格 语音翻译、右⌥ 回车 划词翻译
+// → "Rebind any key"（key 滚过 ⌥ ⌘ F5 Caps）配设置·快捷键的真截图 → "Choose any model"：各家标志排成一列往深处退，DeepSeek 打头，一家家走到前面
+// → "One key" "Ready"：密钥面板的真截图，一把密钥粘进去、打勾 → 第 214 拍起一切收向中间，等第 216 拍砸下。
+const START = 184;
 const at = (n: number) => b(n - START);
 export const ONEAPP_FRAMES = b(32);
 
@@ -51,29 +52,30 @@ const NeonKey: React.FC<{ label: string; color: string; press: number }> = ({ la
 
 export const OneApp: React.FC = () => {
   const frame = useCurrentFrame();
-  const gather = prog(frame, at(166), b(2), easeIn);
-  const keyTyped = Math.floor(prog(frame, at(161.6), 26, (t) => t) * 24);
+  const gather = prog(frame, at(214), b(2), easeIn);
+  const keyTyped = Math.floor(prog(frame, at(208.6), 26, (t) => t) * 24);
 
   return (
     <AbsoluteFill style={{ transform: `scale(${1 - 0.85 * gather})`, opacity: 1 - gather, filter: gather > 0 ? `blur(${12 * gather}px)` : undefined }}>
-      {/* One app.：首页深色真截图，推近到顶上那排热键 */}
-      <Panel fadeIn={30} src={assets.appHomeDark} w={1300} h={(1300 * 1500) / 2160} y={60} rotY={-12} rotX={8} at={0} out={at(141.4)} neon={COLOR.neonIndigo} zoom={{ at: at(138.6), dur: 40, rect: { x: 0.24, y: 0.07, w: 0.56, h: 0.16 } }} />
-      <Line out={at(141.4)} y={-400}>
-        <Neon value="One app." at={at(136.4)} glow={COLOR.neonIndigo} size={110} />
-        <span style={{ width: 40 }} />
-        <Neon value="Three features." at={at(138)} glow={COLOR.neonCinnabar} size={110} color={COLOR.nightInk2} />
+      {/* One app / Three features：上下两行，压在首页深色真截图上，推近到顶上那排热键 */}
+      <Panel fadeIn={30} src={assets.appHomeDark} w={1240} h={(1240 * 1500) / 2160} y={190} rotY={-12} rotX={8} at={0} out={at(188.4)} neon={COLOR.neonIndigo} zoom={{ at: at(186), dur: 40, rect: { x: 0.24, y: 0.07, w: 0.56, h: 0.16 } }} />
+      <Line out={at(188.2)} y={-440}>
+        <Neon value="One app" at={at(184.4)} glow={COLOR.neonIndigo} size={96} />
+      </Line>
+      <Line out={at(188.2)} y={-335}>
+        <Neon value="Three features" at={at(185.6)} glow={COLOR.neonCinnabar} size={96} color={COLOR.nightInk2} />
       </Line>
 
       {/* 三行霓虹键帽，每拍按下一行 */}
-      {frame >= at(141.6) && frame < at(148) ? (
-        <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 40, opacity: 1 - prog(frame, at(147.4), 12) }}>
+      {frame >= at(188.4) && frame < at(192.6) ? (
+        <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 40, opacity: 1 - prog(frame, at(191.8), 12) }}>
           {ROWS.map((row, i) => {
-            const t = prog(frame, at(141.6) + i * 8, 18, EASE.outExpo);
+            const t = prog(frame, at(188.4) + i * 8, 18, EASE.outExpo);
             return (
               <div key={row.name} style={{ display: "flex", alignItems: "center", gap: 18, width: 1460, whiteSpace: "nowrap", opacity: t, transform: `translateX(${-200 * (1 - t)}px)`, filter: t < 1 ? `blur(${8 * (1 - t)}px)` : undefined }}>
                 <div style={{ display: "flex", gap: 16, width: 420, justifyContent: "flex-end" }}>
                   {row.keys.map((k) => (
-                    <NeonKey key={k} label={k} color={row.color} press={at(142 + i)} />
+                    <NeonKey key={k} label={k} color={row.color} press={at(189 + i * 0.8)} />
                   ))}
                 </div>
                 <span style={{ marginLeft: 50, fontFamily: DISPLAY, fontSize: 62, fontWeight: 600, letterSpacing: "-0.02em", color: COLOR.nightInk, whiteSpace: "nowrap" }}>{row.name}</span>
@@ -84,29 +86,23 @@ export const OneApp: React.FC = () => {
         </AbsoluteFill>
       ) : null}
 
-      {/* Rebind any key.：设置 · 快捷键 */}
-      <Panel fadeIn={30} src={assets.appSetHotkeys} w={1180} h={(1180 * 1500) / 2160} y={90} rotY={12} rotX={7} from="left" at={at(147.8)} out={at(151.6)} neon={COLOR.neonCinnabar} spot={{ at: at(149), rect: { x: 0.26, y: 0.12, w: 0.72, h: 0.3 }, dark: true }} />
-      <Line out={at(151.4)} y={-410}>
-        <span style={{ fontFamily: DISPLAY, fontSize: 104, fontWeight: 600, letterSpacing: "-0.025em", color: COLOR.nightInk, whiteSpace: "pre", opacity: prog(frame, at(148), 10) }}>Rebind any </span>
-        <Reel words={["⌥", "⌘", "F5", "Caps", "key."]} at={at(148.2)} hold={6} size={104} color={COLOR.nightInk} land={COLOR.neonCinnabar} />
+      {/* Rebind any key：设置 · 快捷键 */}
+      <Panel fadeIn={30} src={assets.appSetHotkeys} w={1180} h={(1180 * 1216) / 1664} y={90} rotY={12} rotX={7} from="left" at={at(192)} out={at(196.2)} neon={COLOR.neonCinnabar} spot={{ at: at(193), rect: { x: 0.26, y: 0.12, w: 0.72, h: 0.3 }, dark: true }} />
+      <Line out={at(196)} y={-430}>
+        <span style={{ fontFamily: DISPLAY, fontSize: 96, fontWeight: 600, letterSpacing: "-0.025em", color: COLOR.nightInk, whiteSpace: "pre", opacity: prog(frame, at(192.2), 10) }}>Rebind any </span>
+        <Reel words={["⌥", "⌘", "F5", "Caps", "key"]} at={at(192.4)} hold={6} size={96} color={COLOR.nightInk} land={COLOR.neonCinnabar} />
       </Line>
 
-      {/* Choose any model.：引擎页 */}
-      <Panel fadeIn={30} src={assets.appEngine} w={1240} h={(1240 * 1500) / 2160} y={90} rotY={-12} rotX={7} from="right" at={at(151.8)} out={at(155.6)} neon={COLOR.neonIndigo} spot={{ at: at(153), rect: { x: 0.2, y: 0.25, w: 0.58, h: 0.55 }, dark: true }} />
-      <Line out={at(155.4)} y={-410}>
-        <span style={{ fontFamily: DISPLAY, fontSize: 104, fontWeight: 600, letterSpacing: "-0.025em", color: COLOR.nightInk, whiteSpace: "pre", opacity: prog(frame, at(152), 10) }}>Choose any </span>
-        <Reel words={["Gemini", "GPT", "DeepSeek", "Qwen", "Kimi", "GLM", "model."]} at={at(152.2)} hold={5} size={104} color={COLOR.nightInk} land={COLOR.neonIndigo} />
+      {/* Choose any model：各家标志的画廊，前后虚影，DeepSeek 打头 */}
+      <Line out={at(206.4)} y={-430}>
+        <span style={{ fontFamily: DISPLAY, fontSize: 96, fontWeight: 600, letterSpacing: "-0.025em", color: COLOR.nightInk, whiteSpace: "pre", opacity: prog(frame, at(196.4), 10) }}>Choose any </span>
+        <Neon value="model" at={at(196.8)} glow={COLOR.neonIndigo} size={96} />
       </Line>
+      <Gallery at={at(196.2)} first={at(198.4)} step={16} out={at(206.6)} />
 
-      {/* Presets.：推荐组合，一键启用 */}
-      <Panel fadeIn={30} src={assets.appPresets} w={1240} h={(1240 * 1500) / 2160} y={90} rotY={10} rotX={7} from="below" at={at(155.8)} out={at(159.6)} neon={COLOR.ochre} spot={{ at: at(157), rect: { x: 0.46, y: 0.08, w: 0.33, h: 0.66 }, dark: true }} />
-      <Line out={at(159.4)} y={-410}>
-        <Scramble value="Presets. One click." at={at(156)} frames={20} size={104} color={COLOR.nightInk} />
-      </Line>
-
-      {/* One key. Ready.：密钥面板，粘进一把密钥 */}
-      <Panel fadeIn={30} src={assets.appKeys} w={1240} h={(1240 * 1500) / 2160} y={90} rotY={-10} rotX={7} at={at(159.8)} out={at(166.4)} neon={COLOR.neonCinnabar} spot={{ at: at(160.6), rect: { x: 0.52, y: 0.02, w: 0.47, h: 0.96 }, dark: true }} />
-      {frame >= at(161) ? (
+      {/* One key  Ready：密钥面板，粘进一把密钥 */}
+      <Panel fadeIn={30} src={assets.appKeys} w={1240} h={(1240 * 1500) / 2160} y={90} rotY={-10} rotX={7} at={at(206.8)} out={at(214.4)} neon={COLOR.neonCinnabar} spot={{ at: at(207.6), rect: { x: 0.52, y: 0.02, w: 0.47, h: 0.96 }, dark: true }} />
+      {frame >= at(208) ? (
         <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
           <div
             style={{
@@ -121,27 +117,29 @@ export const OneApp: React.FC = () => {
               gap: 22,
               fontFamily: SANS,
               color: COLOR.nightInk,
-              opacity: prog(frame, at(161), 12),
-              transform: `translateY(${30 * (1 - prog(frame, at(161), 16))}px)`,
+              opacity: prog(frame, at(208), 12),
+              transform: `translateY(${30 * (1 - prog(frame, at(208), 16))}px)`,
             }}
           >
             <span style={{ fontSize: 26, color: COLOR.nightInk2, whiteSpace: "nowrap" }}>DeepSeek</span>
             <span style={{ flex: 1, fontSize: 34, letterSpacing: "0.12em", fontFamily: DISPLAY }}>{"•".repeat(keyTyped)}</span>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 10, fontSize: 26, fontWeight: 600, color: COLOR.green, opacity: prog(frame, at(164), 8) }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 10, fontSize: 26, fontWeight: 600, color: COLOR.green, opacity: prog(frame, at(211), 8) }}>
               <svg width={34} height={34} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 6L9 17l-5-5" strokeDasharray={24} strokeDashoffset={24 * (1 - prog(frame, at(164), 14))} />
+                <path d="M20 6L9 17l-5-5" strokeDasharray={24} strokeDashoffset={24 * (1 - prog(frame, at(211), 14))} />
               </svg>
               检测通过
             </span>
           </div>
         </AbsoluteFill>
       ) : null}
-      <Line out={at(166)} y={-410}>
-        <Neon value="One key. " at={at(160.4)} glow={COLOR.neonCinnabar} size={110} />
-        <Neon value="Ready." at={at(164)} glow={COLOR.green} size={110} />
+      {/* 两个词一前一后亮起，中间留空，不加句号 */}
+      <Line out={at(214)} y={-440}>
+        <Neon value="One key" at={at(207.2)} glow={COLOR.neonCinnabar} size={96} />
+        <span style={{ width: 70 }} />
+        <Neon value="Ready" at={at(211)} glow={COLOR.green} size={96} />
       </Line>
-      <Line out={at(166)} y={-300}>
-        <Sub text="一把密钥，即刻就绪" at={at(164.4)} size={34} color={COLOR.nightInk2} />
+      <Line out={at(214)} y={-345}>
+        <Sub text="一把密钥　即刻就绪" at={at(211.4)} size={30} color={COLOR.nightInk2} />
       </Line>
     </AbsoluteFill>
   );

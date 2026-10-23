@@ -9,6 +9,7 @@ import { LOOKUP_FRAMES, Lookup } from "./scenes/Lookup";
 import { ONEAPP_FRAMES, OneApp } from "./scenes/OneApp";
 import { OPENING_FRAMES, Opening } from "./scenes/Opening";
 import { OUTRO_FRAMES, Outro } from "./scenes/Outro";
+import { SETUP_FRAMES, Setup } from "./scenes/Setup";
 import { TRANSLATE_FRAMES, Translate } from "./scenes/Translate";
 import { MUSIC, VIDEO_FRAMES, b, songFrame } from "./theme";
 
@@ -18,15 +19,16 @@ import { MUSIC, VIDEO_FRAMES, b, songFrame } from "./theme";
 export const SCENES = [
   { name: "Opening", Scene: Opening, from: 0, frames: OPENING_FRAMES },
   { name: "Dictate", Scene: Dictate, from: b(32), frames: DICTATE_FRAMES },
-  { name: "Translate", Scene: Translate, from: b(64), frames: TRANSLATE_FRAMES },
-  { name: "Lookup", Scene: Lookup, from: b(95), frames: LOOKUP_FRAMES },
-  { name: "OneApp", Scene: OneApp, from: b(136), frames: ONEAPP_FRAMES },
-  { name: "Climax", Scene: Climax, from: b(168), frames: CLIMAX_FRAMES },
-  { name: "Outro", Scene: Outro, from: b(188), frames: OUTRO_FRAMES },
+  { name: "Translate", Scene: Translate, from: b(88), frames: TRANSLATE_FRAMES },
+  { name: "Lookup", Scene: Lookup, from: b(119), frames: LOOKUP_FRAMES },
+  { name: "Setup", Scene: Setup, from: b(160), frames: SETUP_FRAMES },
+  { name: "OneApp", Scene: OneApp, from: b(184), frames: ONEAPP_FRAMES },
+  { name: "Climax", Scene: Climax, from: b(216), frames: CLIMAX_FRAMES },
+  { name: "Outro", Scene: Outro, from: b(244), frames: OUTRO_FRAMES },
 ] as const;
 
-/** 暗场：第 136 拍起是夜色（上一段的夜色圆盖着切换）；高潮那一页夜色翻走时，底下的夜色用将近三拍慢慢亮回浅色，不闪白 */
-const darkAt = (frame: number) => interpolate(frame, [b(135.6), b(136), b(185.6), b(189.4)], [0, 1, 1, 0], clamp);
+/** 暗场：第 184 拍起是夜色（上一段的夜色圆盖着切换）；高潮那一页夜色翻走时，底下的夜色用将近三拍慢慢亮回浅色，不闪白 */
+const darkAt = (frame: number) => interpolate(frame, [b(183.6), b(184), b(241.6), b(245.4)], [0, 1, 1, 0], clamp);
 
 const VOLUME = 0.55;
 const XF = 3;

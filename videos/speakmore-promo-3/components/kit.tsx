@@ -1,6 +1,6 @@
 import { AbsoluteFill, useCurrentFrame } from "remotion";
 import { prog } from "../../../engine/motion";
-import { COLOR, DISPLAY, EASE, SANS } from "../theme";
+import { COLOR, DISPLAY, EASE, SANS, VERSION } from "../theme";
 
 // 全片共用的小零件：进场、一句话、小标签、指针、App 图标、发光圆环。都是帧的纯函数。
 
@@ -100,6 +100,27 @@ export const AppIcon: React.FC<{ size: number; style?: React.CSSProperties }> = 
     <polygon fill="#d69d43" points="606,372 672,342 686,359 686,674 677,720 606,685" />
     <polygon fill="#f7f4ed" points="745,439 820,469 820,609 745,641" />
   </svg>
+);
+
+/** 版本号的小胶囊（挂在 speakmore 字标旁边）；dark：压在暗场上 */
+export const Version: React.FC<{ dark?: boolean; size?: number }> = ({ dark, size = 32 }) => (
+  <span
+    style={{
+      display: "inline-block",
+      padding: `${size * 0.22}px ${size * 0.6}px`,
+      borderRadius: 999,
+      fontFamily: DISPLAY,
+      fontSize: size,
+      fontWeight: 600,
+      letterSpacing: "0.01em",
+      color: dark ? COLOR.nightInk2 : COLOR.ink2,
+      boxShadow: `inset 0 0 0 1.5px ${dark ? "oklch(1 0 0 / 0.22)" : COLOR.line}`,
+      background: dark ? "oklch(1 0 0 / 0.04)" : "oklch(1 0 0 / 0.7)",
+      whiteSpace: "nowrap",
+    }}
+  >
+    {VERSION}
+  </span>
 );
 
 /** 发光圆环：at 帧亮起，之后每 period 帧脉动一下 */

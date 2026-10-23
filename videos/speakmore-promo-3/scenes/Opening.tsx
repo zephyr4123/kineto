@@ -4,16 +4,16 @@ import { Glass, Halo, Screen, type ViewKeys } from "../components/Glass";
 import { Particles, type ParticleTiming, type TextLine, useTextBounds } from "../components/Particles";
 import { IBeam } from "../components/Terminal";
 import { Line, Polyglot, Wave } from "../components/Type";
-import { rise } from "../components/kit";
+import { AppIcon, Ring, Version, rise } from "../components/kit";
 import { assets } from "../assets.gen";
 import { COLOR, DISPLAY, EASE, b } from "../theme";
 
-// 开场到揭幕（第 0–32 拍）：三个词各演一下自己的意思——Speak.（字母像声波起伏）、Translate.（字母在几种文字间翻转后落定）、
-// Select.（一道选区扫过）；三个词并成一行；原曲抽空的三拍（第 20–23 拍）里这一行从左往右碎成粒子、卷成漩涡，
-// 第 24 拍砸下漩涡涨开，粒子落成 speakmore；下面依次出三项功能的名字。随后首页真截图从下面升起，镜头贴着它滑过三组热键。
+// 开场到揭幕（第 0–32 拍）：三个主角词全大写，各演一下自己的意思——SPEAK（字母像声波起伏）、TRANSLATE（字母在几种文字间翻转后落定）、
+// SELECT（一道选区扫过）；三个词并成一行；原曲抽空的三拍（第 20–23 拍）里这一行从左往右碎成粒子、卷成漩涡，
+// 第 24 拍砸下漩涡涨开，粒子落成 speakmore，图标从上面弹出、旁边挂版本号；下面依次出三项功能的名字。随后首页真截图从下面升起，镜头贴着它滑过三组热键。
 export const OPENING_FRAMES = b(32);
 
-const ROW: TextLine = { text: "Speak. Translate. Select.", size: 84, weight: 600, tracking: -0.025 };
+const ROW: TextLine = { text: "SPEAK   TRANSLATE   SELECT", size: 80, weight: 600, tracking: 0.01 };
 const MARK: TextLine = { text: "speakmore", size: 210, weight: 650, tracking: -0.04, y: -30 };
 const TIMING: ParticleTiming = { release: b(20), releaseSpread: 30, burst: b(24), arrive: b(24.1), arriveSpread: 22, fly: 26 };
 /** 字母都落定、DOM 里的字从左往右显出来的起点 */
@@ -34,13 +34,13 @@ const HOME_VIEW: ViewKeys = [
   [b(32), { fx: 0.62, fy: 0.16, s: 2.6, rx: 8, ry: -2 }],
 ];
 const FEATURES = ["Voice input", "Voice translation", "Selection translation"] as const;
-const WORDS = ["Speak. ", "Translate. ", "Select."] as const;
+const WORDS = ["SPEAK   ", "TRANSLATE   ", "SELECT"] as const;
 const WORD_FROM = [
   { x: -500, y: 0 },
   { x: 0, y: 260 },
   { x: 500, y: 0 },
 ] as const;
-const SELECT = [..."Select."];
+const SELECT = [..."SELECT"];
 
 /** 横向擦除的遮罩（画面坐标）：默认 x 左边透明、右边留着；reveal 反过来，x 左边显出 */
 const sweepMask = (x: number, reveal = false): React.CSSProperties => {
@@ -66,19 +66,19 @@ export const Opening: React.FC = () => {
 
   return (
     <AbsoluteFill>
-      {/* Speak.：字母像声波一样起伏 */}
+      {/* SPEAK：字母像声波一样起伏 */}
       <Line out={b(4.4)}>
-        <Wave value="Speak." at={b(0.5)} size={120} />
+        <Wave value="SPEAK" at={b(0.5)} size={124} style={{ letterSpacing: "0.02em" }} />
       </Line>
 
-      {/* Translate.：字母在几种文字间翻，落成自己 */}
+      {/* TRANSLATE：字母在几种文字间翻，落成自己 */}
       <Line out={b(9.4)}>
-        <Polyglot value="Translate." at={b(5)} size={120} />
+        <Polyglot value="TRANSLATE" at={b(5)} size={124} style={{ letterSpacing: "0.02em" }} />
       </Line>
 
-      {/* Select.：被一道选区扫过 */}
+      {/* SELECT：被一道选区扫过 */}
       <Line out={b(14.4)}>
-        <span style={{ display: "inline-flex", fontFamily: DISPLAY, fontSize: 120, fontWeight: 600, letterSpacing: "-0.025em", color: COLOR.ink, ...rise(frame, b(10)) }}>
+        <span style={{ display: "inline-flex", fontFamily: DISPLAY, fontSize: 124, fontWeight: 600, letterSpacing: "0.02em", color: COLOR.ink, ...rise(frame, b(10)) }}>
           {SELECT.map((ch, i) => (
             <span key={`${ch}-${i}`} style={{ position: "relative", whiteSpace: "pre", background: i < picked ? "oklch(0.62 0.13 255 / 0.32)" : undefined }}>
               {ch}
@@ -113,7 +113,7 @@ export const Opening: React.FC = () => {
 
       {frame >= TIMING.release - 1 && frame < MARK_IN + 60 ? <Particles from={ROW} to={MARK} timing={TIMING} /> : null}
 
-      {/* speakmore：粒子落定的地方从左往右显出来；下面依次出三项功能 */}
+      {/* speakmore：粒子落定的地方从左往右显出来；图标从上面弹出、右上挂版本号；下面依次出三项功能 */}
       {frame >= MARK_IN && markOut < 1 ? (
         <AbsoluteFill style={{ opacity: 1 - markOut, transform: `translateY(${-120 * markOut}px)`, filter: markOut > 0 ? `blur(${12 * markOut}px)` : undefined }}>
           <AbsoluteFill style={sweepMask(markSweep, true)}>
@@ -121,6 +121,15 @@ export const Opening: React.FC = () => {
               <span style={{ whiteSpace: "pre", fontFamily: DISPLAY, fontSize: MARK.size, fontWeight: MARK.weight, letterSpacing: `${MARK.tracking}em`, color: COLOR.ink }}>{MARK.text}</span>
             </AbsoluteFill>
           </AbsoluteFill>
+          <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", transform: "translateY(-260px)" }}>
+            <div style={{ position: "relative", display: "grid", placeItems: "center", opacity: prog(frame, MARK_IN - 4, 10), transform: `scale(${0.4 + 0.6 * prog(frame, MARK_IN - 4, 26, EASE.outExpo)})` }}>
+              <Ring size={196} color={COLOR.cinnabar} at={MARK_IN} period={b(2)} style={{ opacity: 0.55 }} />
+              <AppIcon size={150} style={{ filter: "drop-shadow(0 20px 36px oklch(0.2 0.05 260 / 0.3))" }} />
+            </div>
+          </AbsoluteFill>
+          <div style={{ position: "absolute", left: mark.right + 28, top: 540 + (MARK.y ?? 0) - 92, ...rise(frame, MARK_IN + 18, undefined, 14) }}>
+            <Version />
+          </div>
           <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", transform: "translateY(150px)" }}>
             <div style={{ display: "flex", gap: 34, fontFamily: DISPLAY, fontSize: 50, fontWeight: 500, letterSpacing: "-0.015em", color: COLOR.ink2 }}>
               {FEATURES.map((f, i) => (
