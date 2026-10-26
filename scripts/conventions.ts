@@ -131,7 +131,9 @@ export function checkRange(facts: RangeFacts, inHistory: (sha: string) => boolea
 }
 
 function gitIn(cwd: string | undefined) {
-  return (...args: string[]) => execFileSync("git", args, { cwd, encoding: "utf8", maxBuffer: 64 << 20 }).trimEnd();
+  // core.quotePath=false：不然中文文件名会被转义成 "videos/x/\344..."，路径规则就认不出来
+  return (...args: string[]) =>
+    execFileSync("git", ["-c", "core.quotePath=false", ...args], { cwd, encoding: "utf8", maxBuffer: 64 << 20 }).trimEnd();
 }
 
 const lines = (text: string) => text.split("\n").filter(Boolean);
