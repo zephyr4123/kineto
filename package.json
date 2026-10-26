@@ -20,8 +20,8 @@
     "ship": "scripts/ship.sh"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "3.1146.0",
-    "@aws-sdk/lib-storage": "3.1146.0",
+    "@aws-sdk/client-s3": "3.1156.0",
+    "@aws-sdk/lib-storage": "3.1156.0",
     "@remotion/bundler": "4.0.532",
     "@remotion/captions": "4.0.532",
     "@remotion/cli": "4.0.532",
