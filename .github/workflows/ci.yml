@@ -40,3 +40,17 @@ jobs:
         run: |
           version="$(node -p 'require("./package.json").version')"
           grep -q "^## \[$version\]" CHANGELOG.md || { echo "::error file=CHANGELOG.md::no '## [$version]' section"; exit 1; }
+
+  # 提交规范（AGENTS.md「Git and GitHub」）：查这个分支自己的提交，所以要完整历史。
+  # 和 verify 一样是 main 的必需检查；在 main 上范围为空，提交在分支上已经查过
+  conventions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+      - run: node scripts/conventions.ts --base origin/main
