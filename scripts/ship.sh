@@ -43,13 +43,13 @@ done
 [[ -n "$run" ]] || die "no ci run found for ${sha:0:7} within 60s" "check gh auth status and gh run list --branch $branch, then run ship again"
 
 printf 'ship: waiting for ci run %s on %s\n' "$run" "${sha:0:7}"
-# 以运行的最终结论为准：watch 的退出码分不清"CI 挂了"和"网络断了"
+# 自己轮询运行的状态，不用 gh run watch：实测它在运行早已结束后还会挂住不返回（一次挂了 10 分钟）。
+# 查询出错（网络抖动）就等下一轮，最多等 30 分钟
 result=""
-for _ in $(seq 1 120); do
-  gh run watch "$run" --interval 10 >/dev/null 2>&1 || true
+for _ in $(seq 1 180); do
   result="$(gh run view "$run" --json status,conclusion --jq '.status + "/" + .conclusion' 2>/dev/null)" || result=""
   [[ "$result" == completed/* ]] && break
-  sleep 5
+  sleep 10
 done
 [[ "$result" == completed/success ]] ||
   die "ci run $run on ${sha:0:7} did not pass (${result:-status unknown})" "gh run view $run --log-failed; fix it on the branch and ship again (a flaky job: gh run rerun $run --failed)"
