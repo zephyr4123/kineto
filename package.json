@@ -42,10 +42,10 @@
   },
   "devDependencies": {
     "@remotion/eslint-config-flat": "4.0.532",
-    "@types/node": "26.6.4",
+    "@types/node": "26.6.5",
     "@types/react": "19.3.0",
-    "@types/web": "0.0.166",
+    "@types/web": "0.0.359",
     "eslint": "9.39.5",
-    "prettier": "3.8.1"
+    "prettier": "3.9.10"
   }
 }
