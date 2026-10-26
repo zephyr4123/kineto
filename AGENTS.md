@@ -44,6 +44,7 @@ engine/               ✍️     building blocks shared by 2+ videos
 templates/            ✍️     starting points for ./kineto new
 tools/<name>/         ✍️     tool plugins: tts, transcribe… (contract in tools/README.md)
 cli/  kernel/                the CLI and its logic (TypeScript run directly by Node, no build step)
+scripts/                     repository upkeep: commit conventions check, npm run ship
 ```
 
 ✍️ = creative zone, write freely. 🔒 = controlled zone, **never edit by hand**: change it through the CLI.
@@ -106,6 +107,31 @@ npm run verify     # typecheck + lint + unit tests + ./kineto check
 
 If you rendered, report the path (and the `url`, when the storage backend has a public URL) and the `renders.jsonl`
 record, not just "rendered successfully".
+
+## Git and GitHub
+
+Work on a branch; land it on main with `npm run ship`, and only when the user says to merge.
+
+- **Branches**: `feat/<video-id>` for video work; `feat/` `fix/` `chore/` + a topic for kineto itself.
+- **Commits**: one logical change each. The subject starts with what it touches — the video id for video work
+  (`corner-hit 换配乐`), the module or command otherwise (`render 支持 <Still>`) — and the body says why.
+  No AI attribution: no `Co-Authored-By:` an agent, no "Generated with …", no 🤖.
+- **CHANGELOG**: a branch that changes kineto itself (`cli/ kernel/ tools/ engine/ templates/ src/`, tests and
+  generated files aside) adds a line under `## [Unreleased]` in `CHANGELOG.md`. A change users cannot notice, such as
+  a pure refactor, takes the trailer `Changelog: skip` instead. Video work does not go in the changelog.
+- **Landing on main**: `npm run ship` pushes the branch, waits for CI, fast-forwards main to the same commit and
+  deletes the branch. main only accepts commits that already passed CI on another branch, so a plain
+  `git push origin main` is rejected. Do not rebase commits or merge your own work with GitHub's rebase or squash
+  button: both change commit shas, and `renders.jsonl` records the sha each file was rendered from.
+  When main has moved, `git merge origin/main` into your branch.
+- **Renders you deliver** come from a clean commit: commit, then `./kineto render` (the record says `"dirty": false`).
+- **Issues**: one per video, with each round of feedback as a comment; one per bug, feature or piece of tech debt.
+  Label them `kind:video`, `kind:feat`, `kind:bug` or `kind:infra`, and mention them in commits (`#12`).
+- **Dependabot**: minor and patch updates are merged once CI is green (GitHub's rebase merge is fine there, as they
+  touch no renders). Major versions are ignored and migrated through an issue.
+
+CI checks the rules a machine can judge (`conventions`: attribution, video subjects, CHANGELOG, render shas);
+run `node scripts/conventions.ts` to check locally before you push.
 
 ## Storage
 

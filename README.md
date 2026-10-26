@@ -172,9 +172,11 @@ Tools are plugins in [`tools/`](tools/README.md) that produce media outside Remo
 
 ```bash
 npm run verify    # typecheck, lint, tests and ./kineto check --deep (the CI gate)
+npm run ship      # land the current branch on main once CI is green
 ```
 
 - The CLI and kernel are TypeScript run directly by Node's type stripping. There is no build step.
+- main only takes commits that passed CI on a branch, fast-forwarded by `npm run ship`. Branch, commit and changelog rules are in [`AGENTS.md`](AGENTS.md#git-and-github).
 - Releases are published by pushing a version tag such as `v1.0.0`. See [`CHANGELOG.md`](CHANGELOG.md).
 
 ## 📄 License

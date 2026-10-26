@@ -172,9 +172,11 @@ kernel        视频目录 · 素材库 · 渲染 · 同步 · 检查
 
 ```bash
 npm run verify    # 类型检查、lint、测试与 ./kineto check --deep（即 CI 门禁）
+npm run ship      # CI 通过后把当前分支合进 main
 ```
 
 - CLI 与 kernel 使用 TypeScript 编写，由 Node 原生类型剥离直接运行，没有构建步骤。
+- main 只接受在分支上跑过 CI 的提交，由 `npm run ship` 以 fast-forward 合入。分支、提交与变更记录的约定见 [`AGENTS.md`](AGENTS.md#git-and-github)。
 - 推送 `v1.0.0` 这样的版本标签即发布新版本，变更记录见 [`CHANGELOG.md`](CHANGELOG.md)。
 
 ## 📄 许可证
