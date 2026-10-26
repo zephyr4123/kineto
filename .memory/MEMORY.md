@@ -4,3 +4,4 @@
 - [通用 skill 路由](skill-routing-general.md) — 密钥、多仓、云运维、Multica、编排、长任务、去 AI 腔用哪个 skill
 - [iOS skill 路由](skill-routing-ios.md) — SwiftUI 视图、iOS 验证闭环用哪个 skill
 - [审查力度按活的大小](review-proportional.md) — 小活不开审查子 agent，靠测试和实跑取证
+- [不走 issue-driven](no-issue-driven.md) — 本项目不为干活、记技术债开 issue，问题在汇报里说
