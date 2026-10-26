@@ -34,6 +34,18 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci
+      # ./kineto doctor 本地查这条，CI 不跑 doctor；Dependabot 的 PR 要靠这里拦住拆开升级的 Remotion 包
+      - name: Every remotion package is pinned to one version
+        run: |
+          node -e '
+            const p = require("./package.json");
+            const deps = Object.entries({ ...p.dependencies, ...p.devDependencies })
+              .filter(([n]) => n === "remotion" || n.startsWith("@remotion/"));
+            const versions = [...new Set(deps.map(([, v]) => v))];
+            if (versions.length > 1) {
+              console.error("::error file=package.json::remotion packages are pinned to different versions: " + deps.map(([n, v]) => n + "@" + v).join(", "));
+              process.exit(1);
+            }'
       # 类型检查 + lint + 单测 + kineto check --deep（CI 上没有素材二进制，只会出 ASSET_NOT_LOCAL 警告）
       - run: npm run verify
       - name: CHANGELOG.md has a section for the package.json version

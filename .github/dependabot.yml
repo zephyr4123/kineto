@@ -28,3 +28,5 @@ updates:
         patterns: ["react", "react-dom", "@types/react"]
       dev-tools:
         dependency-type: development
+        # @remotion/eslint-config-flat 是开发依赖，不排除就会被分到这组，和 remotion 组拆成两个 PR、版本错开
+        exclude-patterns: ["remotion", "@remotion/*"]
