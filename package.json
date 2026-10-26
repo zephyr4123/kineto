@@ -16,7 +16,8 @@
     "test": "node --test \"kernel/**/*.test.ts\" \"cli/**/*.test.ts\" \"tools/**/*.test.ts\" \"scripts/**/*.test.ts\"",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json",
     "lint": "eslint --no-error-on-unmatched-pattern src engine videos templates",
-    "verify": "npm run typecheck && npm run lint && npm test && ./kineto check --deep"
+    "verify": "npm run typecheck && npm run lint && npm test && ./kineto check --deep",
+    "ship": "scripts/ship.sh"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1146.0",
