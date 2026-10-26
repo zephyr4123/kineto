@@ -35,16 +35,24 @@ git push --quiet -u origin "$branch"
 # 推送后 GitHub 要几秒才建出这次的 CI 运行
 run=""
 for _ in $(seq 1 30); do
-  run="$(gh run list --workflow ci --branch "$branch" --commit "$sha" --event push --limit 1 --json databaseId --jq '.[0].databaseId // empty')"
+  # gh 偶尔网络抖一下（实测碰到过 EOF），等待期间的报错都当作"再等等"
+  run="$(gh run list --workflow ci --branch "$branch" --commit "$sha" --event push --limit 1 --json databaseId --jq '.[0].databaseId // empty' 2>/dev/null)" || run=""
   [[ -n "$run" ]] && break
   sleep 2
 done
-[[ -n "$run" ]] || die "no ci run showed up for ${sha:0:7} within 60s" "look at gh run list --branch $branch, then run ship again"
+[[ -n "$run" ]] || die "no ci run found for ${sha:0:7} within 60s" "check gh auth status and gh run list --branch $branch, then run ship again"
 
-url="$(gh run view "$run" --json url --jq .url)"
-printf 'ship: waiting for ci on %s (%s)\n' "${sha:0:7}" "$url"
-gh run watch "$run" --exit-status --interval 10 >/dev/null ||
-  die "ci failed on ${sha:0:7}" "gh run view $run --log-failed; fix it on the branch and ship again (a flaky job: gh run rerun $run --failed)"
+printf 'ship: waiting for ci run %s on %s\n' "$run" "${sha:0:7}"
+# 以运行的最终结论为准：watch 的退出码分不清"CI 挂了"和"网络断了"
+result=""
+for _ in $(seq 1 120); do
+  gh run watch "$run" --interval 10 >/dev/null 2>&1 || true
+  result="$(gh run view "$run" --json status,conclusion --jq '.status + "/" + .conclusion' 2>/dev/null)" || result=""
+  [[ "$result" == completed/* ]] && break
+  sleep 5
+done
+[[ "$result" == completed/success ]] ||
+  die "ci run $run on ${sha:0:7} did not pass (${result:-status unknown})" "gh run view $run --log-failed; fix it on the branch and ship again (a flaky job: gh run rerun $run --failed)"
 
 # 推的是分支上跑绿的同一个提交；不是 fast-forward 时 GitHub 会拒绝，这里不加 --force
 git push --quiet origin "$sha:refs/heads/main"
