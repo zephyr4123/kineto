@@ -13,7 +13,7 @@ updates:
     schedule:
       interval: monthly
     open-pull-requests-limit: 5
-    # 大版本升级要改代码，自动 PR 只会挂红；需要时开 issue 专门迁移（TypeScript 7、ESLint 10 就是这么处理的）
+    # 大版本升级要改代码，自动 PR 只会挂红；需要时手动升级（TypeScript 7、ESLint 10 就是这么处理的）
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]

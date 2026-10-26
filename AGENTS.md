@@ -125,10 +125,10 @@ Work on a branch; land it on main with `npm run ship`, and only when the user sa
   button: both change commit shas, and `renders.jsonl` records the sha each file was rendered from.
   When main has moved, `git merge origin/main` into your branch.
 - **Renders you deliver** come from a clean commit: commit, then `./kineto render` (the record says `"dirty": false`).
-- **Issues**: one per video, with each round of feedback as a comment; one per bug, feature or piece of tech debt.
-  Label them `kind:video`, `kind:feat`, `kind:bug` or `kind:infra`, and mention them in commits (`#12`).
+- **No issues**: this project does not track work in GitHub issues (this overrides "Issue 沉淀" further down).
+  Raise bugs and tech debt in your report to the user, who decides what gets done.
 - **Dependabot**: minor and patch updates are merged once CI is green (GitHub's rebase merge is fine there, as they
-  touch no renders). Major versions are ignored and migrated through an issue.
+  touch no renders). Major versions are ignored and upgraded by hand when the user asks.
 
 CI checks the rules a machine can judge (`conventions`: attribution, video subjects, CHANGELOG, render shas);
 run `node scripts/conventions.ts` to check locally before you push.

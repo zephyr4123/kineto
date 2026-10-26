@@ -12,11 +12,11 @@ as a GitHub release; tags with a hyphen (`v1.1.0-rc.1`) become prereleases.
 - `engine/speakmore/`: pieces shared by the SpeakMore promo series (floating bar, seal, Mac and Windows desktops, brand logos, icons), and the videos `speakmore-promo`, `speakmore-promo-2` and `speakmore-promo-3`.
 - `npm run ship` lands a branch on main: it pushes the branch, waits for CI, then fast-forwards main to the same commit, so render records keep pointing at commits on main.
 - A `conventions` CI check on every push: no AI attribution lines in commits, commits that touch one video start their subject with its id, branches that change kineto itself update this changelog, and new render records point at commits in the branch's history.
-- `AGENTS.md` has a Git and GitHub section (branches, commits, changelog, landing on main, issues, Dependabot) and the maintainer's collaboration rules; shared agent memory lives in `.memory/`.
+- `AGENTS.md` has a Git and GitHub section (branches, commits, changelog, landing on main, Dependabot) and the maintainer's collaboration rules; shared agent memory lives in `.memory/`.
 
 ### Changed
 
-- Dependabot no longer opens pull requests for major versions; those are migrated through an issue.
+- Dependabot no longer opens pull requests for major versions; those are upgraded by hand.
 - Remotion 4.0.538 (from 4.0.532), with the agent skills to match: run `./kineto setup --update` after pulling.
 - CI fails when the `remotion` / `@remotion/*` packages are pinned to different versions, and Dependabot keeps them in one group, so a split upgrade can no longer be merged.
 
