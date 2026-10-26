@@ -6,6 +6,18 @@ as a GitHub release; tags with a hyphen (`v1.1.0-rc.1`) become prereleases.
 
 ## [Unreleased]
 
+### Added
+
+- `engine/`: `Counter` (an odometer-style rolling number), `camera.ts` (per-chapter camera keyframes joined into one path), `Glyph` (an SVG icon scaled by its long side), and in `motion.ts` the easings `outExpo`, `outQuint`, `inOutQuint` and the helpers `prog`, `punch`, `typed`, `mix`.
+- `engine/speakmore/`: pieces shared by the SpeakMore promo series (floating bar, seal, Mac and Windows desktops, brand logos, icons), and the videos `speakmore-promo`, `speakmore-promo-2` and `speakmore-promo-3`.
+- `npm run ship` lands a branch on main: it pushes the branch, waits for CI, then fast-forwards main to the same commit, so render records keep pointing at commits on main.
+- A `conventions` CI check on every push: no AI attribution lines in commits, commits that touch one video start their subject with its id, branches that change kineto itself update this changelog, and new render records point at commits in the branch's history.
+- `AGENTS.md` has a Git and GitHub section (branches, commits, changelog, landing on main, issues, Dependabot) and the maintainer's collaboration rules; shared agent memory lives in `.memory/`.
+
+### Changed
+
+- Dependabot no longer opens pull requests for major versions; those are migrated through an issue.
+
 ## [1.1.0] - 2026-10-04
 
 ### Added
