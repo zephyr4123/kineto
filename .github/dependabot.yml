@@ -13,6 +13,10 @@ updates:
     schedule:
       interval: monthly
     open-pull-requests-limit: 5
+    # 大版本升级要改代码，自动 PR 只会挂红；需要时开 issue 专门迁移（TypeScript 7、ESLint 10 就是这么处理的）
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       # Remotion 全家必须是同一个精确版本（./kineto doctor 检查），只能一起升；
       # 升完还要跑 ./kineto setup --update 让 agent skills 跟上
