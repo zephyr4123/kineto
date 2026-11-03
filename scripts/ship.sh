@@ -13,6 +13,16 @@ die() {
 command -v gh >/dev/null || die "gh (GitHub CLI) is not installed" "install it and run gh auth login"
 cd "$(git rev-parse --show-toplevel)"
 
+# 锁定 GitHub 账号：本机常有别的会话切 gh 的活动账号，git 推送也走 gh 的凭据，ship 跑的几分钟里可能被切走（实测推送被拒过）。
+# 仓库 owner 是本机已登录的账号时，整个 ship 固定用它的 token；只放在本进程的环境变量里，不落盘
+if [[ -z "${GH_TOKEN:-}" ]]; then
+  owner="$(git remote get-url origin | sed -nE 's#^(https://github\.com/|git@github\.com:)([^/]+)/.*#\2#p')"
+  if [[ -n "$owner" ]] && token="$(gh auth token --user "$owner" 2>/dev/null)" && [[ -n "$token" ]]; then
+    export GH_TOKEN="$token"
+    printf 'ship: using GitHub account %s\n' "$owner"
+  fi
+fi
+
 branch="$(git symbolic-ref --quiet --short HEAD)" || die "HEAD is detached" "check out the branch you want to ship"
 [[ "$branch" != main ]] || die "you are on main" "ship runs from a branch: git switch -c feat/<name>, commit, then npm run ship"
 [[ -z "$(git status --porcelain)" ]] || die "the working tree has uncommitted changes" "commit or stash them first: CI only sees what is committed"
