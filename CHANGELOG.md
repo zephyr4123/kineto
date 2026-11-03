@@ -17,7 +17,7 @@ as a GitHub release; tags with a hyphen (`v1.1.0-rc.1`) become prereleases.
 ### Changed
 
 - Dependabot no longer opens pull requests for major versions; those are upgraded by hand.
-- Remotion 4.0.538 (from 4.0.532), with the agent skills to match: run `./kineto setup --update` after pulling.
+- Remotion 4.0.540 (from 4.0.532), with the agent skills to match: run `./kineto setup --update` after pulling.
 - CI fails when the `remotion` / `@remotion/*` packages are pinned to different versions, and Dependabot keeps them in one group, so a split upgrade can no longer be merged.
 
 ## [1.1.0] - 2026-10-04
