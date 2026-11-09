@@ -6,6 +6,7 @@ import { Compositions as V_kineto_promo } from "../videos/kineto-promo/compositi
 import { Compositions as V_speakmore_promo } from "../videos/speakmore-promo/compositions";
 import { Compositions as V_speakmore_promo_2 } from "../videos/speakmore-promo-2/compositions";
 import { Compositions as V_speakmore_promo_3 } from "../videos/speakmore-promo-3/compositions";
+import { Compositions as V_speakmore_promo_4 } from "../videos/speakmore-promo-4/compositions";
 
 export const Registry: React.FC = () => {
   return (
@@ -27,6 +28,9 @@ export const Registry: React.FC = () => {
       </Folder>
       <Folder name="speakmore-promo-3">
         <V_speakmore_promo_3 />
+      </Folder>
+      <Folder name="speakmore-promo-4">
+        <V_speakmore_promo_4 />
       </Folder>
     </>
   );
