@@ -13,8 +13,9 @@ const staged = (Scene: React.FC) => {
   );
   return Staged;
 };
-const [views, repo, brand, dictate, vocab, translate, lookup, cost, issues, code, thanks, download, outro] = SPANS;
+const [views, downloads, repo, brand, dictate, vocab, translate, lookup, cost, issues, code, thanks, guide, outro] = SPANS;
 const ViewsStaged = staged(views.Scene);
+const DownloadsStaged = staged(downloads.Scene);
 const RepoStaged = staged(repo.Scene);
 const BrandStaged = staged(brand.Scene);
 const DictateStaged = staged(dictate.Scene);
@@ -25,7 +26,7 @@ const CostStaged = staged(cost.Scene);
 const IssuesStaged = staged(issues.Scene);
 const CodeStaged = staged(code.Scene);
 const ThanksStaged = staged(thanks.Scene);
-const DownloadStaged = staged(download.Scene);
+const GuideStaged = staged(guide.Scene);
 const OutroStaged = staged(outro.Scene);
 
 export const Compositions: React.FC = () => {
@@ -33,6 +34,7 @@ export const Compositions: React.FC = () => {
     <>
       <Composition id="speakmore-promo-4" component={Video} durationInFrames={VIDEO_FRAMES} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-4-views" component={ViewsStaged} durationInFrames={views.frames} fps={FPS} width={W} height={H} />
+      <Composition id="speakmore-promo-4-downloads" component={DownloadsStaged} durationInFrames={downloads.frames} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-4-repo" component={RepoStaged} durationInFrames={repo.frames} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-4-brand" component={BrandStaged} durationInFrames={brand.frames} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-4-dictate" component={DictateStaged} durationInFrames={dictate.frames} fps={FPS} width={W} height={H} />
@@ -43,7 +45,7 @@ export const Compositions: React.FC = () => {
       <Composition id="speakmore-promo-4-issues" component={IssuesStaged} durationInFrames={issues.frames} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-4-code" component={CodeStaged} durationInFrames={code.frames} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-4-thanks" component={ThanksStaged} durationInFrames={thanks.frames} fps={FPS} width={W} height={H} />
-      <Composition id="speakmore-promo-4-download" component={DownloadStaged} durationInFrames={download.frames} fps={FPS} width={W} height={H} />
+      <Composition id="speakmore-promo-4-guide" component={GuideStaged} durationInFrames={guide.frames} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-4-outro" component={OutroStaged} durationInFrames={outro.frames} fps={FPS} width={W} height={H} />
     </>
   );

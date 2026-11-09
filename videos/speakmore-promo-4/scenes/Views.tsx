@@ -17,7 +17,7 @@ const TILES = [
   { src: assets.douyin3, x: 1722, rot: 3.5, pile: { x: 990, y: CY + 14, rot: 6 } },
 ] as const;
 const FAN = [0, 80] as const;
-const LIFT = [b(8), b(10), b(12)];
+const LIFT = [b(5), b(6), b(7)];
 
 export const Views: React.FC = () => {
   const frame = useCurrentFrame();

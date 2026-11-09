@@ -23,7 +23,7 @@ const DL_SHOW = START[0] + sec(2.0);
 const DL_DONE = START[0] + sec(3.1);
 const STAR_CLICK = START[1] + sec(1.45);
 
-export const Download: React.FC = () => {
+export const Guide: React.FC = () => {
   const frame = useCurrentFrame();
   const active = activeWindow(frame, START);
   return (

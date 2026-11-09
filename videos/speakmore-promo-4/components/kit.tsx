@@ -227,8 +227,11 @@ const sampleCam = (keys: readonly Key[], frame: number) => {
   return keys[keys.length - 1];
 };
 
-/** 打字遮罩：盖在原图的一行字上，按时间从左往右退开，像字被写出来；caret 时在写到的位置放一根光标 */
-export type Typing = { x: number; y: number; w: number; h: number; at: number; dur: number; color: string; caret?: string };
+/**
+ * 打字遮罩：盖在原图的一行字上，按时间从左往右退开，像字被写出来；caret 时在写到的位置放一根光标。
+ * step 给了就按这个宽度一格一格退（一个字一格，像边说边认出来的字）；fade 时不退，整块淡掉（像整段粘贴进来）。
+ */
+export type Typing = { x: number; y: number; w: number; h: number; at: number; dur: number; color: string; caret?: string; step?: number; fade?: boolean };
 
 /** 光标：arrow 是箭头，ibeam 是文字光标；keys 是原图上的位置，clicks 是按下的帧 */
 export type Pointer = { kind: "arrow" | "ibeam"; keys: readonly { f: number; x: number; y: number }[]; clicks?: readonly number[]; show: readonly [number, number] };
@@ -347,7 +350,8 @@ export const Screen: React.FC<{
         <Img src={staticFile(src)} style={{ width: w, height: h, display: "block" }} />
         {typing.map((m) => {
           const p = interpolate(frame, [m.at, m.at + m.dur], [0, 1], clamp);
-          const shown = m.w * p;
+          if (m.fade) return <div key={`${m.x}-${m.y}`} style={{ position: "absolute", left: m.x, top: m.y, width: m.w, height: m.h, background: m.color, opacity: 1 - p }} />;
+          const shown = m.step && p < 1 ? Math.floor((m.w * p) / m.step) * m.step : m.w * p;
           const caretOn = m.caret !== undefined && frame >= m.at - 20 && Math.floor((frame - m.at) / 16) % 2 === 0;
           return (
             <div key={`${m.x}-${m.y}`}>

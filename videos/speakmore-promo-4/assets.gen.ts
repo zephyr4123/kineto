@@ -18,6 +18,7 @@ export const assets = {
   douyin1: "speakmore-promo-4/douyin1.png",
   douyin2: "speakmore-promo-4/douyin2.png",
   douyin3: "speakmore-promo-4/douyin3.png",
+  downloads: "speakmore-promo-4/downloads.png",
   fontInter: "speakmore-promo-4/fontInter.ttf",
   fontMono: "speakmore-promo-4/fontMono.ttf",
   fontNum: "speakmore-promo-4/fontNum.ttf",

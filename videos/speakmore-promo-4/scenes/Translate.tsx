@@ -1,12 +1,15 @@
 import { AbsoluteFill } from "remotion";
 import { assets } from "../assets.gen";
 import { Backdrop, Head, Screen, Sub, sec } from "../components/kit";
+import { FinishKey, Waveform } from "../components/bar";
 import { LAND, TONE } from "../theme";
 
-// 语音翻译：和语音输入同一套运镜，说的是中文（订餐厅的位子），落下的是英文。中间在悬浮条上点一下目标语言、再点完成。
+// 语音翻译：和语音输入同一套做法，说的是中文（订餐厅的位子），落下的是英文。声波一直在跳、原话跟着认出来；
+// 说完按一下键，声波收住，英文整段落进光标处（目标语言在悬浮条的菜单里已经选好英文）。
 const T = TONE.night;
 const at = (s: number) => LAND + sec(s);
 const CARD = "#f9fbfc";
+const DONE = at(3.8);
 
 export const Translate: React.FC = () => (
   <AbsoluteFill>
@@ -21,35 +24,24 @@ export const Translate: React.FC = () => (
       bg="oklch(0.975 0.007 235)"
       keys={[
         { f: 0, x: 880, y: 393, s: 0.62 },
-        { f: at(0.4), x: 880, y: 393, s: 0.62 },
-        { f: at(1.2), x: 420, y: 215, s: 1.12 },
-        { f: at(2.6), x: 420, y: 228, s: 1.12 },
-        { f: at(3.3), x: 440, y: 500, s: 1.05 },
-        { f: at(4.8), x: 440, y: 500, s: 1.05 },
-        { f: at(5.5), x: 1300, y: 470, s: 1.02 },
+        { f: at(0.3), x: 880, y: 393, s: 0.62 },
+        { f: at(1.1), x: 420, y: 370, s: 1.0 },
+        { f: at(3.9), x: 430, y: 390, s: 1.0 },
+        { f: at(4.7), x: 1300, y: 470, s: 1.02 },
         { f: at(7.1), x: 1300, y: 470, s: 1.02 },
         { f: at(8.2), x: 880, y: 393, s: 0.62 },
       ]}
       typing={[
-        { x: 110, y: 172, w: 600, h: 50, at: at(1.3), dur: sec(0.9), color: CARD },
-        { x: 110, y: 222, w: 150, h: 48, at: at(2.2), dur: sec(0.3), color: CARD },
-        { x: 948, y: 388, w: 700, h: 54, at: at(5.6), dur: sec(0.55), color: CARD },
-        { x: 948, y: 443, w: 670, h: 54, at: at(6.15), dur: sec(0.55), color: CARD },
-        { x: 948, y: 498, w: 205, h: 52, at: at(6.7), dur: sec(0.25), color: CARD, caret: "#2f5fb8" },
+        { x: 116, y: 172, w: 585, h: 50, at: at(0.5), dur: sec(1.45), color: CARD, step: 29.15 },
+        { x: 116, y: 222, w: 146, h: 48, at: at(2.05), dur: sec(0.4), color: CARD, step: 29.15 },
+        { x: 948, y: 388, w: 702, h: 164, at: at(4.8), dur: sec(0.25), color: CARD, fade: true },
       ]}
-      pointer={{
-        kind: "arrow",
-        show: [at(3.2), at(5.1)],
-        keys: [
-          { f: at(3.2), x: 700, y: 330 },
-          { f: at(3.7), x: 300, y: 412 },
-          { f: at(4.15), x: 300, y: 412 },
-          { f: at(4.55), x: 573, y: 619 },
-          { f: at(4.85), x: 573, y: 619 },
-          { f: at(5.1), x: 660, y: 690 },
-        ],
-        clicks: [at(3.85), at(4.65)],
-      }}
+      overlay={
+        <>
+          <Waveform x={396} cy={618.5} stop={DONE} />
+          <FinishKey x={640} y={571} at={DONE} doneX={573} doneY={619} />
+        </>
+      }
     />
   </AbsoluteFill>
 );

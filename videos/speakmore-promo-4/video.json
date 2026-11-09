@@ -5,7 +5,7 @@
   "status": "draft",
   "tags": [],
   "createdAt": "2026-11-09T11:00:09.093Z",
-  "updatedAt": "2026-11-09T12:07:58.016Z",
+  "updatedAt": "2026-11-09T12:29:25.129Z",
   "assets": {
     "song": "sha256:e364ad393e773f5e2e15f6854e09ce06e6197f754b2e46af9aa8ba1f198a12b3",
     "fontNum": "sha256:413e7357809ddd12fd80a96a8a396de0e401638d4acd3cb3e37532f0472ac682",
@@ -39,6 +39,7 @@
     "fontSerif": "sha256:050080d9255a86808f2945bffac582b31ef32bc36411ce29563b4961670c66f9",
     "fontInter": "sha256:29160a80ff49ddcab2c97711247e08b1fab27a484a329ce8b813d820dc559031",
     "siteHero": "sha256:d3b6ccc6f2d9dc1cb0806fea5186c2bcc2ac71d5bff9f3e44c0f9c87ff441952",
-    "ghRepo": "sha256:1280bcdf526e9c2a227f77f64f1781634c0e6813626405bbc3d323910df13f6c"
+    "ghRepo": "sha256:1280bcdf526e9c2a227f77f64f1781634c0e6813626405bbc3d323910df13f6c",
+    "downloads": "sha256:0e98e775998800821c7026fe76c15dec7e448a32625196fc8aa55f0989e20292"
   }
 }

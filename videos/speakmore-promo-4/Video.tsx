@@ -7,7 +7,8 @@ import { Brand } from "./scenes/Brand";
 import { Code } from "./scenes/Code";
 import { Cost } from "./scenes/Cost";
 import { Dictate } from "./scenes/Dictate";
-import { Download } from "./scenes/Download";
+import { Downloads } from "./scenes/Downloads";
+import { Guide } from "./scenes/Guide";
 import { Issues } from "./scenes/Issues";
 import { Lookup } from "./scenes/Lookup";
 import { Outro } from "./scenes/Outro";
@@ -22,6 +23,7 @@ import { b, H, LAND, MUSIC, MUSIC_END, VIDEO_FRAMES, W } from "./theme";
 // 盖在上一张上面；上一张同时往上让一点、暗一点，动作都朝上，接得顺。落点都在音乐抽空后重新进来的那一拍。
 export const CARDS = [
   { name: "Views", Scene: Views, land: 0 },
+  { name: "Downloads", Scene: Downloads, land: b(12) },
   { name: "Repo", Scene: Repo, land: b(20) },
   { name: "Brand", Scene: Brand, land: b(32) },
   { name: "Dictate", Scene: Dictate, land: b(44) },
@@ -32,7 +34,7 @@ export const CARDS = [
   { name: "Issues", Scene: Issues, land: b(140) },
   { name: "Code", Scene: Code, land: b(156) },
   { name: "Thanks", Scene: Thanks, land: b(172) },
-  { name: "Download", Scene: Download, land: b(188) },
+  { name: "Guide", Scene: Guide, land: b(188) },
   { name: "Outro", Scene: Outro, land: b(204) },
 ] as const;
 
