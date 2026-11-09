@@ -1,11 +1,11 @@
 import { AbsoluteFill } from "remotion";
 import { assets } from "../assets.gen";
 import { Backdrop, Head, Screen, Sub, sec } from "../components/kit";
-import { FinishKey, Waveform } from "../components/bar";
+import { FinishKey, KEY, Waveform } from "../components/bar";
 import { LAND, TONE } from "../theme";
 
 // 语音输入：用 App 自己的界面和悬浮条出的图（口述卡 → 悬浮条 → 写入光标处），口述的话是为这支片子写的生活场景。
-// 要让人一眼看出是在说话：悬浮条的声波一直在跳，口述卡里的原话跟着一个字一个字认出来；说完按一下键，声波收住，
+// 要让人一眼看出是在说话：悬浮条的声波一直在跳，口述卡里的原话跟着一个字一个字认出来；说完再按一下右 ⌥（和悬浮条上方的提示一致），声波收住，
 // 整理好的一段整段落进右边的光标处（App 是粘贴进去的，不是一个字一个字打）。最后拉回全貌。
 const T = TONE.ochre;
 const at = (s: number) => LAND + sec(s);
@@ -42,7 +42,7 @@ export const Dictate: React.FC = () => (
       overlay={
         <>
           <Waveform x={368} cy={496.5} stop={DONE} />
-          <FinishKey x={612} y={449} at={DONE} doneX={545} doneY={497} />
+          <FinishKey cx={426} y={560} at={DONE} doneX={545} doneY={497} keys={[KEY.rightOption]} />
         </>
       }
     />

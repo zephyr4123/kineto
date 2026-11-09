@@ -1,11 +1,11 @@
 import { AbsoluteFill } from "remotion";
 import { assets } from "../assets.gen";
 import { Backdrop, Head, Screen, Sub, sec } from "../components/kit";
-import { FinishKey, Waveform } from "../components/bar";
+import { FinishKey, KEY, Waveform } from "../components/bar";
 import { LAND, TONE } from "../theme";
 
 // 语音翻译：和语音输入同一套做法，说的是中文（订餐厅的位子），落下的是英文。声波一直在跳、原话跟着认出来；
-// 说完按一下键，声波收住，英文整段落进光标处（目标语言在悬浮条的菜单里已经选好英文）。
+// 说完再按一下右 ⌥ 加空格（和悬浮条上方的提示一致），声波收住，英文整段落进光标处（目标语言在悬浮条的菜单里已经选好英文）。
 const T = TONE.night;
 const at = (s: number) => LAND + sec(s);
 const CARD = "#f9fbfc";
@@ -26,7 +26,7 @@ export const Translate: React.FC = () => (
         { f: 0, x: 880, y: 393, s: 0.62 },
         { f: at(0.3), x: 880, y: 393, s: 0.62 },
         { f: at(1.1), x: 420, y: 370, s: 1.0 },
-        { f: at(3.9), x: 430, y: 390, s: 1.0 },
+        { f: at(3.9), x: 440, y: 448, s: 1.0 },
         { f: at(4.7), x: 1300, y: 470, s: 1.02 },
         { f: at(7.1), x: 1300, y: 470, s: 1.02 },
         { f: at(8.2), x: 880, y: 393, s: 0.62 },
@@ -39,7 +39,7 @@ export const Translate: React.FC = () => (
       overlay={
         <>
           <Waveform x={396} cy={618.5} stop={DONE} />
-          <FinishKey x={640} y={571} at={DONE} doneX={573} doneY={619} />
+          <FinishKey cx={454} y={676} at={DONE} doneX={573} doneY={619} keys={[KEY.rightOption, KEY.space]} />
         </>
       }
     />
