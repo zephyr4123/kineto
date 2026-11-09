@@ -1,9 +1,10 @@
-import { AbsoluteFill, Composition } from "remotion";
+import { AbsoluteFill, Composition, Still } from "remotion";
 import { Grain } from "./components/kit";
+import { Cover, CoverPortrait } from "./scenes/Cover";
 import { FPS, H, VIDEO_FRAMES, W } from "./theme";
 import { SPANS, Video } from "./Video";
 
-// 成片 + 每张卡各一个 composition（卡片在 Studio 里可单独预览，时长和成片里一样）
+// 成片 + 每张卡各一个 composition（卡片在 Studio 里可单独预览，时长和成片里一样）+ 横竖两张封面
 const staged = (Scene: React.FC) => {
   const Staged: React.FC = () => (
     <AbsoluteFill>
@@ -29,6 +30,9 @@ const ThanksStaged = staged(thanks.Scene);
 const GuideStaged = staged(guide.Scene);
 const OutroStaged = staged(outro.Scene);
 
+const CoverGrain = staged(Cover);
+const CoverPortraitGrain = staged(CoverPortrait);
+
 export const Compositions: React.FC = () => {
   return (
     <>
@@ -47,6 +51,8 @@ export const Compositions: React.FC = () => {
       <Composition id="speakmore-promo-4-thanks" component={ThanksStaged} durationInFrames={thanks.frames} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-4-guide" component={GuideStaged} durationInFrames={guide.frames} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-4-outro" component={OutroStaged} durationInFrames={outro.frames} fps={FPS} width={W} height={H} />
+      <Still id="speakmore-promo-4-cover" component={CoverGrain} width={W} height={H} />
+      <Still id="speakmore-promo-4-cover-portrait" component={CoverPortraitGrain} width={1080} height={1440} />
     </>
   );
 };
