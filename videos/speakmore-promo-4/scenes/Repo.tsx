@@ -25,6 +25,7 @@ export const Repo: React.FC = () => (
         { f: 0, x: 1240, y: 180, s: 0.363 },
         { f: at(0.9), x: 1240, y: 180, s: 0.363 },
         { f: at(2.4), x: 2215, y: 46, s: 0.95 },
+        { f: at(6.5), x: 2060, y: 52, s: 1.0 },
       ]}
     />
   </AbsoluteFill>

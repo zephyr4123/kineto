@@ -36,7 +36,7 @@ export const Thanks: React.FC = () => {
       <div style={{ position: "absolute", left: 900, top: 200, width: 900, display: "grid", gridTemplateColumns: "repeat(4, 1fr)", rowGap: 46 }}>
         {PEOPLE.map(([name, src], i) => {
           const p = interpolate(frame, [at(0.3) + i * 6, at(0.3) + i * 6 + 44], [0, 1], { ...clamp, easing: outExpo });
-          const float = Math.sin((frame + i * 37) / 70) * 3;
+          const float = Math.sin((frame + i * 37) / 60) * 6;
           return (
             <div key={name} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, opacity: p, transform: `translateY(${(1 - p) * 36 + float}px)` }}>
               <Img

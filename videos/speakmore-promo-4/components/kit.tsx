@@ -70,8 +70,9 @@ export const skyline = (local: number, land: number, w: number, h: number) => {
   const pts: string[] = [`0px ${h}px`];
   CROWNS.forEach((crown, i) => {
     const p = interpolate(local, [ORDER_DELAY[i], ORDER_DELAY[i] + rise], [0, 1], { ...clamp, easing: inOut });
-    const top = h + 40 - p * (h + 40 + col * 0.6);
-    for (const [fx, fy] of crown) pts.push(`${(i + fx) * col}px ${top + fy * col}px`);
+    // 斜口按图标的比例缩到三分之一：看得出是那五道刻痕，又不至于像碎片
+    const top = h + 40 - p * (h + 40 + col * 0.25);
+    for (const [fx, fy] of crown) pts.push(`${(i + fx) * col}px ${top + fy * col * 0.35}px`);
   });
   pts.push(`${w}px ${h}px`);
   return `polygon(${pts.join(", ")})`;

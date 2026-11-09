@@ -37,30 +37,44 @@ export const SPANS = CARDS.map((c, i) => {
   const from = i === 0 ? 0 : c.land - LAND;
   const next = CARDS[i + 1];
   const to = next ? next.land : VIDEO_FRAMES;
-  return { ...c, from, frames: to - from, leaveAt: next ? next.land - LAND - from : Number.POSITIVE_INFINITY, first: i === 0 };
+  return { ...c, from, frames: to - from, leaveAt: next ? next.land - LAND - from : Number.POSITIVE_INFINITY, first: i === 0, last: !next };
 });
 
 const ease = Easing.inOut(Easing.cubic);
 
-const Card: React.FC<{ first: boolean; leaveAt: number; children: React.ReactNode }> = ({ first, leaveAt, children }) => {
+const Card: React.FC<{ first: boolean; last: boolean; frames: number; leaveAt: number; children: React.ReactNode }> = ({ first, last, frames, leaveAt, children }) => {
   const frame = useCurrentFrame();
   // 最后一张没有下一张来盖，不用让
   const leave = Number.isFinite(leaveAt) ? interpolate(frame, [leaveAt, leaveAt + LAND], [0, 1], { ...clamp, easing: ease }) : 0;
   const revealing = !first && frame < LAND;
+  // 新卡片像一页纸叠上来：沿着升起的边有一道柔和的投影，里面的内容跟着往上浮一点
+  const enter = first ? 1 : interpolate(frame, [0, LAND], [0, 1], { ...clamp, easing: Easing.out(Easing.cubic) });
+  // 每张卡在自己的时长里慢慢推近一点，镜头不停；落版那张在音乐收住前推完，之后静止
+  const push = last ? interpolate(frame, [0, LAND + 150], [0, 0.02], { ...clamp, easing: Easing.out(Easing.cubic) }) : (0.03 * frame) / frames;
   return (
-    <AbsoluteFill style={{ clipPath: revealing ? skyline(frame, LAND, W, H) : undefined }}>
-      <AbsoluteFill style={{ transform: `translateY(${-56 * leave}px)`, filter: leave > 0 ? `brightness(${1 - 0.18 * leave})` : undefined }}>{children}</AbsoluteFill>
+    <AbsoluteFill style={{ filter: revealing ? "drop-shadow(0 -14px 28px oklch(0.1 0.02 260 / 0.32))" : undefined }}>
+      <AbsoluteFill style={{ clipPath: revealing ? skyline(frame, LAND, W, H) : undefined, overflow: "hidden" }}>
+        <AbsoluteFill
+          style={{
+            transform: `translateY(${(1 - enter) * 90 - 56 * leave}px) scale(${1 + push})`,
+            filter: leave > 0 ? `brightness(${1 - 0.18 * leave})` : undefined,
+          }}
+        >
+          {children}
+        </AbsoluteFill>
+      </AbsoluteFill>
     </AbsoluteFill>
   );
 };
 
-const VOLUME = 0.8;
+// 响度对着前几支的 -14 LUFS 上下
+const VOLUME = 0.58;
 
 export const Video: React.FC = () => (
   <AbsoluteFill style={{ background: "#000" }}>
-    {SPANS.map(({ name, Scene, from, frames, leaveAt, first }) => (
+    {SPANS.map(({ name, Scene, from, frames, leaveAt, first, last }) => (
       <Sequence key={name} name={name} from={from} durationInFrames={frames}>
-        <Card first={first} leaveAt={leaveAt}>
+        <Card first={first} last={last} frames={frames} leaveAt={leaveAt}>
           <Scene />
         </Card>
       </Sequence>

@@ -25,7 +25,7 @@ export const Lookup: React.FC = () => {
   return (
     <AbsoluteFill>
       <Backdrop tone="paper" />
-      <Head at={at(0)} text="划词即译" color={T.ink} style={{ position: "absolute", left: 118, top: 360 }} />
+      <Head at={at(-0.35)} text="划词即译" color={T.ink} style={{ position: "absolute", left: 118, top: 360 }} />
       <Line at={at(0.3)} style={{ position: "absolute", left: 124, top: 524 }}>
         <div style={{ display: "flex", gap: 30, fontFamily: SANS, fontWeight: 500, fontSize: 34, letterSpacing: "0.06em" }}>
           {PLACES.map((p, i) => (

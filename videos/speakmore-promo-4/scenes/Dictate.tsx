@@ -12,8 +12,8 @@ const CARD = "#f9fbfc";
 export const Dictate: React.FC = () => (
   <AbsoluteFill>
     <Backdrop tone="ochre" />
-    <Head at={at(0)} text="口述成文" color={T.ink} style={{ position: "absolute", left: 118, top: 392 }} />
-    <Sub at={at(0.3)} text="口头禅与改口 即时理顺" color={T.ink2} style={{ position: "absolute", left: 124, top: 556 }} />
+    <Head at={at(-0.35)} text="口述成文" color={T.ink} style={{ position: "absolute", left: 118, top: 392 }} />
+    <Sub at={at(-0.1)} text="口头禅与改口 即时理顺" color={T.ink2} style={{ position: "absolute", left: 124, top: 556 }} />
     <Screen
       src={assets.appDictateLight}
       w={1760}

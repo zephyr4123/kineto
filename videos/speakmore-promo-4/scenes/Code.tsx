@@ -15,8 +15,8 @@ const ITEMS = [
 export const Code: React.FC = () => (
   <AbsoluteFill>
     <Backdrop tone="paper" />
-    <Head at={at(0)} text="社区共建" color={T.ink} style={{ position: "absolute", left: 118, top: 250 }} />
-    <Sub at={at(0.3)} text="七项外部贡献 均已合并" color={T.ink2} style={{ position: "absolute", left: 124, top: 414 }} />
+    <Head at={at(-0.35)} text="社区共建" color={T.ink} style={{ position: "absolute", left: 118, top: 250 }} />
+    <Sub at={at(-0.1)} text="七项外部贡献 均已合并" color={T.ink2} style={{ position: "absolute", left: 124, top: 414 }} />
     {ITEMS.map((it, i) => (
       <Line key={it.text} at={it.at} style={{ position: "absolute", left: 124, top: 520 + i * 84 }}>
         <div style={{ fontFamily: ZH, fontSize: 58, lineHeight: 1.2, color: T.accent }}>{it.text}</div>

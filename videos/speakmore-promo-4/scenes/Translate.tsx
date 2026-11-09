@@ -11,8 +11,8 @@ const CARD = "#f9fbfc";
 export const Translate: React.FC = () => (
   <AbsoluteFill>
     <Backdrop tone="night" />
-    <Head at={at(0)} text="语音翻译" color={T.ink} style={{ position: "absolute", left: 1330, top: 392 }} />
-    <Sub at={at(0.3)} text="中文口述 外文成稿" color={T.ink2} style={{ position: "absolute", left: 1336, top: 556 }} />
+    <Head at={at(-0.35)} text="语音翻译" color={T.ink} style={{ position: "absolute", left: 1330, top: 392 }} />
+    <Sub at={at(-0.1)} text="中文口述 外文成稿" color={T.ink2} style={{ position: "absolute", left: 1336, top: 556 }} />
     <Screen
       src={assets.appTranslateLight}
       w={1760}

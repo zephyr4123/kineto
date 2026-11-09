@@ -18,8 +18,8 @@ export const Issues: React.FC = () => {
   return (
     <AbsoluteFill>
       <Backdrop tone="night" />
-      <Head at={at(0)} text="逐一回复" color={T.ink} style={{ position: "absolute", left: 1290, top: 392 }} />
-      <Sub at={at(0.3)} text="十五条反馈 十四条已解决" color={T.ink2} style={{ position: "absolute", left: 1296, top: 556 }} />
+      <Head at={at(-0.35)} text="逐一回复" color={T.ink} style={{ position: "absolute", left: 1290, top: 392 }} />
+      <Sub at={at(-0.1)} text="十五条反馈 十四条已解决" color={T.ink2} style={{ position: "absolute", left: 1296, top: 556 }} />
       <div
         style={{
           position: "absolute",
@@ -47,7 +47,7 @@ export const Issues: React.FC = () => {
             { f: at(2.2), x: 900, y: 780, s: 0.57 },
           ]}
         />
-        <div style={{ position: "absolute", inset: 0, transform: `translateY(${(1 - swap) * BOX.h}px)` }}>
+        <div style={{ position: "absolute", inset: 0, transform: `translateY(${(1 - swap) * BOX.h - interpolate(frame, [at(5.4), at(8.5)], [0, 60], clamp)}px)` }}>
           <Screen
             src={assets.issue9Head}
             w={1825}
