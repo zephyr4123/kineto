@@ -14,7 +14,7 @@ export const Outro: React.FC = () => {
   const base = prog(frame, at(0.15), 30);
   return (
     <AbsoluteFill>
-      <Backdrop tone="night" />
+      <Backdrop tone="night" side="center" />
       <AbsoluteFill style={{ alignItems: "center" }}>
         <div style={{ marginTop: 190 }}>
           <Seal size={200} bars={bars} base={base} />

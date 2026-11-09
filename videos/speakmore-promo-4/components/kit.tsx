@@ -12,9 +12,10 @@ const inOut = Easing.inOut(Easing.cubic);
  * 1. 同色相一深一浅的斜向渐变，上面三团光慢慢漂（主光、同色系偏深的一团、邻近色压得很淡的一团），四角压暗；
  * 2. 图标的五道声纹放大到将近一屏高、整组立在一侧，颜色只比底亮一点，带长长的柔影，五道各自缓缓起伏，像一段很慢的声音；
  * 3. 每十秒左右从左往右扫过一道很淡的光。
- * side 是声纹放在哪一边：放在截图那一侧，被截图压住一部分，露出来的边缘给画面纵深，不和字抢。
+ * side 是声纹放在哪一边：放在截图那一侧，被截图压住一部分，露出来的边缘给画面纵深，不和字抢；
+ * 落版那种居中的卡用 center，声纹淡一点、正好在图标后面，像图标的一道大影子。
  */
-export const Backdrop: React.FC<{ tone: Tone; side?: "left" | "right" }> = ({ tone, side = "right" }) => {
+export const Backdrop: React.FC<{ tone: Tone; side?: "left" | "right" | "center" }> = ({ tone, side = "right" }) => {
   const frame = useCurrentFrame();
   const t = TONE[tone];
   const wave = (period: number, amp: number, phase: number) => amp * Math.sin(frame / period + phase);
@@ -43,7 +44,7 @@ export const Backdrop: React.FC<{ tone: Tone; side?: "left" | "right" }> = ({ to
         style={{
           position: "absolute",
           top: 70 + wave(420, 12, 0.8),
-          [side]: 40,
+          ...(side === "center" ? { left: (1920 - 900) / 2, opacity: 0.6 } : { [side]: 40 }),
           filter: `drop-shadow(0 40px 50px ${t.barShadow})`,
           overflow: "visible",
         }}
