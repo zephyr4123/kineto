@@ -2,6 +2,7 @@ import { AbsoluteFill, Easing, interpolate, random, useCurrentFrame } from "remo
 import { clamp } from "../../../engine/motion";
 import { Backdrop, Head, Line, Sub, sec } from "../components/kit";
 import { LookupCard, Selectable } from "../components/lookup";
+import { activeWindow, Bar, WindowStack } from "../components/window";
 import { b, LAND, MONO, SANS, SERIF, TONE, UI } from "../theme";
 
 // 划词翻译：讲"哪里都能划"。四个常用的地方轮流上来——终端里的 Claude Code、技术文档、PDF 论文、游戏模组页，
@@ -9,9 +10,7 @@ import { b, LAND, MONO, SANS, SERIF, TONE, UI } from "../theme";
 // 左边"终端 文档 论文 模组"跟着亮起当前那一个。
 const T = TONE.paper;
 const at = (s: number) => LAND + sec(s);
-const BOX = { x: 690, y: 150, w: 1110, h: 780 };
 const START = [0, 8, 16, 24].map((n) => LAND + b(92 + n) - b(92));
-const SLIDE = 40;
 const PLACES = ["终端", "文档", "论文", "模组"];
 
 // 每个窗口自己的时间（u 是它铺满后的帧数）：光标出现 → 拖选 → 松手弹卡 → 译文换上
@@ -27,7 +26,7 @@ type WinProps = { u: number; k: number };
 
 export const Lookup: React.FC = () => {
   const frame = useCurrentFrame();
-  const active = Math.max(0, START.filter((s) => frame >= s - 20).length - 1);
+  const active = activeWindow(frame, START);
   const WINDOWS = [Terminal, Docs, Paper, ModPage];
   return (
     <AbsoluteFill>
@@ -43,63 +42,17 @@ export const Lookup: React.FC = () => {
         </div>
       </Line>
       <Sub at={at(0.5)} text="不装插件 任意窗口 选中即译" color={T.ink2} style={{ position: "absolute", left: 124, top: 590 }} />
-      <div
-        style={{
-          position: "absolute",
-          left: BOX.x,
-          top: BOX.y,
-          width: BOX.w,
-          height: BOX.h,
-          borderRadius: 22,
-          overflow: "hidden",
-          background: "#1c1e22",
-          boxShadow: "0 46px 90px -40px oklch(0.15 0.03 260 / 0.55), 0 16px 34px -18px oklch(0.15 0.03 260 / 0.4)",
-        }}
-      >
-        {WINDOWS.map((Win, k) => {
-          // 下一个窗口像一页纸从下面叠上来，这一个往上让一点、暗一点（和卡片之间的转场同一个意思）
-          const inP = k === 0 ? 1 : interpolate(frame, [START[k] - SLIDE, START[k]], [0, 1], { ...clamp, easing: Easing.inOut(Easing.cubic) });
-          const outP = k === 3 ? 0 : interpolate(frame, [START[k + 1] - SLIDE, START[k + 1]], [0, 1], { ...clamp, easing: Easing.inOut(Easing.cubic) });
-          if (inP <= 0 || outP >= 1) return null;
-          return (
-            <AbsoluteFill
-              key={k}
-              style={{
-                transform: `translateY(${(1 - inP) * BOX.h - outP * BOX.h * 0.3}px)`,
-                filter: outP > 0 ? `brightness(${1 - 0.3 * outP})` : undefined,
-                boxShadow: inP < 1 ? "0 -18px 40px oklch(0.1 0.02 260 / 0.35)" : undefined,
-              }}
-            >
-              <Win u={frame - START[k]} k={k} />
-            </AbsoluteFill>
-          );
-        })}
-      </div>
+      <WindowStack starts={START} bg="#1c1e22" windows={WINDOWS.map((Win, k) => <Win key={k} u={frame - START[k]} k={k} />)} />
     </AbsoluteFill>
   );
 };
 
 // ———— 四个窗口 ————
-// 每个窗口先画内容（会跟着镜头推），再把标题栏盖在最上面，推近时内容不会压到标题栏上。
-
-const Lights: React.FC = () => (
-  <div style={{ display: "flex", gap: 9 }}>
-    {["#ff5f57", "#febc2e", "#28c840"].map((c) => (
-      <i key={c} style={{ width: 14, height: 14, borderRadius: 7, background: c, boxShadow: "inset 0 0 0 0.5px oklch(0 0 0 / 0.15)" }} />
-    ))}
-  </div>
-);
+// 每个窗口先画内容（会跟着镜头推），再把标题栏盖在最上面。
 
 /** 选中后镜头往选区推一点：transform-origin 放在选区附近 */
 const Zoom: React.FC<{ u: number; origin: string; children: React.ReactNode }> = ({ u, origin, children }) => (
   <AbsoluteFill style={{ transformOrigin: origin, transform: `scale(${zoom(u)})` }}>{children}</AbsoluteFill>
-);
-
-const Bar: React.FC<{ bg: string; line: string; children?: React.ReactNode }> = ({ bg, line, children }) => (
-  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 54, display: "flex", alignItems: "center", gap: 22, padding: "0 20px", background: bg, borderBottom: `1px solid ${line}` }}>
-    <Lights />
-    {children}
-  </div>
 );
 
 const TERM_TEXT = "The build fails because vite.config.ts imports a plugin that isn't installed. Add it to devDependencies, then run the build again.";

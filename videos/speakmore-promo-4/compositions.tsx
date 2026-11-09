@@ -13,7 +13,7 @@ const staged = (Scene: React.FC) => {
   );
   return Staged;
 };
-const [views, repo, brand, dictate, vocab, translate, lookup, cost, issues, code, thanks, outro] = SPANS;
+const [views, repo, brand, dictate, vocab, translate, lookup, cost, issues, code, thanks, download, outro] = SPANS;
 const ViewsStaged = staged(views.Scene);
 const RepoStaged = staged(repo.Scene);
 const BrandStaged = staged(brand.Scene);
@@ -25,6 +25,7 @@ const CostStaged = staged(cost.Scene);
 const IssuesStaged = staged(issues.Scene);
 const CodeStaged = staged(code.Scene);
 const ThanksStaged = staged(thanks.Scene);
+const DownloadStaged = staged(download.Scene);
 const OutroStaged = staged(outro.Scene);
 
 export const Compositions: React.FC = () => {
@@ -42,6 +43,7 @@ export const Compositions: React.FC = () => {
       <Composition id="speakmore-promo-4-issues" component={IssuesStaged} durationInFrames={issues.frames} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-4-code" component={CodeStaged} durationInFrames={code.frames} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-4-thanks" component={ThanksStaged} durationInFrames={thanks.frames} fps={FPS} width={W} height={H} />
+      <Composition id="speakmore-promo-4-download" component={DownloadStaged} durationInFrames={download.frames} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-4-outro" component={OutroStaged} durationInFrames={outro.frames} fps={FPS} width={W} height={H} />
     </>
   );

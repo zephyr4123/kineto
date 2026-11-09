@@ -24,6 +24,7 @@ export const assets = {
   fontSans: "speakmore-promo-4/fontSans.ttf",
   fontSerif: "speakmore-promo-4/fontSerif.ttf",
   fontZh: "speakmore-promo-4/fontZh.woff2",
+  ghRepo: "speakmore-promo-4/ghRepo.webp",
   issue1: "speakmore-promo-4/issue1.png",
   issue9Head: "speakmore-promo-4/issue9Head.png",
   issue9Reply: "speakmore-promo-4/issue9Reply.png",
@@ -32,5 +33,6 @@ export const assets = {
   sceneDictate: "speakmore-promo-4/sceneDictate.webp",
   sceneTranslate: "speakmore-promo-4/sceneTranslate.webp",
   sceneVocab: "speakmore-promo-4/sceneVocab.webp",
+  siteHero: "speakmore-promo-4/siteHero.webp",
   song: "speakmore-promo-4/song.mp3",
 } as const;

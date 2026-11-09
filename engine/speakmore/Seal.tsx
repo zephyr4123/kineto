@@ -4,7 +4,7 @@
 // 五道两头斜切、左右不完全对称，是刀刻的样子，坐标别改。
 export const SEAL_COLOR = { indigo: "#29486f", paper: "#f7f4ed", cinnabar: "#c7563c", ochre: "#d69d43" } as const;
 
-const BARS = [
+export const BARS = [
   { fill: SEAL_COLOR.paper, points: "197,469 271,437 271,644 197,611" },
   { fill: SEAL_COLOR.cinnabar, points: "329,348 398,315 411,354 411,701 395,743 329,712" },
   { fill: SEAL_COLOR.paper, points: "469,219 517,187 547,226 547,814 526,842 469,811" },

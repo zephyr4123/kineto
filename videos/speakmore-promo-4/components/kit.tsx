@@ -1,27 +1,78 @@
 import { AbsoluteFill, Easing, Img, interpolate, staticFile, useCurrentFrame } from "remotion";
 import { clamp, outExpo } from "../../../engine/motion";
+import { BARS as SEAL_BARS } from "../../../engine/speakmore/Seal";
 import { NUM, SANS, TONE, type Tone, ZH } from "../theme";
 
 // 这支片子共用的零件：卡片的底、文字的进场、数字滚动、截图运镜（含光标和打字遮罩）。
 
 const inOut = Easing.inOut(Easing.cubic);
 
-/** 卡片的底：同色相一深一浅的斜向渐变，左上一团慢慢漂的光，四角压暗一点 */
-export const Backdrop: React.FC<{ tone: Tone }> = ({ tone }) => {
+/**
+ * 卡片的底，从下往上四层：
+ * 1. 同色相一深一浅的斜向渐变，上面三团光慢慢漂（主光、同色系偏深的一团、邻近色压得很淡的一团），四角压暗；
+ * 2. 图标的五道声纹放大到将近一屏高、整组立在一侧，颜色只比底亮一点，带长长的柔影，五道各自缓缓起伏，像一段很慢的声音；
+ * 3. 每十秒左右从左往右扫过一道很淡的光。
+ * side 是声纹放在哪一边：放在截图那一侧，被截图压住一部分，露出来的边缘给画面纵深，不和字抢。
+ */
+export const Backdrop: React.FC<{ tone: Tone; side?: "left" | "right" }> = ({ tone, side = "right" }) => {
   const frame = useCurrentFrame();
   const t = TONE[tone];
-  const gx = 24 + 7 * Math.sin(frame / 260);
-  const gy = 14 + 5 * Math.cos(frame / 330);
+  const wave = (period: number, amp: number, phase: number) => amp * Math.sin(frame / period + phase);
+  const blobs = [
+    { c: t.glow, x: 24 + wave(260, 7, 0), y: 14 + wave(330, 5, 1.6), w: 70, h: 80 },
+    { c: t.mesh[0], x: 80 + wave(300, 8, 2), y: 84 + wave(240, 6, 0.5), w: 80, h: 75 },
+    { c: t.mesh[1], x: 62 + wave(380, 10, 4), y: 26 + wave(290, 7, 3), w: 50, h: 55 },
+  ];
+  // 光带：每 640 帧扫过一次，扫过的那一段只占三分之一，其余时间不在画面里
+  const sweep = ((frame + 200) % 640) / 640;
   return (
-    <AbsoluteFill
-      style={{
-        background: [
-          `radial-gradient(ellipse 70% 80% at ${gx}% ${gy}%, ${t.glow}, transparent 70%)`,
-          `radial-gradient(ellipse 120% 120% at 50% 45%, transparent 55%, oklch(0 0 0 / 0.16) 100%)`,
-          `linear-gradient(155deg, ${t.from}, ${t.to})`,
-        ].join(", "),
-      }}
-    />
+    <AbsoluteFill style={{ overflow: "hidden" }}>
+      <AbsoluteFill
+        style={{
+          background: [
+            ...blobs.map((g) => `radial-gradient(ellipse ${g.w}% ${g.h}% at ${g.x}% ${g.y}%, ${g.c}, transparent 70%)`),
+            `radial-gradient(ellipse 120% 120% at 50% 45%, transparent 55%, oklch(0 0 0 / 0.16) 100%)`,
+            `linear-gradient(155deg, ${t.from}, ${t.to})`,
+          ].join(", "),
+        }}
+      />
+      <svg
+        viewBox="180 170 660 690"
+        width={900}
+        height={940}
+        style={{
+          position: "absolute",
+          top: 70 + wave(420, 12, 0.8),
+          [side]: 40,
+          filter: `drop-shadow(0 40px 50px ${t.barShadow})`,
+          overflow: "visible",
+        }}
+      >
+        <defs>
+          <linearGradient id={`bar-${tone}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor={t.bar} />
+            <stop offset="1" stopColor={t.bar} stopOpacity={0.25} />
+          </linearGradient>
+        </defs>
+        {SEAL_BARS.map((bar, i) => (
+          <polygon
+            key={bar.points}
+            points={bar.points}
+            fill={`url(#bar-${tone})`}
+            style={{ transformBox: "fill-box", transformOrigin: "center", transform: `scaleY(${1 + 0.07 * Math.sin(frame / 48 + i * 1.15)})` }}
+          />
+        ))}
+      </svg>
+      <AbsoluteFill
+        style={{
+          background: `linear-gradient(105deg, transparent 40%, ${t.sheen} 50%, transparent 60%)`,
+          backgroundSize: "300% 100%",
+          backgroundPosition: `${interpolate(sweep, [0, 0.34], [100, 0], clamp)}% 0`,
+          mixBlendMode: "soft-light",
+          opacity: interpolate(sweep, [0, 0.04, 0.3, 0.34], [0, 1, 1, 0], clamp),
+        }}
+      />
+    </AbsoluteFill>
   );
 };
 
@@ -254,7 +305,7 @@ const PointerView: React.FC<{ p: Pointer; frame: number; toScreen: (x: number, y
 
 /**
  * 一块"屏幕"：固定在画面上的圆角框，里面的截图按关键帧推近、平移（Screen Studio 那种运镜）。
- * 截图原尺寸 w×h（像素）；bg 是框里截图以外的底色；typing 是打字遮罩，pointer 是光标，都用原图坐标。
+ * 截图原尺寸 w×h（像素）；bg 是框里截图以外的底色；typing 是打字遮罩，pointer 是光标，overlay 是盖在图上的元素（跟着图一起推），都用原图坐标。
  */
 export const Screen: React.FC<{
   src: string;
@@ -268,7 +319,8 @@ export const Screen: React.FC<{
   frame?: number;
   style?: React.CSSProperties;
   shadow?: boolean;
-}> = ({ src, w, h, box, keys, bg = "transparent", typing = [], pointer, frame: frameProp, style, shadow = true }) => {
+  overlay?: React.ReactNode;
+}> = ({ src, w, h, box, keys, bg = "transparent", typing = [], pointer, frame: frameProp, style, shadow = true, overlay }) => {
   const current = useCurrentFrame();
   const frame = frameProp ?? current;
   const cam = sampleCam(keys, frame);
@@ -303,6 +355,7 @@ export const Screen: React.FC<{
             </div>
           );
         })}
+        {overlay}
       </div>
       {pointer ? <PointerView p={pointer} frame={frame} toScreen={toScreen} /> : null}
     </div>

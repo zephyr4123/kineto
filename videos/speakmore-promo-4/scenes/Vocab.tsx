@@ -11,7 +11,7 @@ const CARD = "#f9fbfc";
 
 export const Vocab: React.FC = () => (
   <AbsoluteFill>
-    <Backdrop tone="cinnabar" />
+    <Backdrop tone="cinnabar" side="left" />
     <Head at={at(-0.35)} text="专业词汇" color={T.ink} style={{ position: "absolute", left: 1312, top: 360 }} />
     <Sub at={at(-0.1)} text="医学术语 人名 小众专名" color={T.ink2} style={{ position: "absolute", left: 1318, top: 524 }} />
     <Sub at={at(4.6)} text="写进词典 一次认准" color={T.accent} style={{ position: "absolute", left: 1318, top: 578 }} />
