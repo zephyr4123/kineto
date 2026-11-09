@@ -13,11 +13,12 @@ const staged = (Scene: React.FC) => {
   );
   return Staged;
 };
-const [views, repo, brand, dictate, translate, lookup, cost, issues, code, thanks, outro] = SPANS;
+const [views, repo, brand, dictate, vocab, translate, lookup, cost, issues, code, thanks, outro] = SPANS;
 const ViewsStaged = staged(views.Scene);
 const RepoStaged = staged(repo.Scene);
 const BrandStaged = staged(brand.Scene);
 const DictateStaged = staged(dictate.Scene);
+const VocabStaged = staged(vocab.Scene);
 const TranslateStaged = staged(translate.Scene);
 const LookupStaged = staged(lookup.Scene);
 const CostStaged = staged(cost.Scene);
@@ -34,6 +35,7 @@ export const Compositions: React.FC = () => {
       <Composition id="speakmore-promo-4-repo" component={RepoStaged} durationInFrames={repo.frames} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-4-brand" component={BrandStaged} durationInFrames={brand.frames} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-4-dictate" component={DictateStaged} durationInFrames={dictate.frames} fps={FPS} width={W} height={H} />
+      <Composition id="speakmore-promo-4-vocab" component={VocabStaged} durationInFrames={vocab.frames} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-4-translate" component={TranslateStaged} durationInFrames={translate.frames} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-4-lookup" component={LookupStaged} durationInFrames={lookup.frames} fps={FPS} width={W} height={H} />
       <Composition id="speakmore-promo-4-cost" component={CostStaged} durationInFrames={cost.frames} fps={FPS} width={W} height={H} />

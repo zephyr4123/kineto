@@ -5,7 +5,7 @@
   "status": "draft",
   "tags": [],
   "createdAt": "2026-11-09T11:00:09.093Z",
-  "updatedAt": "2026-11-09T11:01:06.320Z",
+  "updatedAt": "2026-11-09T11:47:09.779Z",
   "assets": {
     "song": "sha256:e364ad393e773f5e2e15f6854e09ce06e6197f754b2e46af9aa8ba1f198a12b3",
     "fontNum": "sha256:413e7357809ddd12fd80a96a8a396de0e401638d4acd3cb3e37532f0472ac682",
@@ -19,14 +19,7 @@
     "issue9Reply": "sha256:a8602dbc339500ee1f53b5054b6c0f8a4e44a25b83242dd3236705b2c3ba8013",
     "prsMerged": "sha256:7c4a1b797c72c6e558839087c6fff905864982017e2ea9917e20c52797aa982f",
     "repoHead": "sha256:22d24e8b27094047e28d4088607bf8f6db937475b862d7cd7aeb031847f3e88f",
-    "appDictateLight": "sha256:5ded80015681e0bee3b777c4c376e1856f03304da7e288a6dd91e505b912ffa3",
-    "appTranslateLight": "sha256:0a4252fbfb62fedb787b4b8cb07f237a06e82abb56e0576a73b3b8b1127c4c7b",
-    "appLookupTerminal": "sha256:ac9f45fdf124ba00a109c8410b5bfa8a9ca98011ba062126b44a1675fcafe5a1",
-    "appLookupPdf": "sha256:0e72d0dd5df20365051bc63b13aa11671d585edd0d197c4f5e701c26e6061786",
-    "appLookupWeb": "sha256:ab92c208d84bd89fc3a60218905b55ec36d39d40751cdfc14549007a75df0052",
     "appPresets": "sha256:122550dfe47e73229ca39788dbc492899630d95f5ab7992fb1c47d40b708820e",
-    "appHistory": "sha256:203bf46730b7c83b5102aa5b4abdbb3782804f68cadd2d8d0ab4189a8c1cbdf7",
-    "appHome": "sha256:c0962793abae0db65f46e912cfa5f94b427aaede94dbe43d8ddeb34cdcf8a20a",
     "avKylelau339": "sha256:9af7fc401d26ef33a0601a96a34466fcea06bfd2a88570ad64d5465333fe2ef8",
     "avReverieach": "sha256:acbe583ea8c87e6e6ce041d08bbcf072120ea4488ea1c79d65404b06094ec808",
     "avLijunyu726": "sha256:db72e353946222edaaf5a4005726e12472b3f01dba2d2e224d8bc11665c261e7",
@@ -38,6 +31,12 @@
     "avShaneMikecn": "sha256:2110826974a5652cf581bff121641e312af51f508b5501bd9fc9ffcc448a8146",
     "avElsieHu": "sha256:5b377aee7344bccd5f93c1b3caad14774338665c25fd53ff54eba20887318e03",
     "avXiaofenghaoku": "sha256:dd4d650878482ce3d52e7b697aaea8a664e4f864c315dbf1500a8c6362adfa25",
-    "avKevinsol": "sha256:305e882bdaea8e09f7cc07b280325ca5454baff8a2bd78ca9e012f03b4108050"
+    "avKevinsol": "sha256:305e882bdaea8e09f7cc07b280325ca5454baff8a2bd78ca9e012f03b4108050",
+    "sceneDictate": "sha256:db441885da4eea26f80941c96fd7d257cc6d95a28fdabcad247bbfe0deab3ed4",
+    "sceneTranslate": "sha256:39a97dad5f24966c2bf5e848d9ea74ad79ea5c28b51bd13df15608203e61be09",
+    "sceneVocab": "sha256:bd1252ac5ab8808ec9ba22b4b6cfdb63a5c17414b2a34c9ffdded4633349573f",
+    "fontMono": "sha256:48715a42ec242c21e9f02692891e147d022299a52e48d5e413e1a942193ffeda",
+    "fontSerif": "sha256:050080d9255a86808f2945bffac582b31ef32bc36411ce29563b4961670c66f9",
+    "fontInter": "sha256:29160a80ff49ddcab2c97711247e08b1fab27a484a329ce8b813d820dc559031"
   }
 }

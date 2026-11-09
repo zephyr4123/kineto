@@ -9,9 +9,16 @@ import { assets } from "./assets.gen";
 export const ZH = "Smiley Sans"; // 得意黑：标题。斜切的笔画和图标刻痕的斜口是一路
 export const NUM = "Bricolage Grotesque"; // 大数字与品牌字
 export const SANS = "Noto Sans SC"; // 小字
+// 划词一段里画出来的几个窗口用：终端的等宽、文档和模组页的西文、论文的衬线
+export const MONO = "JetBrains Mono";
+export const UI = "Inter";
+export const SERIF = "Noto Serif SC";
 await loadFont({ family: ZH, url: staticFile(assets.fontZh) });
 await loadFont({ family: NUM, url: staticFile(assets.fontNum), weight: "200 800" });
 await loadFont({ family: SANS, url: staticFile(assets.fontSans), weight: "100 900" });
+await loadFont({ family: MONO, url: staticFile(assets.fontMono), weight: "100 800" });
+await loadFont({ family: UI, url: staticFile(assets.fontInter), weight: "100 900" });
+await loadFont({ family: SERIF, url: staticFile(assets.fontSerif), weight: "200 900" });
 
 export const W = 1920;
 export const H = 1080;
@@ -20,6 +27,7 @@ export const FPS = 60;
 // 配乐：秋成《We Never（若如初见）Vibe 氛围版》，只用开头到 85.54 秒（用户说这一段是精髓）。
 // 实测约 112.8 拍/分，第 0 拍在 0.44 秒。第 32 拍（17.46 秒）鼓进来；之后每 16 拍有两拍低音抽掉，
 // 第 44、60、76……156 拍重新进来，转场就放在抽空的两拍里、落在重新进来的那一拍上；第 160 拍（85.54 秒）这一段结束。
+// 片子比这一段长，接法见 LOOP_AT。
 const BEAT0 = 0.44;
 const BEAT_SEC = 0.531865;
 /** 第 n 拍是第几帧 */
@@ -27,9 +35,12 @@ export const b = (n: number) => Math.round((BEAT0 + n * BEAT_SEC) * FPS);
 export const BEAT = BEAT_SEC * FPS;
 /** 转场用两拍：新卡片从这时开始升起，两拍后铺满 */
 export const LAND = b(2) - b(0);
-/** 音乐停在第 160 拍，之后静音落版 */
-export const MUSIC_END = b(160);
-export const VIDEO_FRAMES = Math.round(88.4 * FPS);
+/** 片子比这一段长 32 拍：放到第 156 拍时跳回第 124 拍接着放（两处都是低音重新进来的那一拍），
+ *  所以片子的第 n 拍（n ≥ 156）对应歌的第 n − 32 拍，片子第 192 拍放到歌的第 160 拍收住，之后静音落版 */
+export const LOOP_AT = b(156);
+export const LOOP_FROM = b(124);
+export const MUSIC_END = b(192);
+export const VIDEO_FRAMES = MUSIC_END + Math.round(2.87 * FPS);
 
 /** 四种底：同一套明度、彩度压低到 0.1 上下，靠色相区分；每种底一深一浅铺成斜向渐变 */
 export const TONE = {

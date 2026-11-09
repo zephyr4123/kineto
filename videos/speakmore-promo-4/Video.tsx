@@ -14,7 +14,8 @@ import { Repo } from "./scenes/Repo";
 import { Thanks } from "./scenes/Thanks";
 import { Translate } from "./scenes/Translate";
 import { Views } from "./scenes/Views";
-import { b, H, LAND, MUSIC_END, VIDEO_FRAMES, W } from "./theme";
+import { Vocab } from "./scenes/Vocab";
+import { b, H, LAND, LOOP_AT, LOOP_FROM, MUSIC_END, VIDEO_FRAMES, W } from "./theme";
 
 // 成片的时间线：只排卡片和配乐。每张卡在"落点"那一拍铺满：落点前两拍（LAND 帧）新卡片从五道竖条里升上来，
 // 盖在上一张上面；上一张同时往上让一点、暗一点，动作都朝上，接得顺。落点都在音乐抽空后重新进来的那一拍。
@@ -23,13 +24,14 @@ export const CARDS = [
   { name: "Repo", Scene: Repo, land: b(20) },
   { name: "Brand", Scene: Brand, land: b(32) },
   { name: "Dictate", Scene: Dictate, land: b(44) },
-  { name: "Translate", Scene: Translate, land: b(60) },
-  { name: "Lookup", Scene: Lookup, land: b(76) },
-  { name: "Cost", Scene: Cost, land: b(92) },
-  { name: "Issues", Scene: Issues, land: b(108) },
-  { name: "Code", Scene: Code, land: b(124) },
-  { name: "Thanks", Scene: Thanks, land: b(140) },
-  { name: "Outro", Scene: Outro, land: b(156) },
+  { name: "Vocab", Scene: Vocab, land: b(60) },
+  { name: "Translate", Scene: Translate, land: b(76) },
+  { name: "Lookup", Scene: Lookup, land: b(92) },
+  { name: "Cost", Scene: Cost, land: b(124) },
+  { name: "Issues", Scene: Issues, land: b(140) },
+  { name: "Code", Scene: Code, land: b(156) },
+  { name: "Thanks", Scene: Thanks, land: b(172) },
+  { name: "Outro", Scene: Outro, land: b(188) },
 ] as const;
 
 /** 每张卡的 Sequence：从升起开始（第一张从 0 开始），到下一张铺满为止 */
@@ -69,6 +71,7 @@ const Card: React.FC<{ first: boolean; last: boolean; frames: number; leaveAt: n
 
 // 响度对着前几支的 -14 LUFS 上下
 const VOLUME = 0.58;
+const XF = 2;
 
 export const Video: React.FC = () => (
   <AbsoluteFill style={{ background: "#000" }}>
@@ -80,8 +83,17 @@ export const Video: React.FC = () => (
       </Sequence>
     ))}
     <Grain />
-    <Sequence name="music" durationInFrames={MUSIC_END + 12}>
-      <Audio src={staticFile(assets.song)} volume={(f) => interpolate(f, [0, 2, MUSIC_END - 18, MUSIC_END + 12], [0, VOLUME, VOLUME, 0], clamp)} />
+    {/* 配乐接成两段：先放到第 156 拍，再从第 124 拍接着放到第 160 拍（两处都是低音重新进来的那一拍，听不出接缝），
+        接口处交叉淡化 4 帧 */}
+    <Sequence name="music" durationInFrames={LOOP_AT + XF}>
+      <Audio src={staticFile(assets.song)} volume={(f) => interpolate(f, [0, 2, LOOP_AT - XF, LOOP_AT + XF], [0, VOLUME, VOLUME, 0], clamp)} />
+    </Sequence>
+    <Sequence name="music-loop" from={LOOP_AT - XF} durationInFrames={MUSIC_END + 12 - (LOOP_AT - XF)}>
+      <Audio
+        src={staticFile(assets.song)}
+        trimBefore={LOOP_FROM - XF}
+        volume={(f) => interpolate(f, [0, 2 * XF, MUSIC_END - LOOP_AT + XF - 18, MUSIC_END - LOOP_AT + XF + 12], [0, VOLUME, VOLUME, 0], clamp)}
+      />
     </Sequence>
   </AbsoluteFill>
 );
