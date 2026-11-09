@@ -27,7 +27,7 @@ export const FPS = 60;
 // 配乐：秋成《We Never（若如初见）Vibe 氛围版》，只用开头到 85.54 秒（用户说这一段是精髓）。
 // 实测约 112.8 拍/分，第 0 拍在 0.44 秒。第 32 拍（17.46 秒）鼓进来；之后每 16 拍有两拍低音抽掉，
 // 第 44、60、76……156 拍重新进来，转场就放在抽空的两拍里、落在重新进来的那一拍上；第 160 拍（85.54 秒）这一段结束。
-// 片子比这一段长，接法见 LOOP_AT。
+// 片子比这一段长，接法见 LOOP_SHIFT。
 const BEAT0 = 0.44;
 const BEAT_SEC = 0.531865;
 /** 第 n 拍是第几帧 */
@@ -35,10 +35,11 @@ export const b = (n: number) => Math.round((BEAT0 + n * BEAT_SEC) * FPS);
 export const BEAT = BEAT_SEC * FPS;
 /** 转场用两拍：新卡片从这时开始升起，两拍后铺满 */
 export const LAND = b(2) - b(0);
-/** 片子比这一段长 32 拍：放到第 156 拍时跳回第 124 拍接着放（两处都是低音重新进来的那一拍），
- *  所以片子的第 n 拍（n ≥ 156）对应歌的第 n − 32 拍，片子第 192 拍放到歌的第 160 拍收住，之后静音落版 */
+/** 片子比这一段长 32 拍：放到第 156 拍附近跳回 32 拍前接着放（第 124、156 拍都是低音重新进来的那一拍），
+ *  片子第 192 拍放到歌的第 160 拍收住，之后静音落版。
+ *  跳回的距离按波形互相关实测是 1021 帧；拿 b(156) − b(124) 算会取整成 1022，差的这 0.8 帧正好让两段低音反相相消 */
 export const LOOP_AT = b(156);
-export const LOOP_FROM = b(124);
+export const LOOP_SHIFT = 1021;
 export const MUSIC_END = b(192);
 export const VIDEO_FRAMES = MUSIC_END + Math.round(2.87 * FPS);
 

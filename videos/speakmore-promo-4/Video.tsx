@@ -15,7 +15,7 @@ import { Thanks } from "./scenes/Thanks";
 import { Translate } from "./scenes/Translate";
 import { Views } from "./scenes/Views";
 import { Vocab } from "./scenes/Vocab";
-import { b, H, LAND, LOOP_AT, LOOP_FROM, MUSIC_END, VIDEO_FRAMES, W } from "./theme";
+import { b, H, LAND, LOOP_AT, LOOP_SHIFT, MUSIC_END, VIDEO_FRAMES, W } from "./theme";
 
 // 成片的时间线：只排卡片和配乐。每张卡在"落点"那一拍铺满：落点前两拍（LAND 帧）新卡片从五道竖条里升上来，
 // 盖在上一张上面；上一张同时往上让一点、暗一点，动作都朝上，接得顺。落点都在音乐抽空后重新进来的那一拍。
@@ -72,6 +72,8 @@ const Card: React.FC<{ first: boolean; last: boolean; frames: number; leaveAt: n
 // 响度对着前几支的 -14 LUFS 上下
 const VOLUME = 0.58;
 const XF = 2;
+// 接点在第 154 拍后一点、还在抽空的两拍里：这一帧前后两段波形差得最少（实测差值只有信号的 12%）
+const CUT = LOOP_AT - 52;
 
 export const Video: React.FC = () => (
   <AbsoluteFill style={{ background: "#000" }}>
@@ -83,16 +85,15 @@ export const Video: React.FC = () => (
       </Sequence>
     ))}
     <Grain />
-    {/* 配乐接成两段：先放到第 156 拍，再从第 124 拍接着放到第 160 拍（两处都是低音重新进来的那一拍，听不出接缝），
-        接口处交叉淡化 4 帧 */}
-    <Sequence name="music" durationInFrames={LOOP_AT + XF}>
-      <Audio src={staticFile(assets.song)} volume={(f) => interpolate(f, [0, 2, LOOP_AT - XF, LOOP_AT + XF], [0, VOLUME, VOLUME, 0], clamp)} />
+    {/* 配乐接成两段：第二段比第一段晚 32 拍起放，接口处交叉淡化 4 帧；接法见 theme.ts 的 LOOP_SHIFT */}
+    <Sequence name="music" durationInFrames={CUT + XF}>
+      <Audio src={staticFile(assets.song)} volume={(f) => interpolate(f, [0, 2, CUT - XF, CUT + XF], [0, VOLUME, VOLUME, 0], clamp)} />
     </Sequence>
-    <Sequence name="music-loop" from={LOOP_AT - XF} durationInFrames={MUSIC_END + 12 - (LOOP_AT - XF)}>
+    <Sequence name="music-loop" from={CUT - XF} durationInFrames={MUSIC_END + 12 - (CUT - XF)}>
       <Audio
         src={staticFile(assets.song)}
-        trimBefore={LOOP_FROM - XF}
-        volume={(f) => interpolate(f, [0, 2 * XF, MUSIC_END - LOOP_AT + XF - 18, MUSIC_END - LOOP_AT + XF + 12], [0, VOLUME, VOLUME, 0], clamp)}
+        trimBefore={CUT - XF - LOOP_SHIFT}
+        volume={(f) => interpolate(f, [0, 2 * XF, MUSIC_END - CUT + XF - 18, MUSIC_END - CUT + XF + 12], [0, VOLUME, VOLUME, 0], clamp)}
       />
     </Sequence>
   </AbsoluteFill>
