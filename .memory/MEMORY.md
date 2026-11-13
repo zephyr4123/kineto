@@ -6,3 +6,4 @@
 - [审查力度按活的大小](review-proportional.md) — 小活不开审查子 agent，靠测试和实跑取证
 - [不走 issue-driven](no-issue-driven.md) — 本项目不为干活、记技术债开 issue，问题在汇报里说
 - [GitHub 账号锁定](gh-account-lock.md) — 专用 gh 配置 + ship 自锁，不受别的会话切号影响；推送 403 先查这里
+- [代码画界面的宣传片](video-ui-fidelity.md) — 要有真实交互、终端排满整行、现代 iPhone、底色跟品牌走
