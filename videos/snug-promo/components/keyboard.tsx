@@ -63,6 +63,25 @@ const Key: React.FC<{ x: number; y: number; w: number; label: React.ReactNode; d
   </div>
 );
 
+/** UU 自己的输入栏：「输入法」「电脑键盘」两个标签（选中的蓝色带下划线），右边关闭 */
+const TAB_X = { ime: 100, pc: 265 } as const;
+const UUBar: React.FC<{ tab: "ime" | "pc" }> = ({ tab }) => (
+  <div style={{ position: "absolute", left: 0, top: 0, width: SW, height: BAR_H + 30, background: "#f7f7f9", borderTop: "0.5px solid rgba(0,0,0,0.12)" }}>
+    {(["ime", "pc"] as const).map((k) => (
+      <div key={k} style={{ position: "absolute", left: TAB_X[k] - 60, width: 120, top: 10, textAlign: "center", fontFamily: ZH, fontSize: 18, color: tab === k ? "#5a9bff" : "#1c1c1e" }}>
+        {k === "ime" ? "输入法" : "电脑键盘"}
+        {tab === k ? <div style={{ margin: "3px auto 0", width: k === "ime" ? 60 : 76, height: 2, background: "#5a9bff", borderRadius: 1 }} /> : null}
+      </div>
+    ))}
+    <svg style={{ position: "absolute", left: 392, top: 11 }} width="22" height="22" viewBox="0 0 22 22">
+      <circle cx="11" cy="11" r="10.5" fill="#b4b6bd" />
+      <path d="M7.2 7.2l7.6 7.6M14.8 7.2l-7.6 7.6" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" />
+    </svg>
+  </div>
+);
+/** 输入栏上「电脑键盘」标签的中心（键盘内坐标） */
+export const PC_TAB = { x: TAB_X.pc, y: 22 };
+
 export const Keyboard: React.FC<{ show: number; pressed?: string | null; suggest?: readonly [string, string, string]; layer?: "abc" | "123" }> = ({
   show,
   pressed = null,
@@ -73,18 +92,7 @@ export const Keyboard: React.FC<{ show: number; pressed?: string | null; suggest
   const pop = pressed && pressed !== "LAYER" ? keyPos(pressed, layer) : null;
   return (
     <div style={{ position: "absolute", left: 0, top: KB_TOP + (1 - show) * KB_H, width: SW, height: KB_H }}>
-      {/* UU 输入栏 */}
-      <div style={{ position: "absolute", left: 0, top: 0, width: SW, height: BAR_H + 30, background: "#f7f7f9", borderTop: "0.5px solid rgba(0,0,0,0.12)" }}>
-        <div style={{ position: "absolute", left: 40, width: 120, top: 10, textAlign: "center", fontFamily: ZH, fontSize: 18, color: "#5a9bff" }}>
-          输入法
-          <div style={{ margin: "3px auto 0", width: 60, height: 2, background: "#5a9bff", borderRadius: 1 }} />
-        </div>
-        <div style={{ position: "absolute", left: 205, width: 120, top: 10, textAlign: "center", fontFamily: ZH, fontSize: 18, color: "#1c1c1e" }}>电脑键盘</div>
-        <svg style={{ position: "absolute", left: 392, top: 11 }} width="22" height="22" viewBox="0 0 22 22">
-          <circle cx="11" cy="11" r="10.5" fill="#b4b6bd" />
-          <path d="M7.2 7.2l7.6 7.6M14.8 7.2l-7.6 7.6" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" />
-        </svg>
-      </div>
+      <UUBar tab="ime" />
       {/* iOS 键盘面板 */}
       <div style={{ position: "absolute", left: 0, top: BAR_H, width: SW, height: KB_H - BAR_H, background: "#d9dbe1", borderRadius: "30px 30px 0 0" }}>
         <div style={{ position: "absolute", left: (SW - 146) / 2, top: 8, width: 146, height: 38, borderRadius: 19, background: "#ffffff" }} />
@@ -162,6 +170,91 @@ export const Keyboard: React.FC<{ show: number; pressed?: string | null; suggest
           {pressed}
         </div>
       ) : null}
+    </div>
+  );
+};
+
+// UU 的「电脑键盘」：UU 自己画的一块键盘，不是 iOS 键盘。排布照实机截图（公开测评 ai-bot.cn/netease-uuremote-review 里的横屏截图）：
+// 第一排「☐ 组合键模式」+ Control、Shift、Option、⌘，下面数字一排、字母三排，最后一排右边是 Space、Enter，最底下两个翻页点。
+// 截图是深色模式；这支片子里手机是浅色模式，配色换成浅色，排布不变。竖屏下一排十格。
+const PC_M = 8;
+const PC_GAP = 5;
+const PC_CW = (SW - 2 * PC_M - 9 * PC_GAP) / 10;
+const PC_KH = 40;
+const PC_TOP = BAR_H + 14;
+const pcX = (col: number) => PC_M + col * (PC_CW + PC_GAP);
+const pcW = (cols: number) => cols * PC_CW + (cols - 1) * PC_GAP;
+const pcY = (row: number) => PC_TOP + row * (PC_KH + 8);
+type PcKey = { id: string; label: React.ReactNode; row: number; x: number; w: number };
+const PC_KEYS: PcKey[] = [
+  { id: "CTRL", label: "Control", row: 0, x: pcX(2), w: pcW(2) },
+  { id: "SHIFT", label: "Shift", row: 0, x: pcX(4), w: pcW(2) },
+  { id: "OPT", label: "Option", row: 0, x: pcX(6), w: pcW(2) },
+  { id: "CMD", label: "⌘", row: 0, x: pcX(8), w: pcW(2) },
+  ...[..."1234567890"].map((ch, i) => ({ id: ch, label: ch, row: 1, x: pcX(i), w: PC_CW })),
+  ...[..."QWERTYUIOP"].map((ch, i) => ({ id: ch, label: ch, row: 2, x: pcX(i), w: PC_CW })),
+  ...[..."ASDFGHJKL"].map((ch, i) => ({ id: ch, label: ch, row: 3, x: pcX(i), w: PC_CW })),
+  { id: "BS", label: "←", row: 3, x: pcX(9), w: PC_CW },
+  ...[..."ZXCVBNM"].map((ch, i) => ({ id: ch, label: ch, row: 4, x: pcX(i), w: PC_CW })),
+  { id: "SPACE", label: "Space", row: 4, x: pcX(7), w: (pcW(3) - PC_GAP) / 2 },
+  { id: "ENTER", label: "Enter", row: 4, x: pcX(7) + (pcW(3) - PC_GAP) / 2 + PC_GAP, w: (pcW(3) - PC_GAP) / 2 },
+];
+/** 电脑键盘上某个键的中心（键盘内坐标）；COMBO 是「组合键模式」那个勾选框 */
+export const pcKeyPos = (id: string) => {
+  if (id === "COMBO") return { x: PC_M + 12, y: pcY(0) + PC_KH / 2 };
+  const k = PC_KEYS.find((q) => q.id === id);
+  return k ? { x: k.x + k.w / 2, y: pcY(k.row) + PC_KH / 2 } : null;
+};
+
+/** UU 的电脑键盘。combo：「组合键模式」勾上了；held：组合键模式下已经按住的修饰键；pressed：正按着的键 */
+export const PcKeyboard: React.FC<{ show: number; combo?: boolean; held?: readonly string[]; pressed?: string | null }> = ({ show, combo = false, held = [], pressed = null }) => {
+  if (show <= 0) return null;
+  return (
+    <div style={{ position: "absolute", left: 0, top: KB_TOP + (1 - show) * KB_H, width: SW, height: KB_H }}>
+      <UUBar tab="pc" />
+      <div style={{ position: "absolute", left: 0, top: BAR_H, width: SW, height: KB_H - BAR_H, background: "#e3e5ea" }} />
+      {/* 组合键模式：勾选框 + 字 */}
+      <div style={{ position: "absolute", left: PC_M + 2, top: pcY(0), height: PC_KH, display: "flex", alignItems: "center", gap: 5, fontFamily: ZH, fontSize: 12.5, color: "#1c1c1e", whiteSpace: "nowrap" }}>
+        <div style={{ width: 17, height: 17, borderRadius: 4, border: combo ? "none" : "1.6px solid #3a3a3c", background: combo ? "#2f7cf6" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transform: pressed === "COMBO" ? "scale(0.88)" : undefined }}>
+          {combo ? (
+            <svg width="11" height="9" viewBox="0 0 11 9">
+              <path d="M1.2 4.6 4 7.4 9.8 1.4" fill="none" stroke="#fff" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          ) : null}
+        </div>
+        组合键模式
+      </div>
+      {PC_KEYS.map((k) => {
+        const on = pressed === k.id;
+        const hold = held.includes(k.id);
+        return (
+          <div
+            key={k.id}
+            style={{
+              position: "absolute",
+              left: k.x,
+              top: pcY(k.row),
+              width: k.w,
+              height: PC_KH,
+              borderRadius: 7,
+              background: on ? "#b9bec8" : hold ? "#cfe0ff" : "#ffffff",
+              border: hold ? "1.5px solid #2f7cf6" : undefined,
+              boxShadow: "0 1px 0 rgba(0,0,0,0.22)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontFamily: SF,
+              fontSize: k.row === 0 ? 17 : 19,
+              color: hold ? "#1f5fd6" : "#1c1c1e",
+            }}
+          >
+            {k.label}
+          </div>
+        );
+      })}
+      {/* 翻页点 */}
+      <div style={{ position: "absolute", left: SW / 2 - 30, top: pcY(5) + 6, width: 26, height: 5, borderRadius: 3, background: "#1c1c1e" }} />
+      <div style={{ position: "absolute", left: SW / 2 + 4, top: pcY(5) + 6, width: 26, height: 5, borderRadius: 3, background: "#a6a9b0" }} />
     </div>
   );
 };

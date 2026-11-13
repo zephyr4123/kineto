@@ -14,11 +14,10 @@ const staged = (Scene: React.FC) => {
   );
   return Staged;
 };
-const [away, painSmall, painLocked, painCut, reveal, snap, scroll, select, menu, back, anyApp, resume, anywhere, restore, outro] = SPANS;
+const [away, connect, desktop, reveal, snap, scroll, select, menu, back, anyApp, resume, anywhere, restore, outro] = SPANS;
 const AwayStaged = staged(away.Scene);
-const PainSmallStaged = staged(painSmall.Scene);
-const PainLockedStaged = staged(painLocked.Scene);
-const PainCutStaged = staged(painCut.Scene);
+const ConnectStaged = staged(connect.Scene);
+const DesktopStaged = staged(desktop.Scene);
 const RevealStaged = staged(reveal.Scene);
 const SnapStaged = staged(snap.Scene);
 const ScrollStaged = staged(scroll.Scene);
@@ -36,9 +35,8 @@ export const Compositions: React.FC = () => {
     <>
       <Composition id="snug-promo" component={Video} durationInFrames={VIDEO_FRAMES} fps={FPS} width={W} height={H} />
       <Composition id="snug-promo-away" component={AwayStaged} durationInFrames={away.frames} fps={FPS} width={W} height={H} />
-      <Composition id="snug-promo-pain-small" component={PainSmallStaged} durationInFrames={painSmall.frames} fps={FPS} width={W} height={H} />
-      <Composition id="snug-promo-pain-locked" component={PainLockedStaged} durationInFrames={painLocked.frames} fps={FPS} width={W} height={H} />
-      <Composition id="snug-promo-pain-cut" component={PainCutStaged} durationInFrames={painCut.frames} fps={FPS} width={W} height={H} />
+      <Composition id="snug-promo-connect" component={ConnectStaged} durationInFrames={connect.frames} fps={FPS} width={W} height={H} />
+      <Composition id="snug-promo-desktop" component={DesktopStaged} durationInFrames={desktop.frames} fps={FPS} width={W} height={H} />
       <Composition id="snug-promo-reveal" component={RevealStaged} durationInFrames={reveal.frames} fps={FPS} width={W} height={H} />
       <Composition id="snug-promo-snap" component={SnapStaged} durationInFrames={snap.frames} fps={FPS} width={W} height={H} />
       <Composition id="snug-promo-scroll" component={ScrollStaged} durationInFrames={scroll.frames} fps={FPS} width={W} height={H} />

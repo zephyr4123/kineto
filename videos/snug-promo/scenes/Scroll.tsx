@@ -4,12 +4,12 @@ import { GHOSTTY_BODY, GhosttyApp } from "../components/apps";
 import { flick } from "../components/gesture";
 import { MW, toPhone } from "../components/mac";
 import { Phone, Touch } from "../components/phone";
-import { Hero, HOME } from "../components/stage";
+import { Hero, HOME, Note } from "../components/stage";
 import { BANNER, contentHeight, EARLY, INPUT, layout, SESSION } from "../components/terminal";
 import { UUSnug } from "../components/uu";
 import { local } from "../theme";
 
-// 单指滚动：手指往下一甩，终端往回翻，松手后按 Snug 的惯性曲线减速停下；再往上一甩回到底部。
+// MOBILE NATIVE 第一下：单指滚动，和在 iPhone 上一样（原版 UU远程 要双指滑）。手指往下一甩，终端往回翻、慢慢停稳；再往上一甩回到底部。
 const at = local(64);
 const LINES = [...BANNER, "", ...EARLY, ...SESSION, ...INPUT("")];
 const SIZE = 16;
@@ -47,7 +47,8 @@ export const Scroll: React.FC = () => {
         ))}
         <Touch x={pc.x} y={pc.y} press={1} show={c.show} />
       </Phone>
-      <Hero at={2} until={at(8) - 6} title="SCROLL" sub="单指滚动 · 惯性滑行" />
+      <Hero at={2} title="MOBILE NATIVE" sub="单指滚动" />
+      <Note at={at(1)} until={at(8) - 6} text="原版 · 双指滑动" y={500} dim />
     </AbsoluteFill>
   );
 };

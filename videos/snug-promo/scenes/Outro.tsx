@@ -3,7 +3,7 @@ import { clamp, inOutQuint, outExpo, punch } from "../../../engine/motion";
 import { assets } from "../assets.gen";
 import { C, local, MONO, SF, ZH } from "../theme";
 
-// 落版：图标、名字、一句定位；GitHub 仓库卡片升上来，光标点亮 Star；最后是地址、开源许可和致谢。
+// 落版：图标、名字、slogan 和一句定位；GitHub 仓库卡片升上来，光标点亮 Star；最后是地址、开源许可和致谢。
 // 仓库刚发布（v2.0.0，2026-11-13），星标数很小，卡片上不放数字，只演示点亮。
 const at = local(228);
 
@@ -33,10 +33,9 @@ export const Outro: React.FC = () => {
       <div style={{ position: "absolute", left: 0, right: 0, top: 0, height: 1200, transform: `scale(${hit})`, transformOrigin: "50% 40%" }}>
         <Img src={staticFile(assets.snugIcon)} style={{ position: "absolute", left: 540 - 170, top: 250, width: 340, height: 340, opacity: icon, transform: `translateY(${(1 - icon) * 50}px) scale(${0.8 + 0.2 * icon})`, filter: "drop-shadow(0 30px 60px rgba(20,50,120,0.28))" }} />
         <div style={{ position: "absolute", left: 0, right: 0, top: 590, textAlign: "center", fontFamily: SF, fontWeight: 800, fontSize: 200, letterSpacing: "-0.04em", color: C.ink, opacity: name, transform: `translateY(${(1 - name) * 30}px)` }}>Snug</div>
-        <div style={{ position: "absolute", left: 0, right: 0, top: 860, textAlign: "center", fontFamily: ZH, fontWeight: 600, fontSize: 58, lineHeight: 1.45, letterSpacing: "0.06em", color: C.ink, opacity: line, transform: `translateY(${(1 - line) * 24}px)` }}>
-          手机上的 Mac
-          <br />
-          原生级操作体验
+        <div style={{ position: "absolute", left: 0, right: 0, top: 860, textAlign: "center", opacity: line, transform: `translateY(${(1 - line) * 24}px)` }}>
+          <div style={{ fontFamily: SF, fontWeight: 700, fontSize: 56, letterSpacing: "-0.01em", color: C.blue }}>Make UU Remote Native on iPhone</div>
+          <div style={{ marginTop: 22, fontFamily: ZH, fontWeight: 600, fontSize: 46, letterSpacing: "0.1em", color: C.ink2 }}>UU远程 手机屏插件</div>
         </div>
       </div>
       {/* GitHub 仓库卡片 */}

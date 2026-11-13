@@ -7,11 +7,10 @@ import { AnyApp } from "./scenes/AnyApp";
 import { Away } from "./scenes/Away";
 import { Anywhere } from "./scenes/Anywhere";
 import { Back } from "./scenes/Back";
+import { Connect } from "./scenes/Connect";
+import { Desktop } from "./scenes/Desktop";
 import { Menu } from "./scenes/Menu";
 import { Outro } from "./scenes/Outro";
-import { PainCut } from "./scenes/PainCut";
-import { PainLocked } from "./scenes/PainLocked";
-import { PainSmall } from "./scenes/PainSmall";
 import { Restore } from "./scenes/Restore";
 import { Resume } from "./scenes/Resume";
 import { Reveal } from "./scenes/Reveal";
@@ -22,13 +21,13 @@ import { b, MUSIC, VIDEO_FRAMES, VOLUME } from "./theme";
 
 // 成片时间线：只排场景和配乐。场景按拍排（from / to 是片子的第几拍），全片共用一块底。
 // enter / exit：场景首尾要不要「快推入、切出」；手机一直在同一个机位上接着演的场景不加，直接硬切。
-// 段落和音乐：前奏里交代场景、试三条路（0–48），第一次砸下 Snug 亮相、手势、切窗口（48–144，第 112 拍重新砸下一次），
-// 中段安静时在手机上敲命令接回会话（144–192），第二次砸下出门、复原、落版（192–256）。
+// 段落和音乐：前奏里交代场景、UU远程 连回 Mac、桌面操作搬上手机的落差（0–40），抽空的一小节 Snug 亮相（40–48）；
+// 第一次砸下进 mobile native、切窗口（48–144，第 112 拍重新砸下一次），中段安静时在手机上敲命令接回会话（144–192），
+// 第二次砸下出门、复原、落版（192–256）。
 export const SCENES = [
-  { name: "Away", Scene: Away, from: 0, to: 12, enter: false, exit: false },
-  { name: "PainSmall", Scene: PainSmall, from: 12, to: 24, enter: false, exit: true },
-  { name: "PainLocked", Scene: PainLocked, from: 24, to: 32, enter: true, exit: true },
-  { name: "PainCut", Scene: PainCut, from: 32, to: 40, enter: true, exit: true },
+  { name: "Away", Scene: Away, from: 0, to: 8, enter: false, exit: false },
+  { name: "Connect", Scene: Connect, from: 8, to: 16, enter: false, exit: false },
+  { name: "Desktop", Scene: Desktop, from: 16, to: 40, enter: false, exit: true },
   { name: "Reveal", Scene: Reveal, from: 40, to: 48, enter: true, exit: false },
   { name: "Snap", Scene: Snap, from: 48, to: 64, enter: true, exit: false },
   { name: "Scroll", Scene: Scroll, from: 64, to: 72, enter: true, exit: false },

@@ -113,12 +113,14 @@ export const Hero: React.FC<{
   subSize?: number;
   color?: string;
   stagger?: number;
-}> = ({ at, until = Number.POSITIVE_INFINITY, title, sub, y = 210, size: want = 150, subSize = 50, color = C.ink, stagger = 1.2 }) => {
+  /** 主角词一开始就在（同一个主角词跨好几个场景时，后面的场景用它，只有副标题重新进场） */
+  instant?: boolean;
+}> = ({ at, until = Number.POSITIVE_INFINITY, title, sub, y = 210, size: want = 150, subSize = 50, color = C.ink, stagger = 1.2, instant = false }) => {
   const f = useCurrentFrame();
   // 词太长时缩字号，保证一行放得下（SF Black 大写字母平均约 0.66 em 宽）
   const size = Math.min(want, 980 / (0.66 * [...title].length));
   if (f < at - 1 || f > until + 8) return null;
-  const out = interpolate(f, [until, until + 6], [0, 1], clamp);
+  const out = Number.isFinite(until) ? interpolate(f, [until, until + 6], [0, 1], clamp) : 0;
   const chars = [...title];
   const subIn = interpolate(f, [at + 4, at + 14], [0, 1], { ...clamp, easing: outExpo });
   return (
@@ -140,7 +142,7 @@ export const Hero: React.FC<{
       <div style={{ position: "absolute", left: 0, right: 0, top: -y, height: y + size * 2.6, background: "linear-gradient(180deg, rgba(248,251,255,0.94) 0%, rgba(244,248,255,0.8) 62%, rgba(244,248,255,0) 100%)", zIndex: -1 }} />
       <div style={{ fontFamily: SF, fontWeight: 900, fontSize: size, letterSpacing: "-0.035em", lineHeight: 0.95, color, whiteSpace: "pre" }}>
         {chars.map((ch, i) => {
-          const p = interpolate(f, [at + i * stagger, at + i * stagger + 9], [0, 1], { ...clamp, easing: outExpo });
+          const p = instant ? 1 : interpolate(f, [at + i * stagger, at + i * stagger + 9], [0, 1], { ...clamp, easing: outExpo });
           return (
             <span
               key={i}
@@ -176,30 +178,31 @@ export const Hero: React.FC<{
   );
 };
 
-/** 小标签：痛点、答案前面的序号 */
-export const Tag: React.FC<{ at: number; until?: number; text: string; y: number; color?: string }> = ({ at, until = Infinity, text, y, color = C.blue }) => {
+/** 画面里的一行小注（手势叫什么、原版怎么操作）：浅色胶囊，不抢主角词 */
+export const Note: React.FC<{ at: number; until?: number; text: string; y: number; dim?: boolean }> = ({ at, until = Infinity, text, y, dim = false }) => {
   const f = useCurrentFrame();
   const p = interpolate(f, [at, at + 10], [0, 1], { ...clamp, easing: outExpo });
-  const out = interpolate(f, [until, until + 6], [0, 1], clamp);
+  const out = Number.isFinite(until) ? interpolate(f, [until, until + 6], [0, 1], clamp) : 0;
+  if (p <= 0 || out >= 1) return null;
   return (
-    <div
-      style={{
-        position: "absolute",
-        top: y,
-        left: 0,
-        right: 0,
-        textAlign: "center",
-        zIndex: 11,
-        fontFamily: SF,
-        fontWeight: 700,
-        fontSize: 30,
-        letterSpacing: "0.32em",
-        color,
-        opacity: p * (1 - out),
-        transform: `translateY(${(1 - p) * 14}px)`,
-      }}
-    >
-      {text}
+    <div style={{ position: "absolute", top: y, left: 0, right: 0, textAlign: "center", zIndex: 11, opacity: p * (1 - out), transform: `translateY(${(1 - p) * 12}px)` }}>
+      <span
+        style={{
+          display: "inline-block",
+          padding: "10px 26px",
+          borderRadius: 30,
+          background: dim ? "rgba(255,255,255,0.62)" : "rgba(255,255,255,0.9)",
+          border: "1.5px solid rgba(20,40,90,0.08)",
+          boxShadow: "0 8px 24px rgba(20,40,90,0.1)",
+          fontFamily: ZH,
+          fontSize: 34,
+          fontWeight: 600,
+          letterSpacing: "0.06em",
+          color: dim ? C.ink3 : C.ink2,
+        }}
+      >
+        {text}
+      </span>
     </div>
   );
 };

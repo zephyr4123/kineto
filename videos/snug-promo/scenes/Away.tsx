@@ -5,11 +5,11 @@ import { Phone } from "../components/phone";
 import { Hero, HOME } from "../components/stage";
 import { taskAt } from "../components/story";
 import { Terminal } from "../components/terminal";
-import { UUOriginal } from "../components/uu";
+import { UUHome } from "../components/uu";
 import { local } from "../theme";
 
-// 开场，先交代场景：Mac 上的 Claude Code 正在干活（镜头贴在终端上，字一行行往外吐）；
-// 右上角弹出日历提醒，人得走开；想用手机接着盯，手机从下面升上来，连上 UU远程，接进方案一。
+// 开场，交代场景（两小节，收得很短）：Mac 上的 Claude Code 正在干活（镜头贴在终端上，字一行行往外吐），
+// 右上角弹出日历提醒，人得走开；手机从下面升上来，停在主屏，下一个场景点开 UU远程。AI 只是背景里在跑的事，不当卖点。
 const at = local(0);
 const SIZE = 13;
 const LEFT = 70;
@@ -27,18 +27,18 @@ const WHOLE = { x: 540, y: TOP + 300, cy: 1065 };
 
 export const Away: React.FC = () => {
   const f = useCurrentFrame();
-  const toNote = interpolate(f, [at(4.6), at(5.6)], [0, 1], { ...clamp, easing: inOutQuint });
-  const toWhole = interpolate(f, [at(8), at(9.6)], [0, 1], { ...clamp, easing: inOutQuint });
+  const toNote = interpolate(f, [at(2), at(2.8)], [0, 1], { ...clamp, easing: inOutQuint });
+  const toWhole = interpolate(f, [at(4.4), at(5.4)], [0, 1], { ...clamp, easing: inOutQuint });
   const fx = TERM.x + (NOTE.x - TERM.x) * toNote + (WHOLE.x - NOTE.x) * toWhole;
   const fy = TERM.y + (NOTE.y - TERM.y) * toNote + (WHOLE.y - NOTE.y) * toWhole;
-  const s = interpolate(f, [0, at(4.6), at(5.6), at(8), at(9.6)], [2.1, 2.25, 2.3, 2.38, 1], clamp);
+  const s = interpolate(f, [0, at(2), at(2.8), at(4.4), at(5.4)], [2.1, 2.2, 2.3, 2.36, 1], clamp);
   // 镜头对准的点放在字幕下面
   const cx = 540;
   const cy = TERM.cy + (NOTE.cy - TERM.cy) * toNote + (WHOLE.cy - NOTE.cy) * toWhole;
-  const note = interpolate(f, [at(5), at(5) + 16], [0, 1], { ...clamp, easing: outExpo });
+  const note = interpolate(f, [at(2.4), at(2.4) + 16], [0, 1], { ...clamp, easing: outExpo });
   // 手机升上来，MacBook 往后退、淡掉
-  const rise = interpolate(f, [at(9), at(11.5)], [0, 1], { ...clamp, easing: inOutQuint });
-  const mac = 1 - interpolate(f, [at(9.8), at(11.6)], [0, 1], clamp);
+  const rise = interpolate(f, [at(5), at(7.5)], [0, 1], { ...clamp, easing: inOutQuint });
+  const mac = 1 - interpolate(f, [at(5.6), at(7.6)], [0, 1], clamp);
   const lines = taskAt(f);
   return (
     <AbsoluteFill>
@@ -52,11 +52,10 @@ export const Away: React.FC = () => {
       </AbsoluteFill>
       {rise > 0 ? (
         <Phone x={HOME.x} y={HOME.y + (1 - rise) * 1500} scale={HOME.s} rotate={-6 * (1 - rise)}>
-          <UUOriginal front={<Terminal lines={lines} size={SIZE} width={FRONT.w} height={FRONT.h - 33} anchor="bottom" />} />
+          <UUHome />
         </Phone>
       ) : null}
-      <Hero at={2} until={at(5) - 6} title="AI AT WORK" sub="Mac 端 · AI 任务进行中" />
-      <Hero at={at(6)} until={at(12) - 6} title="STEP AWAY" sub="暂离工位 · 任务在途" />
+      <Hero at={2} until={at(8) - 6} title="STEP AWAY" sub="暂离工位 · 任务在途" />
     </AbsoluteFill>
   );
 };

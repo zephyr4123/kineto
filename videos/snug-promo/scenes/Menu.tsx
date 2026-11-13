@@ -4,13 +4,14 @@ import { GhosttyApp } from "../components/apps";
 import { HOLD, holdRing } from "../components/gesture";
 import { MH, toPhone } from "../components/mac";
 import { aim, Phone, Touch } from "../components/phone";
-import { Hero, HOME } from "../components/stage";
+import { press01 } from "../components/snug";
+import { Hero, HOME, Note } from "../components/stage";
 import { UUSnug } from "../components/uu";
 import { local, SF } from "../theme";
 import { FROM, pos, selection, SEL_LINES, SIZE, TO } from "./Select";
 
-// 长按松开：按住 0.5 秒直接松手，弹出的是 Mac 上这个 App 自己的右键菜单（Ghostty 的，照实机截图），
-// 弹在手指的位置，选区不丢。
+// MOBILE NATIVE 第三下，长按拷贝，和 iPhone 上一样：按住 0.5 秒直接松手，弹出 Mac 上这个 App 自己的右键菜单
+// （Ghostty 的，照实机截图），弹在手指的位置，选区不丢；再点「Copy」，菜单收起（原版 UU远程 要调出电脑键盘按 ⌘C）。
 const at = local(80);
 const ITEMS = [
   "Copy",
@@ -82,7 +83,9 @@ export const Menu: React.FC = () => {
   const up = down + HOLD + 2;
   const fp = pos(TO.line, TO.col - 1);
   const finger = toPhone(fp.x, fp.y);
-  const menu = interpolate(f, [up, up + 8], [0, 1], { ...clamp, easing: outExpo });
+  // 点 Copy：手指落到第一项，按下时这一项变蓝，松手菜单收起
+  const copyAt = up + 38;
+  const menu = interpolate(f, [up, up + 8], [0, 1], { ...clamp, easing: outExpo }) * (1 - interpolate(f, [copyAt + 10, copyAt + 18], [0, 1], clamp));
   const my = Math.min(fp.y, MH - 28 - MENU_H - 8);
   const show = interpolate(f, [down - 6, down, up, up + 6], [0, 1, 1, 0], clamp);
   const zoom = interpolate(f, [up - 4, up + 18], [0, 1], { ...clamp, easing: inOutQuint });
@@ -91,17 +94,22 @@ export const Menu: React.FC = () => {
   const y0 = pos(FROM.line, FROM.col).y + 30;
   const focus = toPhone(270 + (fp.x + 80 - 270) * zoom, y0 + (my + MENU_H / 2 - y0) * zoom);
   const pose = aim(focus.x, focus.y, s, 540, HOME.y - 60);
+  const menuX = Math.min(fp.x, 540 - 236);
+  // Copy 那一项的中心（Mac 点）：菜单左上角 + 内边距；菜单放在窗口内容区里，内容区顶在 62
+  const copy = toPhone(menuX + 60, my + 16);
   return (
     <AbsoluteFill>
       <Phone x={pose.x} y={pose.y} scale={s}>
         <UUSnug>
           <GhosttyApp lines={SEL_LINES} size={SIZE} sel={selection(TO.col)}>
-            {menu > 0 ? <ContextMenu x={Math.min(fp.x, 540 - 236)} y={my - 62} p={menu} hover={-1} /> : null}
+            {menu > 0 ? <ContextMenu x={menuX} y={my - 62} p={menu} hover={f >= copyAt - 2 ? 0 : -1} /> : null}
           </GhosttyApp>
         </UUSnug>
         <Touch x={finger.x} y={finger.y} press={1} show={show} ring={holdRing(f, down)} />
+        <Touch x={copy.x} y={copy.y} press={press01(f, copyAt)} show={interpolate(f, [copyAt - 14, copyAt - 4, copyAt + 10, copyAt + 16], [0, 1, 1, 0], clamp)} />
       </Phone>
-      <Hero at={2} until={at(8) - 6} title="RIGHT CLICK" sub="长按松开 · 右键菜单" />
+      <Hero at={2} title="MOBILE NATIVE" sub="长按 · 菜单 · 拷贝" instant />
+      <Note at={up} until={at(8) - 6} text="原版 · 电脑键盘 ⌘C" y={462} dim />
     </AbsoluteFill>
   );
 };

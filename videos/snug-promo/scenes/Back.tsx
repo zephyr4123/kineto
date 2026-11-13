@@ -35,7 +35,7 @@ export const Back: React.FC = () => {
         </UUSnug>
         <Touch x={bar.x} y={bar.y} press={press01(f, tap)} show={show} />
       </Phone>
-      <Hero at={2} until={at(4) + 30} title="HOME" sub="轻点横条 · 返回列表" />
+      <Hero at={2} title="MOBILE NATIVE" sub="轻点横条 · 返回列表" instant />
     </AbsoluteFill>
   );
 };

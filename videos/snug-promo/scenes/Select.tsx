@@ -50,7 +50,7 @@ export const Select: React.FC = () => {
         </UUSnug>
         <Touch x={finger.x} y={finger.y} press={1} show={show} ring={f < drag0 ? holdRing(f, down) : 0} />
       </Phone>
-      <Hero at={2} until={at(8) - 6} title="SELECT" sub="长按拖动 · 精准选字" />
+      <Hero at={2} title="MOBILE NATIVE" sub="长按选字" instant />
     </AbsoluteFill>
   );
 };
