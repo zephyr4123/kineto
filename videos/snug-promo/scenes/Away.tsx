@@ -21,7 +21,7 @@ const stage = (x: number, y: number) => ({ x: LEFT + x * k, y: TOP + y * k });
 // 三个机位：贴着终端的下半截、右上角（通知在上面，下面露出终端的右半截和壁纸）、整台 MacBook。
 // 这一场桌面上只放 Ghostty，不放后面的 Safari，推近到右上角时不会满屏都是一个空网页。
 // 每个机位是「桌面上哪个点 → 放到画面哪里」
-const TERM = { ...stage(FRONT.x + 380, FRONT.y + 520), cy: 1300 };
+const TERM = { ...stage(FRONT.x + 380, FRONT.y + 520), cy: 1400 };
 const NOTE = { ...stage(DW - 360, 300), cy: 1230 };
 const WHOLE = { x: 540, y: TOP + 300, cy: 1065 };
 
