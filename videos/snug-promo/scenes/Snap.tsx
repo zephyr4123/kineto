@@ -3,7 +3,7 @@ import { clamp, inOutQuint, outExpo, punch, shake } from "../../../engine/motion
 import { GhosttyApp } from "../components/apps";
 import { aim, DISPLAY_H, DISPLAY_TOP, Phone, SW, UUToolbar } from "../components/phone";
 import { Hero, HOME } from "../components/stage";
-import { INPUT, SESSION, Terminal } from "../components/terminal";
+import { ANSWER, ASK, EARLY, PRELUDE, SESSION, streaming, Terminal } from "../components/terminal";
 import { UUOriginal, UUSnug } from "../components/uu";
 import { local } from "../theme";
 
@@ -28,12 +28,12 @@ export const Snap: React.FC = () => {
           <div style={{ position: "absolute", left: 0, top: -DISPLAY_TOP, width: SW, height: 956 }}>
             {m < 1 ? (
               <div style={{ position: "absolute", inset: 0, opacity: 1 - m, transform: `scale(${1 + 1.4 * m})`, transformOrigin: ORIGIN }}>
-                <UUOriginal front={<Terminal lines={SESSION} size={13} />} />
+                <UUOriginal front={<Terminal lines={SESSION} size={13} width={900} height={667} />} />
               </div>
             ) : null}
             <div style={{ position: "absolute", inset: 0, opacity: Math.min(1, m * 1.4), transform: `scale(${0.5 + 0.5 * m})`, transformOrigin: ORIGIN }}>
               <UUSnug>
-                <GhosttyApp lines={[...SESSION, ...INPUT("")]} size={size} />
+                <GhosttyApp lines={streaming([...PRELUDE, ...EARLY, ASK, ""], ANSWER, f, 6, 3.4)} size={size} />
               </UUSnug>
             </div>
           </div>

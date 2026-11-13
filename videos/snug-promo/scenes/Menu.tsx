@@ -7,7 +7,7 @@ import { aim, Phone, Touch } from "../components/phone";
 import { Hero, HOME } from "../components/stage";
 import { UUSnug } from "../components/uu";
 import { local, SF } from "../theme";
-import { charPos, selection, SEL_LINES, SIZE, TO } from "./Select";
+import { FROM, pos, selection, SEL_LINES, SIZE, TO } from "./Select";
 
 // 长按松开：按住 0.5 秒直接松手，弹出的是 Mac 上这个 App 自己的右键菜单（Ghostty 的，照实机截图），
 // 弹在手指的位置，选区不丢。
@@ -80,7 +80,7 @@ export const Menu: React.FC = () => {
   const f = useCurrentFrame();
   const down = at(1);
   const up = down + HOLD + 2;
-  const fp = charPos(TO.line, TO.col);
+  const fp = pos(TO.line, TO.col - 1);
   const finger = toPhone(fp.x, fp.y);
   const menu = interpolate(f, [up, up + 8], [0, 1], { ...clamp, easing: outExpo });
   const my = Math.min(fp.y, MH - 28 - MENU_H - 8);
@@ -88,14 +88,15 @@ export const Menu: React.FC = () => {
   const zoom = interpolate(f, [up - 4, up + 18], [0, 1], { ...clamp, easing: inOutQuint });
   const s = HOME.s + 0.55 + 0.1 * zoom;
   // 开头和 Select 收尾的机位一样（对着第 18 行左边），菜单弹出后移到菜单中间
-  const focus = toPhone(200 + (fp.x + 80 - 200) * zoom, charPos(18, 0).y + (my + MENU_H / 2 - charPos(18, 0).y) * zoom);
+  const y0 = pos(FROM.line, FROM.col).y + 30;
+  const focus = toPhone(270 + (fp.x + 80 - 270) * zoom, y0 + (my + MENU_H / 2 - y0) * zoom);
   const pose = aim(focus.x, focus.y, s, 540, HOME.y - 60);
   return (
     <AbsoluteFill>
       <Phone x={pose.x} y={pose.y} scale={s}>
         <UUSnug>
-          <GhosttyApp lines={SEL_LINES} size={SIZE} sel={selection(TO)}>
-            {menu > 0 ? <ContextMenu x={fp.x} y={my - 62} p={menu} hover={-1} /> : null}
+          <GhosttyApp lines={SEL_LINES} size={SIZE} sel={selection(TO.col)}>
+            {menu > 0 ? <ContextMenu x={Math.min(fp.x, 540 - 236)} y={my - 62} p={menu} hover={-1} /> : null}
           </GhosttyApp>
         </UUSnug>
         <Touch x={finger.x} y={finger.y} press={1} show={show} ring={holdRing(f, down)} />

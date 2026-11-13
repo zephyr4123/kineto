@@ -2,10 +2,10 @@ import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
 import { clamp, outExpo, punch, shake } from "../../../engine/motion";
 import { GhosttyApp } from "../components/apps";
 import { KB_TOP } from "../components/keyboard";
-import { Phone, Touch } from "../components/phone";
+import { Phone, TOOLBAR_TOP, Touch } from "../components/phone";
 import { press01 } from "../components/snug";
 import { Hero, HOME } from "../components/stage";
-import { BANNER, CC, EARLY, PROMPT, RESUME_LIST, SESSION, type Line } from "../components/terminal";
+import { BANNER, CC, EARLY, INPUT, PROMPT, RECAP, RESUME_LIST, SESSION, streaming, type Line } from "../components/terminal";
 import { strokes, typingAt, UUSnug } from "../components/uu";
 import { C, local, ZH } from "../theme";
 
@@ -14,11 +14,10 @@ import { C, local, ZH } from "../theme";
 // 键盘照实机：/ 在数字层，先按 123 再按 /，再按 ABC 切回。
 const at = local(92);
 const SIZE = 16;
-const LH = SIZE * 1.42;
-const VIEW = 950 - 62 - 28;
 const INK = "#1d1f24";
 
 const EXITED: Line[] = [
+  ...EARLY,
   ...SESSION,
   "",
   [{ t: "❯ ", c: CC.dim }, { t: "/exit", c: CC.purple }],
@@ -28,7 +27,6 @@ const EXITED: Line[] = [
   "claude --resume 3f2a9c1e-7d41-4b8a-9e52-0c6b1d7e4a90",
 ];
 const caret = { t: " ", bg: INK };
-const rule: Line = [{ t: "─".repeat(52), c: "#c9ccd2" }];
 
 const S1 = strokes("claude\n", at(4) + 14, 6);
 const S2 = strokes("/resume\n", at(7), 6);
@@ -45,31 +43,31 @@ export const Resume: React.FC = () => {
   const launched = f >= S1[S1.length - 1].at;
   const picking = f >= S2[S2.length - 1].at;
   const resumed = f >= S3[0].at;
+  // 接回会话后，Claude Code 把之前的对话原样摆回来，再逐字打一段 recap
   let lines: Line[];
   if (resumed) {
-    lines = [...EARLY, ...SESSION, "", rule, [{ t: "❯ ", c: INK }, caret], rule, [{ t: "  ▸▸ auto mode on ", c: CC.brown }, { t: "(shift+tab to cycle)", c: CC.dim }]];
+    lines = streaming([...EARLY, ...SESSION, ""], [RECAP], f, S3[0].at + 8, 3.2, "Recapping");
   } else if (picking) {
-    lines = [...EXITED, [...PROMPT, { t: "claude" }], "", ...BANNER, "", rule, [{ t: "❯ ", c: INK }, { t: "/resume" }], "", ...RESUME_LIST];
+    lines = [...EXITED, [...PROMPT, { t: "claude" }], "", ...BANNER, "", ...INPUT("/resume").slice(0, 2), "", ...RESUME_LIST];
   } else if (launched) {
-    lines = [...EXITED, [...PROMPT, { t: "claude" }], "", ...BANNER, "", rule, [{ t: "❯ ", c: INK }, { t: t2.typed }, caret], rule, [{ t: "  ? for shortcuts", c: CC.dim }]];
+    lines = [...EXITED, [...PROMPT, { t: "claude" }], "", ...BANNER, "", ...INPUT(t2.typed, true)];
   } else {
     lines = [...EXITED, [...PROMPT, { t: t1.typed }, caret]];
   }
-  const scroll = Math.max(0, lines.length * LH + 28 - VIEW);
   const typing = !launched ? t1 : !picking ? t2 : t3;
   const suggest: readonly [string, string, string] = /claud?$/.test(t1.typed) && !launched ? ["“claud”", "Claud", "Claude"] : /resu/.test(t2.typed) && !picking ? ["“resu”", "result", "resume"] : ["I", "The", "I'm"];
   // 抽空的一小节：画面压暗，手机退后一点；砸下时推回来
   const dim = interpolate(f, [0, 10, at(4) - 4, at(4)], [0, 1, 1, 0], clamp);
   const s = (HOME.s - 0.08 * dim) * punch(f, at(4), 0.05, 24);
   const sh = shake(f, at(4), 14, 10, "resume");
-  const kbFinger = { x: 275, y: 888 };
+  const kbFinger = { x: 275, y: TOOLBAR_TOP + 27 };
   const closeFinger = { x: 403, y: KB_TOP + 22 };
   return (
     <AbsoluteFill style={{ transform: `translate(${sh.x}px, ${sh.y}px)` }}>
       <div style={{ position: "absolute", inset: 0, filter: dim > 0 ? `saturate(${1 - 0.5 * dim})` : undefined, opacity: 1 - 0.35 * dim }}>
         <Phone x={HOME.x} y={HOME.y} scale={s} glow={0.6 * (1 - dim)}>
           <UUSnug kb={kb} shiftY={300 * kb} pressed={typing.pressed} layer={typing.layer} suggest={suggest}>
-            <GhosttyApp lines={lines} size={SIZE} scroll={scroll} title={resumed || launched ? "✳ 项目目录结构" : ".../coding/personal/snug"} />
+            <GhosttyApp lines={lines} size={SIZE} title={resumed || launched ? "✳ 项目目录结构" : ".../coding/personal/snug"} />
           </UUSnug>
           <Touch x={kbFinger.x} y={kbFinger.y} press={press01(f, KB_TAP)} show={interpolate(f, [KB_TAP - 8, KB_TAP - 2, KB_TAP + 10, KB_TAP + 16], [0, 1, 1, 0], clamp)} />
           {typing.finger ? <Touch x={typing.finger.x} y={typing.finger.y} press={1} show={0.85} /> : null}

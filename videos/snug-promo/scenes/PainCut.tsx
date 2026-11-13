@@ -38,7 +38,7 @@ export const PainCut: React.FC = () => {
           <div style={{ position: "absolute", inset: 0, transform: "scale(1.5)", transformOrigin: "0 0", width: 600, height: 267 }}>
             <TitleBar title="✳ 项目目录结构" top={0} width={600} folder={false} />
             <div style={{ position: "absolute", top: 33, left: 0, width: 600, height: 234 }}>
-              <Terminal lines={working} size={13} />
+              <Terminal lines={working} size={13} width={600} height={234} anchor="bottom" />
             </div>
           </div>
         </div>

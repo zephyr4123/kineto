@@ -1,11 +1,11 @@
 import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
 import { clamp } from "../../../engine/motion";
-import { GhosttyApp } from "../components/apps";
+import { GHOSTTY_BODY, GhosttyApp } from "../components/apps";
 import { flick } from "../components/gesture";
-import { toPhone } from "../components/mac";
+import { MW, toPhone } from "../components/mac";
 import { Phone, Touch } from "../components/phone";
 import { Hero, HOME } from "../components/stage";
-import { BANNER, EARLY, INPUT, SESSION } from "../components/terminal";
+import { BANNER, contentHeight, EARLY, INPUT, layout, SESSION } from "../components/terminal";
 import { UUSnug } from "../components/uu";
 import { local } from "../theme";
 
@@ -13,9 +13,7 @@ import { local } from "../theme";
 const at = local(64);
 const LINES = [...BANNER, "", ...EARLY, ...SESSION, ...INPUT("")];
 const SIZE = 16;
-const LH = SIZE * 1.42;
-const VIEW = 950 - 62 - 28;
-const MAX = LINES.length * LH + 28 - VIEW;
+const MAX = contentHeight(layout(LINES, SIZE, MW)) - GHOSTTY_BODY;
 const DRAG = 8;
 
 export const Scroll: React.FC = () => {
@@ -37,7 +35,7 @@ export const Scroll: React.FC = () => {
     <AbsoluteFill>
       <Phone x={HOME.x} y={HOME.y} scale={HOME.s}>
         <UUSnug>
-          <GhosttyApp lines={LINES} size={SIZE} scroll={scroll} />
+          <GhosttyApp lines={LINES} size={SIZE} scroll={scroll} anchor="top" />
         </UUSnug>
         {/* 手指和它身后一小段拖影 */}
         {[0.5, 0.3, 0.15].map((o, i) => (

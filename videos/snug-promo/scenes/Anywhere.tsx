@@ -3,7 +3,7 @@ import { clamp, inOutQuint, outExpo } from "../../../engine/motion";
 import { GhosttyApp } from "../components/apps";
 import { Phone } from "../components/phone";
 import { Hero } from "../components/stage";
-import { INPUT, SESSION } from "../components/terminal";
+import { ANSWER, ASK, EARLY, PRELUDE, streaming } from "../components/terminal";
 import { UUSnug } from "../components/uu";
 import { C, local, SF, ZH } from "../theme";
 
@@ -71,10 +71,8 @@ export const Anywhere: React.FC = () => {
     };
   };
   const dot = bz(route);
-  // 会话在手机上一行一行往下长
-  const shown = Math.min(SESSION.length, 14 + Math.floor(Math.max(0, t - at(2)) / 8));
-  const lines = [...SESSION.slice(0, shown), ...INPUT("")];
-  const scroll = Math.max(0, lines.length * 16 * 1.42 + 28 - 860);
+  // Claude Code 在手机上照常往外吐字
+  const lines = streaming([...PRELUDE, ...EARLY, ASK, ""], ANSWER, t, at(1), 2.6, "Working");
   return (
     <AbsoluteFill style={{ filter: freeze ? "saturate(0.5)" : undefined }}>
       <svg style={{ position: "absolute", left: 0, top: 0, opacity: map }} width={1080} height={1920}>
@@ -116,7 +114,7 @@ export const Anywhere: React.FC = () => {
       </div>
       <Phone x={PHONE.x} y={PHONE.y} scale={PHONE.s} glow={0.4 + 0.5 * lib}>
         <UUSnug>
-          <GhosttyApp lines={lines} size={16} scroll={scroll} />
+          <GhosttyApp lines={lines} size={16} />
         </UUSnug>
       </Phone>
       <Hero at={2} until={at(16) - 6} title="ANYWHERE" sub="离开工位 工作照常推进" />

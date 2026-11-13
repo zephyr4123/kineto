@@ -2,7 +2,7 @@ import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
 import { clamp, inOutQuint, outQuint } from "../../../engine/motion";
 import { aim, Phone, Touch } from "../components/phone";
 import { Hero, HOME, Tag } from "../components/stage";
-import { SESSION, Terminal, type Sel } from "../components/terminal";
+import { ANSWER, ASK, EARLY, streaming, Terminal } from "../components/terminal";
 import { DESK_K, DESK_TOP, UUOriginal } from "../components/uu";
 import { local } from "../theme";
 
@@ -12,7 +12,7 @@ const at = local(0);
 const LINE0 = 62 + 33 + 14;
 const SIZE = 13;
 const LH = SIZE * 1.42;
-const lineAt = (phoneY: number) => Math.floor(((phoneY - DESK_TOP) / DESK_K - LINE0) / LH);
+const rowAt = (phoneY: number) => Math.floor(((phoneY - DESK_TOP) / DESK_K - LINE0) / LH);
 
 export const PainSmall: React.FC = () => {
   const f = useCurrentFrame();
@@ -27,16 +27,11 @@ export const PainSmall: React.FC = () => {
   const show = interpolate(f, [t0 - 4, t0, t0 + 24, t0 + 32], [0, 1, 1, 0], clamp);
   const down = f >= t0 && f < t0 + 24;
   // 被当成拖拽：从按下那行一直选到手指现在那行
-  const sel: Sel[] = [];
-  if (f >= t0 + 2) {
-    const a = lineAt(540);
-    const z = lineAt(y);
-    for (let l = Math.min(a, z); l <= Math.max(a, z); l++) sel.push({ line: l, from: l === z ? 6 : 0, to: l === a ? 18 : 80 });
-  }
+  const selRows: [number, number] | undefined = f >= t0 + 2 ? [Math.min(rowAt(540), rowAt(y)), Math.max(rowAt(540), rowAt(y))] : undefined;
   return (
     <AbsoluteFill>
       <Phone x={p.x} y={p.y} scale={s}>
-        <UUOriginal front={<Terminal lines={SESSION} size={SIZE} sel={sel} selColor="rgba(30,110,255,0.75)" />} />
+        <UUOriginal front={<Terminal lines={streaming(EARLY, [ASK, "", ...ANSWER], f, 0, 6)} size={SIZE} width={900} height={667} selRows={selRows} selColor="rgba(30,110,255,0.75)" />} />
         <Touch x={150} y={y} press={down ? 1 : 0} show={show} />
       </Phone>
       <Tag at={0} until={at(8) - 6} text="PROBLEM 01" y={150} />

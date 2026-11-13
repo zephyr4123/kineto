@@ -25,6 +25,7 @@ export const DESK_K = SW / DW;
 export const DESK_TOP = DISPLAY_TOP + (DISPLAY_H - DH * DESK_K) / 2;
 export const UUOriginal: React.FC<{ front: React.ReactNode; back?: React.ReactNode; soft?: number }> = ({ front, back, soft = 0.7 }) => (
   <>
+    <div style={{ position: "absolute", left: 0, top: DISPLAY_TOP, width: SW, height: DISPLAY_H, background: "#000" }} />
     <div style={{ position: "absolute", left: 0, top: DESK_TOP, width: DW, height: DH, transform: `scale(${DESK_K})`, transformOrigin: "0 0", filter: `blur(${soft}px)` }}>
       <MacDesktop front={front} back={back} />
     </div>

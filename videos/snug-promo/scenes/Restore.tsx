@@ -47,7 +47,7 @@ export const Restore: React.FC = () => {
       <div style={{ opacity: on, transform: `translateY(${(1 - on) * 60}px)` }}>
         <MacBook>
           <div style={{ width: DW, height: DH, transform: `scale(${K})`, transformOrigin: "0 0" }}>
-            <MacDesktop front={<Terminal lines={SESSION} size={size} />} frontRect={rect} menuIcon={menuIcon} />
+            <MacDesktop front={<Terminal lines={SESSION} size={size} width={rect.w} height={rect.h - 33} />} frontRect={rect} menuIcon={menuIcon} />
           </div>
         </MacBook>
         {/* 菜单栏里的 Snug 图标：一圈光提示它在那里 */}
