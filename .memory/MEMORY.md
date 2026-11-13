@@ -8,3 +8,4 @@
 - [GitHub 账号锁定](gh-account-lock.md) — 专用 gh 配置 + ship 自锁，不受别的会话切号影响；推送 403 先查这里
 - [代码画界面的宣传片](video-ui-fidelity.md) — 要有真实交互、终端排满整行、现代 iPhone、底色跟品牌走
 - [宣传片画面文字](video-caption-copy.md) — 书面短词，不用口语、不用主谓宾齐全的句子
+- [Snug 宣传片定位](snug-promo-positioning.md) — UU远程 的 iPhone 辅助插件，Make UU Remote Native on iPhone，主打 mobile native，不拉踩
