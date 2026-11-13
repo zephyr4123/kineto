@@ -4,9 +4,9 @@ import { assets } from "../assets.gen";
 import { Hero, Tag } from "../components/stage";
 import { C, local, SF } from "../theme";
 
-// 痛点二：AI 助手自带的远程控制（Claude Remote Control、ChatGPT 里的 Codex）只连自家 AI 的会话，
+// 方案二：换 AI 助手自带的远程控制（Claude Remote Control、ChatGPT 里的 Codex）。只连得上自家 AI 的会话，
 // Mac 上别的 App 一个也碰不到。上面两个 AI 亮着，下面一排 App 被逐个锁上。
-const at = local(8);
+const at = local(24);
 
 const AI = [
   { icon: "iconClaude", label: "Remote Control", x: 300 },
@@ -96,8 +96,8 @@ export const PainLocked: React.FC = () => {
           </div>
         );
       })}
-      <Tag at={0} until={at(8) - 6} text="PROBLEM 02" y={150} />
-      <Hero at={2} until={at(8) - 6} title="ONE AI ONLY" sub="远程控制 只连自家 AI" />
+      <Tag at={0} until={at(8) - 6} text="方案二 · AI 远程控制" y={150} />
+      <Hero at={2} until={at(8) - 6} title="ONE AI ONLY" sub="仅限自家 AI" />
     </AbsoluteFill>
   );
 };

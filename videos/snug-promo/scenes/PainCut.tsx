@@ -4,25 +4,18 @@ import { TitleBar } from "../components/mac";
 import { Phone } from "../components/phone";
 import { DISPLAY_H, DISPLAY_TOP, SW, UUToolbar } from "../components/phone";
 import { Hero, Tag } from "../components/stage";
-import { CC, SESSION, Terminal, type Line } from "../components/terminal";
-import { C, local, MONO, SF, ZH } from "../theme";
+import { taskAt } from "../components/story";
+import { Terminal } from "../components/terminal";
+import { b, C, local, MONO, SF, ZH } from "../theme";
 
-// 痛点三：UU远程 自带的终端跑在它自己的 tmux 里，和 Mac 上开着的终端互不相通。
-// 上面是 Mac 上进行到一半的 Claude Code，下面是手机上另起的空终端，中间的线断开。
-const at = local(16);
-const SPIN = ["✢", "✳", "✶", "✻", "✽", "✻", "✶", "✳"];
+// 方案三：用 UU远程 自带的终端。它跑在自己的 tmux 里，和 Mac 上开着的终端互不相通。
+// 上面是 Mac 上进行到一半的 Claude Code（还是开场那个任务），下面是手机上另起的空终端，中间的线断开。
+const START = 32;
+const at = local(START);
 
 export const PainCut: React.FC = () => {
   const f = useCurrentFrame();
-  const working: Line[] = [
-    ...SESSION.slice(16, 21),
-    "",
-    [
-      { t: `${SPIN[Math.floor(f / 6) % SPIN.length]} `, c: CC.orange },
-      { t: "Refactoring… ", c: CC.orange },
-      { t: `(${Math.floor(133 + f / 60)}s · esc to interrupt)`, c: CC.dim },
-    ],
-  ];
+  const working = taskAt(b(START) + f);
   const win = interpolate(f, [2, 16], [0, 1], { ...clamp, easing: outExpo });
   const ph = interpolate(f, [at(1.5), at(1.5) + 16], [0, 1], { ...clamp, easing: outExpo });
   const line = interpolate(f, [at(3), at(4)], [0, 1], { ...clamp, easing: outExpo });
@@ -83,7 +76,7 @@ export const PainCut: React.FC = () => {
         <div style={{ position: "absolute", left: 110, top: 1500, width: 360, fontFamily: ZH, fontSize: 40, fontWeight: 600, color: C.ink2, lineHeight: 1.5 }}>
           UU远程
           <br />
-          自带终端
+          内置终端
         </div>
         <Phone x={760} y={1580} scale={0.7}>
           <div style={{ position: "absolute", left: 0, top: DISPLAY_TOP, width: SW, height: DISPLAY_H, background: "#0c0c0c", fontFamily: MONO, fontSize: 15, color: "#e6e6e6", padding: 12, lineHeight: 1.5 }}>
@@ -96,8 +89,8 @@ export const PainCut: React.FC = () => {
           <UUToolbar />
         </Phone>
       </div>
-      <Tag at={0} until={at(8) - 6} text="PROBLEM 03" y={150} />
-      <Hero at={2} until={at(8) - 6} title="CUT OFF" sub="另起一个终端 手头的工作接不上" />
+      <Tag at={0} until={at(8) - 6} text="方案三 · UU 内置终端" y={150} />
+      <Hero at={2} until={at(8) - 6} title="CUT OFF" sub="另起会话 · 进度断档" />
     </AbsoluteFill>
   );
 };

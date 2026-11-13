@@ -14,18 +14,18 @@ const staged = (Scene: React.FC) => {
   );
   return Staged;
 };
-const [painSmall, painLocked, painCut, reveal, snap, list, anyApp, scroll, select, menu, back, resume, anywhere, restore, outro] = SPANS;
+const [away, painSmall, painLocked, painCut, reveal, snap, scroll, select, menu, back, anyApp, resume, anywhere, restore, outro] = SPANS;
+const AwayStaged = staged(away.Scene);
 const PainSmallStaged = staged(painSmall.Scene);
 const PainLockedStaged = staged(painLocked.Scene);
 const PainCutStaged = staged(painCut.Scene);
 const RevealStaged = staged(reveal.Scene);
 const SnapStaged = staged(snap.Scene);
-const ListStaged = staged(list.Scene);
-const AnyAppStaged = staged(anyApp.Scene);
 const ScrollStaged = staged(scroll.Scene);
 const SelectStaged = staged(select.Scene);
 const MenuStaged = staged(menu.Scene);
 const BackStaged = staged(back.Scene);
+const AnyAppStaged = staged(anyApp.Scene);
 const ResumeStaged = staged(resume.Scene);
 const AnywhereStaged = staged(anywhere.Scene);
 const RestoreStaged = staged(restore.Scene);
@@ -35,17 +35,17 @@ export const Compositions: React.FC = () => {
   return (
     <>
       <Composition id="snug-promo" component={Video} durationInFrames={VIDEO_FRAMES} fps={FPS} width={W} height={H} />
+      <Composition id="snug-promo-away" component={AwayStaged} durationInFrames={away.frames} fps={FPS} width={W} height={H} />
       <Composition id="snug-promo-pain-small" component={PainSmallStaged} durationInFrames={painSmall.frames} fps={FPS} width={W} height={H} />
       <Composition id="snug-promo-pain-locked" component={PainLockedStaged} durationInFrames={painLocked.frames} fps={FPS} width={W} height={H} />
       <Composition id="snug-promo-pain-cut" component={PainCutStaged} durationInFrames={painCut.frames} fps={FPS} width={W} height={H} />
       <Composition id="snug-promo-reveal" component={RevealStaged} durationInFrames={reveal.frames} fps={FPS} width={W} height={H} />
       <Composition id="snug-promo-snap" component={SnapStaged} durationInFrames={snap.frames} fps={FPS} width={W} height={H} />
-      <Composition id="snug-promo-list" component={ListStaged} durationInFrames={list.frames} fps={FPS} width={W} height={H} />
-      <Composition id="snug-promo-any-app" component={AnyAppStaged} durationInFrames={anyApp.frames} fps={FPS} width={W} height={H} />
       <Composition id="snug-promo-scroll" component={ScrollStaged} durationInFrames={scroll.frames} fps={FPS} width={W} height={H} />
       <Composition id="snug-promo-select" component={SelectStaged} durationInFrames={select.frames} fps={FPS} width={W} height={H} />
       <Composition id="snug-promo-menu" component={MenuStaged} durationInFrames={menu.frames} fps={FPS} width={W} height={H} />
       <Composition id="snug-promo-back" component={BackStaged} durationInFrames={back.frames} fps={FPS} width={W} height={H} />
+      <Composition id="snug-promo-any-app" component={AnyAppStaged} durationInFrames={anyApp.frames} fps={FPS} width={W} height={H} />
       <Composition id="snug-promo-resume" component={ResumeStaged} durationInFrames={resume.frames} fps={FPS} width={W} height={H} />
       <Composition id="snug-promo-anywhere" component={AnywhereStaged} durationInFrames={anywhere.frames} fps={FPS} width={W} height={H} />
       <Composition id="snug-promo-restore" component={RestoreStaged} durationInFrames={restore.frames} fps={FPS} width={W} height={H} />

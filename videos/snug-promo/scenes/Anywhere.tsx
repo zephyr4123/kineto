@@ -3,14 +3,15 @@ import { clamp, inOutQuint, outExpo } from "../../../engine/motion";
 import { GhosttyApp } from "../components/apps";
 import { Phone } from "../components/phone";
 import { Hero } from "../components/stage";
-import { ANSWER, ASK, EARLY, PRELUDE, streaming } from "../components/terminal";
+import { followAt } from "../components/story";
 import { UUSnug } from "../components/uu";
-import { C, local, SF, ZH } from "../theme";
+import { b, C, local, SF, ZH } from "../theme";
 
-// 场景：Mac 留在宿舍，人带着手机去了图书馆，Claude Code 照常往下跑。
-// 一张代码画的夜色街区图：两个落点、一条连线上来回走的光点，手机沿着路线走远，距离往上数。
-// 第 14 拍音乐有一拍几乎静音，画面在这一拍定住。
-const at = local(112);
+// 场景：Mac 留在宿舍，人带着手机去了图书馆（开场日历提醒里的那个小组讨论），Claude Code 照常往下跑：
+// 手机上是上一个场景里刚问的 gestures，回答一路写到图书馆写完。
+// 一张代码画的街区图：两个落点、一条连线上来回走的光点，手机沿着路线走远，距离往上数。
+const START = 192;
+const at = local(START);
 const DORM = { x: 250, y: 800 };
 /** 手机就是图书馆那头的落点：放在右下，路线接到它左边 */
 const PHONE = { x: 790, y: 1420, s: 0.62 };
@@ -54,8 +55,7 @@ const Pin: React.FC<{ x: number; y: number; p: number; children: React.ReactNode
 
 export const Anywhere: React.FC = () => {
   const f = useCurrentFrame();
-  const freeze = f >= at(14) && f < at(15);
-  const t = freeze ? at(14) : f;
+  const t = f;
   const map = interpolate(f, [0, 16], [0, 1], { ...clamp, easing: outExpo });
   const route = interpolate(t, [at(1), at(5)], [0, 1], { ...clamp, easing: inOutQuint });
   const dorm = interpolate(f, [4, 18], [0, 1], { ...clamp, easing: outExpo });
@@ -72,9 +72,9 @@ export const Anywhere: React.FC = () => {
   };
   const dot = bz(route);
   // Claude Code 在手机上照常往外吐字
-  const lines = streaming([...PRELUDE, ...EARLY, ASK, ""], ANSWER, t, at(1), 2.6, "Working");
+  const lines = followAt(b(START) + f);
   return (
-    <AbsoluteFill style={{ filter: freeze ? "saturate(0.5)" : undefined }}>
+    <AbsoluteFill>
       <svg style={{ position: "absolute", left: 0, top: 0, opacity: map }} width={1080} height={1920}>
         <defs>
           <radialGradient id="fade" cx="50%" cy="60%" r="60%">
@@ -117,7 +117,7 @@ export const Anywhere: React.FC = () => {
           <GhosttyApp lines={lines} size={16} />
         </UUSnug>
       </Phone>
-      <Hero at={2} until={at(16) - 6} title="ANYWHERE" sub="离开工位 工作照常推进" />
+      <Hero at={2} until={at(16) - 6} title="ANYWHERE" sub="人在途中 · 进度不停" />
     </AbsoluteFill>
   );
 };

@@ -4,6 +4,7 @@
 export const assets = {
   appleLogo: "snug-promo/appleLogo.svg",
   fontMono: "snug-promo/fontMono.ttf",
+  iconCalendar: "snug-promo/iconCalendar.png",
   iconChatgpt: "snug-promo/iconChatgpt.png",
   iconClash: "snug-promo/iconClash.png",
   iconClaude: "snug-promo/iconClaude.png",

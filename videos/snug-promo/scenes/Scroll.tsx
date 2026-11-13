@@ -47,7 +47,7 @@ export const Scroll: React.FC = () => {
         ))}
         <Touch x={pc.x} y={pc.y} press={1} show={c.show} />
       </Phone>
-      <Hero at={2} until={at(8) - 6} title="SCROLL" sub="单指滑动 松手带惯性" />
+      <Hero at={2} until={at(8) - 6} title="SCROLL" sub="单指滚动 · 惯性滑行" />
     </AbsoluteFill>
   );
 };

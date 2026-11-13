@@ -1,6 +1,6 @@
 import { SF, ZH } from "../theme";
 
-// iPhone 17 Pro Max（深蓝色）：屏幕 440×956 点，窄边框，灵动岛。机身、状态栏代码画；屏幕里的东西用屏幕点坐标。
+// iPhone 17 Pro Max：屏幕 440×956 点，窄边框，灵动岛，套一只淡绿到黄绿的硅胶手机壳。机身、壳、状态栏代码画；屏幕里的东西用屏幕点坐标。
 // 手机是浅色模式：状态栏（62 点）下面直接接 440×774 的远程画面（Snug 手机屏 540×950 点等比缩到 0.815），
 // 再下面是 UU 的工具栏（展开所有窗口、显示桌面、键盘、操作，按钮照实机录屏）和主屏指示条，做成浅色毛玻璃，不留上下黑带。
 
@@ -18,6 +18,13 @@ export const aim = (px: number, py: number, s: number, cx: number, cy: number) =
   x: cx - (px + RIM - BODY_W / 2) * s,
   y: cy - (py + RIM - BODY_H / 2) * s,
 });
+
+/** 手机壳比机身每边厚多少点；壳沿压住机身边框，正面只露出黑色玻璃边和屏幕 */
+const CASE = 13;
+const CASE_R = 72 + CASE;
+// 壳的颜色：淡绿到黄绿，左上受光偏淡，右下偏黄
+const CASE_BG = "linear-gradient(150deg, #eef8d8 0%, #d6efb4 30%, #cbe9a2 55%, #dcec98 82%, #eaf0ac 100%)";
+const BUMP_BG = "linear-gradient(90deg, #c4e29a, #d9ec9f)";
 
 /** 手机放在画面上：x、y 是机身中心在画面上的位置（像素），scale 是每点多少像素 */
 export const Phone: React.FC<{
@@ -40,40 +47,46 @@ export const Phone: React.FC<{
       transformOrigin: "50% 50%",
     }}
   >
-    {/* 影子和机身外发的一圈光 */}
+    {/* 影子和外发的一圈光 */}
     <div
       style={{
         position: "absolute",
-        inset: 0,
-        borderRadius: 72,
-        boxShadow: `0 40px 90px rgba(20,40,90,0.28), 0 10px 30px rgba(20,40,90,0.18), 0 0 ${40 + 60 * glow}px rgba(31,99,255,${0.12 + 0.3 * glow})`,
+        inset: -CASE,
+        borderRadius: CASE_R,
+        boxShadow: `0 40px 90px rgba(40,70,40,0.24), 0 10px 30px rgba(30,60,40,0.16), 0 0 ${40 + 60 * glow}px rgba(31,99,255,${0.1 + 0.28 * glow})`,
       }}
     />
-    {/* 侧键：左边操作键、音量键，右边电源键和相机控制 */}
+    {/* 壳上包住侧键的凸起：左边操作键、两个音量键，右边电源键；相机控制键处是一个开孔 */}
     {[
-      [-2.4, 190, 32],
-      [-2.4, 250, 58],
-      [-2.4, 322, 58],
-    ].map(([dx, top, h], i) => (
-      <div key={`l${i}`} style={{ position: "absolute", left: dx, top, width: 4, height: h, borderRadius: 2, background: "linear-gradient(90deg,#2b3b5c,#4b5f86)" }} />
+      [190, 34],
+      [252, 60],
+      [326, 60],
+    ].map(([top, h], i) => (
+      <div key={`l${i}`} style={{ position: "absolute", left: -CASE - 4, top, width: 8, height: h, borderRadius: 4, background: BUMP_BG, boxShadow: "inset 1px 0 1px rgba(255,255,255,0.7), 0 1px 2px rgba(60,90,30,0.25)" }} />
     ))}
-    {[
-      [BODY_W - 1.6, 270, 92],
-      [BODY_W - 1.6, 640, 54],
-    ].map(([left, top, h], i) => (
-      <div key={`r${i}`} style={{ position: "absolute", left, top, width: 4, height: h, borderRadius: 2, background: "linear-gradient(90deg,#4b5f86,#2b3b5c)" }} />
-    ))}
-    {/* 机身：深蓝铝框，边缘一道高光 */}
+    <div style={{ position: "absolute", left: BODY_W + CASE - 4, top: 270, width: 8, height: 96, borderRadius: 4, background: BUMP_BG, boxShadow: "inset -1px 0 1px rgba(255,255,255,0.6), 0 1px 2px rgba(60,90,30,0.25)" }} />
+    {/* 壳身：硅胶的哑光，左上一点受光，右下一点暗，外沿一道细边 */}
     <div
       style={{
         position: "absolute",
-        inset: 0,
-        borderRadius: 72,
-        background: "linear-gradient(140deg,#5b6f96 0%,#22314f 22%,#151f36 55%,#2c3d63 85%,#6b7fa6 100%)",
-        boxShadow: "inset 0 0 0 1.2px rgba(255,255,255,0.28), inset 0 0 0 3px rgba(10,16,30,0.9)",
+        inset: -CASE,
+        borderRadius: CASE_R,
+        background: CASE_BG,
+        boxShadow: "inset 0 3px 5px rgba(255,255,255,0.85), inset 0 -5px 12px rgba(120,150,50,0.3), inset 3px 0 6px rgba(255,255,255,0.4), 0 0 0 1px rgba(110,140,60,0.28)",
       }}
     />
-    <div style={{ position: "absolute", inset: 3.5, borderRadius: 68.5, background: "#05070b" }} />
+    {/* 相机控制键的开孔：壳上挖一个圆角槽，露出里面的蓝宝石按键 */}
+    <div style={{ position: "absolute", left: BODY_W + 3, top: 628, width: 7, height: 70, borderRadius: 4, background: "linear-gradient(90deg,#9fb98a,#c9dcb6)", boxShadow: "inset 1px 0 2px rgba(40,60,30,0.45)" }} />
+    {/* 壳沿：比玻璃高一点的那一圈，内侧一道暗线，外侧一道高光 */}
+    <div
+      style={{
+        position: "absolute",
+        inset: -4,
+        borderRadius: 76,
+        boxShadow: "0 0 0 1.5px rgba(255,255,255,0.55), inset 0 0 0 1.2px rgba(70,100,40,0.35), 0 0 6px rgba(90,120,50,0.25)",
+      }}
+    />
+    <div style={{ position: "absolute", inset: -1, borderRadius: 73, background: "#05070b" }} />
     {/* 屏幕 */}
     <div style={{ position: "absolute", left: RIM, top: RIM, width: SW, height: SH, borderRadius: 63, overflow: "hidden", background: CHROME }}>
       {children}

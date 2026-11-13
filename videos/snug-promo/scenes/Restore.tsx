@@ -1,59 +1,60 @@
 import { AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame } from "remotion";
 import { clamp, inOutQuint, outExpo } from "../../../engine/motion";
 import { assets } from "../assets.gen";
-import { DH, DW, FRONT, MacDesktop, type Rect } from "../components/mac";
-import { Phone } from "../components/phone";
-import { WIN, WindowList } from "../components/snug";
+import { GhosttyApp } from "../components/apps";
+import { DW, FRONT, MacBook, MacDesktop, type Rect } from "../components/mac";
+import { flick } from "../components/gesture";
+import { Phone, Touch } from "../components/phone";
 import { Hero } from "../components/stage";
-import { SESSION, Terminal } from "../components/terminal";
+import { followAt } from "../components/story";
+import { Terminal } from "../components/terminal";
 import { UUSnug } from "../components/uu";
-import { C, local, SF, ZH } from "../theme";
-import { OTHERS } from "./List";
+import { b, C, local, SF, ZH } from "../theme";
 
-// Mac 端零操作：Snug 常驻菜单栏，连上就用，Mac 上什么都不用点。
-// 断开即复原：手机一断开，手机屏移除，窗口从右边回到原来的位置，字号缩回原样。
-const at = local(128);
+// Mac 端零操作：Snug 常驻菜单栏，连上就用，Mac 上什么都不用点。手机上还是刚才答完的那个终端，
+// 手指往下甩一下翻回去重看一段，再往上甩回到底；镜头慢慢推近。
+// 断开即复原：第 14 拍音乐静音一拍，手机在这一拍断开退下，手机屏移除；声音回来时窗口从右边回到原来的位置，字号缩回原样。
+const START = 208;
+const at = local(START);
 const SCREEN_W = 940;
 const K = SCREEN_W / DW;
-const SCREEN_H = DH * K;
 const LEFT = (1080 - SCREEN_W) / 2;
 const TOP = 640;
-
-const MacBook: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div style={{ position: "absolute", left: LEFT - 22, top: TOP - 22 }}>
-    <div style={{ width: SCREEN_W + 44, height: SCREEN_H + 40, borderRadius: 30, background: "#0d0f14", border: "2px solid #3b4257", boxShadow: "0 40px 90px rgba(20,40,90,0.3)", position: "relative" }}>
-      <div style={{ position: "absolute", left: 22, top: 22, width: SCREEN_W, height: SCREEN_H, borderRadius: 10, overflow: "hidden" }}>{children}</div>
-    </div>
-    <div style={{ width: SCREEN_W + 120, height: 26, marginLeft: -38, borderRadius: "0 0 26px 26px", background: "linear-gradient(180deg,#a8b2c8,#5d667c)" }} />
-  </div>
-);
 
 export const Restore: React.FC = () => {
   const f = useCurrentFrame();
   const on = interpolate(f, [0, 14], [0, 1], { ...clamp, easing: outExpo });
   const pulse = interpolate(f % 56, [0, 56], [0, 1]);
-  const off = interpolate(f, [at(8), at(8) + 14], [0, 1], { ...clamp, easing: inOutQuint });
-  const back = interpolate(f, [at(9), at(11)], [0, 1], { ...clamp, easing: inOutQuint });
+  const off = interpolate(f, [at(14), at(14) + 14], [0, 1], { ...clamp, easing: inOutQuint });
+  const back = interpolate(f, [at(15), at(17)], [0, 1], { ...clamp, easing: inOutQuint });
   // 窗口从右边（手机屏那块虚拟屏）回到原位
   const rect: Rect = { x: FRONT.x + (DW + 40 - FRONT.x) * (1 - back), y: FRONT.y, w: FRONT.w, h: FRONT.h };
   const size = 13 + 4 * (1 - back);
+  const lines = followAt(b(START) + f);
+  // 手机上甩两下：往下翻回去（anchor 贴底，往回翻是负的 scroll），再甩回底部
+  const scroll = -Math.max(0, Math.min(260, flick(f, at(4), 8, 150) - flick(f, at(8.5), 8, 150)));
+  const swipe = (t0: number, dir: number) => ({
+    y: interpolate(f, [t0, t0 + 8], [0, 150], clamp) * dir,
+    show: interpolate(f, [t0 - 6, t0, t0 + 8, t0 + 14], [0, 1, 1, 0], clamp),
+  });
+  const w1 = swipe(at(4), 1);
+  const w2 = swipe(at(8.5), -1);
+  const push = interpolate(f, [0, at(14)], [0, 1], clamp);
   const menuIcon = (
     <div style={{ position: "absolute", left: DW - 330, top: 2, width: 22, height: 22 }}>
       <Img src={staticFile(assets.snugIcon)} style={{ width: 22, height: 22 }} />
     </div>
   );
   return (
-    <AbsoluteFill>
+    <AbsoluteFill style={{ transform: `scale(${1 + 0.04 * push})`, transformOrigin: "50% 60%" }}>
       <div style={{ opacity: on, transform: `translateY(${(1 - on) * 60}px)` }}>
-        <MacBook>
-          <div style={{ width: DW, height: DH, transform: `scale(${K})`, transformOrigin: "0 0" }}>
-            <MacDesktop front={<Terminal lines={SESSION} size={size} width={rect.w} height={rect.h - 33} />} frontRect={rect} menuIcon={menuIcon} />
-          </div>
+        <MacBook left={LEFT} top={TOP} width={SCREEN_W}>
+          <MacDesktop front={<Terminal lines={lines} size={size} width={rect.w} height={rect.h - 33} anchor="bottom" />} frontRect={rect} menuIcon={menuIcon} />
         </MacBook>
         {/* 菜单栏里的 Snug 图标：一圈光提示它在那里 */}
         <div style={{ position: "absolute", left: LEFT + (DW - 319) * K - 30, top: TOP + 13 * K - 30, width: 60, height: 60, borderRadius: 30, border: `3px solid rgba(31,99,255,${(1 - pulse) * (1 - off)})`, transform: `scale(${0.6 + 0.8 * pulse})` }} />
         <div style={{ position: "absolute", left: LEFT + (DW - 319) * K - 200, top: TOP + 60, width: 400, textAlign: "center", opacity: 1 - off }}>
-          <span style={{ display: "inline-block", padding: "8px 20px", borderRadius: 22, background: "#ffffff", boxShadow: "0 8px 24px rgba(20,40,90,0.18)", fontFamily: ZH, fontSize: 30, fontWeight: 600, color: C.blue }}>Snug 常驻菜单栏</span>
+          <span style={{ display: "inline-block", padding: "8px 20px", borderRadius: 22, background: "#ffffff", boxShadow: "0 8px 24px rgba(20,40,90,0.18)", fontFamily: ZH, fontSize: 30, fontWeight: 600, color: C.blue }}>常驻菜单栏</span>
         </div>
       </div>
       {/* 连着的手机，断开时往下退掉 */}
@@ -63,8 +64,10 @@ export const Restore: React.FC = () => {
         </svg>
         <Phone x={540} y={1590} scale={0.58} glow={0.6}>
           <UUSnug>
-            <WindowList current={WIN.ghostty} others={OTHERS} />
+            <GhosttyApp lines={lines} size={17} scroll={scroll} />
           </UUSnug>
+          <Touch x={260} y={330 + w1.y} press={1} show={w1.show} />
+          <Touch x={260} y={520 + w2.y} press={1} show={w2.show} />
         </Phone>
       </div>
       {off > 0 ? (
@@ -72,8 +75,8 @@ export const Restore: React.FC = () => {
           <span style={{ fontFamily: ZH }}>窗口归位 · 字号复原</span>
         </div>
       ) : null}
-      <Hero at={2} until={at(8) - 6} title="ZERO SETUP" sub="Mac 端 无需任何操作" />
-      <Hero at={at(8)} until={at(16) - 6} title="AUTO RESTORE" sub="断开即复原" />
+      <Hero at={2} until={at(14) - 6} title="ZERO SETUP" sub="Mac 端 · 零操作" />
+      <Hero at={at(14)} until={at(20) - 6} title="AUTO RESTORE" sub="断开即复原" />
     </AbsoluteFill>
   );
 };

@@ -5,7 +5,7 @@
   "status": "draft",
   "tags": [],
   "createdAt": "2026-11-13T16:10:18.582Z",
-  "updatedAt": "2026-11-13T16:17:44.224Z",
+  "updatedAt": "2026-11-13T17:19:52.594Z",
   "assets": {
     "song": "sha256:6347145a192a34956249906235e6bc7151665444001fe5c330b1ff9c615a2f87",
     "snugIcon": "sha256:650577ae9022a88483cc83994b1b27ce5a7c21ddb57e7cd5b20d7f196358fa5f",
@@ -25,6 +25,7 @@
     "iconWechat": "sha256:dbe54b40d210b1a61f4866e158437ac10cfeb5f5d72a59d2ade24ff9bbabe1da",
     "iconIterm": "sha256:ef1c4f6beacb978b4f6423bed4b0c5adf56a1c7454db3a4629b858f7249decd0",
     "fontMono": "sha256:48715a42ec242c21e9f02692891e147d022299a52e48d5e413e1a942193ffeda",
-    "appleLogo": "sha256:319c9d9732be88d8b9431c13bdfb2db25fecb30b11616e2f40edfb0a30ae9921"
+    "appleLogo": "sha256:319c9d9732be88d8b9431c13bdfb2db25fecb30b11616e2f40edfb0a30ae9921",
+    "iconCalendar": "sha256:11385fe20f406bfd905f1905ce01f27fe5bd08d768c53ab7a688c6b153245dfb"
   }
 }

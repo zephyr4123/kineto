@@ -1,8 +1,8 @@
 import { Img, interpolate, staticFile } from "remotion";
-import { clamp } from "../../../engine/motion";
+import { clamp, outExpo } from "../../../engine/motion";
 import { assets } from "../assets.gen";
 import { SF } from "../theme";
-import { MH, MW } from "./mac";
+import { Indicator, MH, MW, toPhone } from "./mac";
 
 // Snug 自己画在手机屏上的界面：窗口列表、正在打开。照 Snug 代码里的尺寸（Mac 点）：
 // 浅灰底 #F2F2F7、白卡片圆角 12；大标题「窗口」40 号粗体；分组标题 15 号次要色；
@@ -125,8 +125,12 @@ export const WIN = {
   typeless: { icon: "iconTypeless", app: "Typeless", title: "Typeless" },
   settings: { icon: "iconSettings", app: "System Settings", title: "Login Items" },
   notion: { icon: "iconNotion", app: "Notion", title: "Snug 2.0 发布清单" },
+  shell: { icon: "iconGhostty", app: "Ghostty", title: ".../coding/personal/snug" },
   wechat: { icon: "iconWechat", app: "WeChat", title: "WeChat" },
 } as const satisfies Record<string, Win>;
+
+/** 窗口列表里「其他窗口」那一组的默认内容 */
+export const OTHERS = [WIN.vscode, WIN.chatgpt, WIN.safari, WIN.notion, WIN.claude, WIN.finder, WIN.settings] as const;
 
 /** 列表里第 i 行的中心（Mac 点），用来放手指 */
 export const rowCenter = (i: number, current: boolean) => {
@@ -134,3 +138,47 @@ export const rowCenter = (i: number, current: boolean) => {
   return { x: 270, y: top + i * ROW_H + ROW_H / 2 };
 };
 export const press01 = (frame: number, at: number) => interpolate(frame, [at, at + 3, at + 10, at + 16], [0, 1, 1, 0], clamp);
+
+/** 手指：屏幕点坐标，press 0→1 按下，show 控制出现和消失 */
+export type Finger = { x: number; y: number; press: number; show: number };
+
+/** 换窗口的时间（帧）：0 点底部横条，6–18 列表滑上来，18–38 手指移到那一行，40 点下，50 起「正在打开」，82 起铺满 */
+export const SWITCH = { TAP_BAR: 0, LIST_IN: 6, MOVE: 18, TAP_ROW: 40, OPENING: 50, ENTER: 82 } as const;
+
+/**
+ * 换窗口进行到第 t 帧时屏上的样子和手指；t ≥ SWITCH.ENTER 时返回 null，表示新窗口已经铺满，由调用方画。
+ * fromList：列表已经在屏上了（上一个场景点过横条），从手指移向那一行开始，t 也从 SWITCH.MOVE 起算。
+ */
+export const switching = (
+  t: number,
+  o: { prevScreen: React.ReactNode; current: Win; others: readonly Win[]; target: Win; fromList?: boolean },
+): { screen: React.ReactNode; finger: Finger | null } | null => {
+  const { TAP_BAR, LIST_IN, MOVE, TAP_ROW, OPENING, ENTER } = SWITCH;
+  if (t >= ENTER) return null;
+  if (t >= OPENING) return { screen: <Opening w={o.target} frame={t} />, finger: null };
+  const bar = toPhone(MW / 2, MH - 14);
+  if (t < LIST_IN) return { screen: o.prevScreen, finger: { ...bar, press: press01(t, TAP_BAR), show: interpolate(t, [-6, 0], [0, 1], clamp) } };
+  const pressRow = o.others.indexOf(o.target);
+  const c = rowCenter(pressRow, true);
+  const row = toPhone(c.x, c.y);
+  const p = o.fromList ? 1 : interpolate(t, [LIST_IN, LIST_IN + 12], [0, 1], { ...clamp, easing: outExpo });
+  const start = o.fromList ? { x: row.x + 50, y: row.y + 140 } : bar;
+  const ease = { ...clamp, easing: outExpo };
+  return {
+    screen: (
+      <>
+        {p < 1 ? o.prevScreen : null}
+        <div style={{ position: "absolute", inset: 0, opacity: p, transform: `translateY(${(1 - p) * 50}px)` }}>
+          <WindowList current={o.current} others={o.others} pressRow={pressRow} press={press01(t, TAP_ROW)} />
+          <Indicator />
+        </div>
+      </>
+    ),
+    finger: {
+      x: interpolate(t, [MOVE, TAP_ROW - 2], [start.x, row.x], ease),
+      y: interpolate(t, [MOVE, TAP_ROW - 2], [start.y, row.y], ease),
+      press: press01(t, TAP_ROW),
+      show: Math.min(o.fromList ? (t - MOVE) / 8 : 1, interpolate(t, [TAP_ROW + 6, TAP_ROW + 10], [1, 0], clamp)),
+    },
+  };
+};

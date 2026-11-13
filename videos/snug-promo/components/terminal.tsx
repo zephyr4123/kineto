@@ -295,7 +295,8 @@ export const cut = (lines: readonly Line[], n: number): Line[] => {
       part.push({ ...s, t: chars.slice(0, left).join("") });
       left -= chars.length;
     }
-    out.push(part);
+    // 正好停在两行之间时不留一行空的
+    if (part.length) out.push(part);
     break;
   }
   return out;
@@ -309,9 +310,52 @@ export const working = (frame: number, verb = "Thinking", secs = 12): Line => [
   { t: `(${secs + Math.floor(frame / 60)}s · esc to interrupt)`, c: DIM },
 ];
 
-/** 流式回答：before 是已经在屏上的，stream 从 from 帧起按字吐出，吐的时候底下有转圈行，最后是输入框 */
-export const streaming = (before: readonly Line[], stream: readonly Line[], frame: number, from: number, cps = 3, verb = "Thinking"): Line[] => {
-  const n = typedCount(frame, from, cps);
+/** 工具调用那一行（绿点 + Read / Bash） */
+const isTool = (l: Line) => typeof l !== "string" && l[0]?.t === "● " && l[0]?.c === CC.green;
+const RUNNING: Line = [{ t: "  ⎿  Running…", c: DIM }];
+
+/**
+ * 流式回答：before 是已经在屏上的，stream 已经吐出前 n 个字，没吐完时底下有转圈行，最后是输入框。
+ * 工具调用那一行出完、结果还没出来时，下面挂一行「⎿ Running…」，和 Claude Code 跑工具时一样。
+ * input 是最底下的输入框（默认空着），手机上正在打字时换成带字和光标的。
+ */
+export const streamed = (
+  before: readonly Line[],
+  stream: readonly Line[],
+  n: number,
+  frame: number,
+  verb = "Thinking",
+  secs = 12,
+  input: readonly Line[] = INPUT(""),
+): Line[] => {
   const done = n >= charCount(stream);
-  return [...before, ...cut(stream, n), ...(done ? [] : ["", working(frame, verb)]), "", ...INPUT("")];
+  const shown = cut(stream, n);
+  const last = shown.length - 1;
+  const running = !done && last >= 0 && isTool(shown[last]) && charCount([shown[last]]) === charCount([stream[last]]);
+  return [...before, ...shown, ...(running ? [RUNNING] : []), ...(done ? [] : ["", working(frame, verb, secs)]), "", ...input];
 };
+
+/** 流式回答：stream 从 from 帧起按每帧 cps 个字吐出 */
+export const streaming = (before: readonly Line[], stream: readonly Line[], frame: number, from: number, cps = 3, verb = "Thinking"): Line[] =>
+  streamed(before, stream, typedCount(frame, from, cps), frame, verb);
+
+/** 接回会话后在手机上敲的那一句：回答 recap 里「挑一块深入」 */
+export const FOLLOW = "gestures";
+export const FOLLOW_LINE: Line = [{ t: "❯ ", c: DIM }, { t: FOLLOW, bg: "#eef0f3" }];
+/** 对 FOLLOW 的回答：读两个文件，讲手势翻译。行数是 Snug 仓库里的真实行数，内容照 docs/how-it-works.md 的「手势翻译」 */
+export const GESTURES: readonly Line[] = [
+  [{ t: "● ", c: CC.green }, { t: "Read", b: true }, { t: "(SnugCore/Touch/TouchTranslator.swift)" }],
+  [{ t: "  ⎿  Read 186 lines", c: DIM }],
+  [{ t: "● ", c: CC.green }, { t: "Read", b: true }, { t: "(SnugCore/Touch/Scrolling.swift)" }],
+  [{ t: "  ⎿  Read 74 lines", c: DIM }],
+  "",
+  [{ t: "● ", c: INK }, { t: "手势翻译只接管 UU远程 注入、且在手机屏内按下的鼠标左键，本机的触控板、鼠标和其他显示器都不受影响：" }],
+  "",
+  [{ t: "  - 移动不少于 10 点：像素滚动，松手后按速度附加惯性，速度设有上限" }],
+  [{ t: "  - 惯性滚动中轻点：只停下滚动，不触发点击" }],
+  [{ t: "  - 按住 0.5 秒后拖动：补发按下事件，用来拖选文字" }],
+  [{ t: "  - 按住 0.5 秒后松开：右键" }],
+  [{ t: "  - 其余操作原样放行" }],
+  "",
+  [{ t: "● ", c: INK }, { t: "补发的事件都带有标记，不会被再次接管。" }],
+];

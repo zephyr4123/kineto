@@ -3,8 +3,8 @@ import { clamp, outExpo } from "../../../engine/motion";
 import { assets } from "../assets.gen";
 import { C, local, SF, ZH } from "../theme";
 
-// 三个痛点一拍一个砸回来、划掉；音乐抽空的那一小节里 Snug 亮相：图标从暗处浮起，光圈越涨越亮，名字和一句定位跟上。
-const at = local(24);
+// 三条路一拍一个砸回来、划掉；音乐抽空的那一小节里 Snug 亮相：图标从暗处浮起，光圈越涨越亮，名字和一句定位跟上。
+const at = local(40);
 const WORDS = ["TOO SMALL", "ONE AI ONLY", "CUT OFF"];
 
 export const Reveal: React.FC = () => {
@@ -72,7 +72,7 @@ export const Reveal: React.FC = () => {
         Snug
       </div>
       <div style={{ position: "absolute", left: 0, right: 0, top: 1280, textAlign: "center", fontFamily: ZH, fontWeight: 600, fontSize: 50, letterSpacing: "0.1em", color: C.ink2, opacity: sub, transform: `translateY(${(1 - sub) * 20}px)` }}>
-        为 UU远程 打造的手机屏
+        UU远程 专属手机屏
       </div>
     </AbsoluteFill>
   );

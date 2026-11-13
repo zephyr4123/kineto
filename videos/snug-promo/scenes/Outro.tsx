@@ -5,7 +5,7 @@ import { C, local, MONO, SF, ZH } from "../theme";
 
 // 落版：图标、名字、一句定位；GitHub 仓库卡片升上来，光标点亮 Star；最后是地址、开源许可和致谢。
 // 仓库刚发布（v2.0.0，2026-11-13），星标数很小，卡片上不放数字，只演示点亮。
-const at = local(144);
+const at = local(228);
 
 const Cursor: React.FC<{ x: number; y: number; down: number }> = ({ x, y, down }) => (
   <svg style={{ position: "absolute", left: x, top: y, transform: `scale(${1 - 0.12 * down})`, transformOrigin: "0 0" }} width="40" height="52" viewBox="0 0 20 26">
@@ -17,26 +17,26 @@ export const Outro: React.FC = () => {
   const f = useCurrentFrame();
   const icon = interpolate(f, [0, 16], [0, 1], { ...clamp, easing: outExpo });
   const name = interpolate(f, [6, 20], [0, 1], { ...clamp, easing: outExpo });
-  const line = interpolate(f, [at(1.5), at(1.5) + 14], [0, 1], { ...clamp, easing: outExpo });
-  const card = interpolate(f, [at(4), at(4) + 16], [0, 1], { ...clamp, easing: outExpo });
-  const click = at(6.5);
-  const cx = interpolate(f, [at(4) + 10, click - 4], [980, 236], { ...clamp, easing: inOutQuint });
-  const cy = interpolate(f, [at(4) + 10, click - 4], [1720, 1468], { ...clamp, easing: inOutQuint });
+  const line = interpolate(f, [at(2), at(2) + 14], [0, 1], { ...clamp, easing: outExpo });
+  const card = interpolate(f, [at(6), at(6) + 16], [0, 1], { ...clamp, easing: outExpo });
+  const click = at(10);
+  const cx = interpolate(f, [at(7), click - 4], [980, 236], { ...clamp, easing: inOutQuint });
+  const cy = interpolate(f, [at(7), click - 4], [1720, 1468], { ...clamp, easing: inOutQuint });
   const down = interpolate(f, [click - 2, click, click + 6], [0, 1, 0], clamp);
   const starred = f >= click;
   const burst = interpolate(f, [click, click + 18], [0, 1], { ...clamp, easing: outExpo });
-  const url = interpolate(f, [at(8), at(8) + 14], [0, 1], { ...clamp, easing: outExpo });
-  const credit = interpolate(f, [at(11), at(11) + 16], [0, 1], clamp);
-  const hit = punch(f, at(12), 0.05, 26);
+  const url = interpolate(f, [at(13), at(13) + 14], [0, 1], { ...clamp, easing: outExpo });
+  const credit = interpolate(f, [at(17), at(17) + 16], [0, 1], clamp);
+  const hit = punch(f, at(20), 0.05, 26);
   return (
     <AbsoluteFill>
       <div style={{ position: "absolute", left: 0, right: 0, top: 0, height: 1200, transform: `scale(${hit})`, transformOrigin: "50% 40%" }}>
         <Img src={staticFile(assets.snugIcon)} style={{ position: "absolute", left: 540 - 170, top: 250, width: 340, height: 340, opacity: icon, transform: `translateY(${(1 - icon) * 50}px) scale(${0.8 + 0.2 * icon})`, filter: "drop-shadow(0 30px 60px rgba(20,50,120,0.28))" }} />
         <div style={{ position: "absolute", left: 0, right: 0, top: 590, textAlign: "center", fontFamily: SF, fontWeight: 800, fontSize: 200, letterSpacing: "-0.04em", color: C.ink, opacity: name, transform: `translateY(${(1 - name) * 30}px)` }}>Snug</div>
         <div style={{ position: "absolute", left: 0, right: 0, top: 860, textAlign: "center", fontFamily: ZH, fontWeight: 600, fontSize: 58, lineHeight: 1.45, letterSpacing: "0.06em", color: C.ink, opacity: line, transform: `translateY(${(1 - line) * 24}px)` }}>
-          让 Mac 在手机上
+          手机上的 Mac
           <br />
-          拥有原生级的操作体验
+          原生级操作体验
         </div>
       </div>
       {/* GitHub 仓库卡片 */}

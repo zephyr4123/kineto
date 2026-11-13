@@ -1,6 +1,6 @@
 import { Img, staticFile } from "remotion";
 import { assets } from "../assets.gen";
-import { MONO, SF } from "../theme";
+import { SF } from "../theme";
 import { Indicator, MENU_H, MenuBar, MH, MW, TitleBar } from "./mac";
 import { Terminal, type Line, type Sel } from "./terminal";
 
@@ -47,69 +47,6 @@ export const GhosttyApp: React.FC<{
 
 /** 打字机：一段文字从 from 帧起按字出现（聊天类 App 的回复用） */
 const typeOut = (text: string, n: number) => [...text].slice(0, Math.max(0, n)).join("");
-
-// VS Code：Snug 仓库里真实的 Scrolling.swift（松手后的惯性那一段）
-const KW = "#c586c0";
-const TY = "#4ec9b0";
-const FN = "#dcdcaa";
-const CM = "#6a9955";
-const NB = "#b5cea8";
-const PL = "#9cdcfe";
-const DF = "#d4d4d4";
-const BL = "#569cd6";
-type Tok = [string, string?];
-const CODE: Tok[][] = [
-  [["/// 松手后的惯性：每帧速度乘一个衰减系数，", CM]],
-  [["/// 慢到看不出来就停", CM]],
-  [["public ", BL], ["struct ", BL], ["Momentum", TY], [": ", DF], ["Sendable", TY], [" {", DF]],
-  [["    public static let ", BL], ["frameRate", PL], [" = ", DF], ["60.0", NB]],
-  [["    /// 每帧衰减（60fps 下约 0.8 秒停下）", CM]],
-  [["    static let ", BL], ["decay", PL], [" = ", DF], ["0.95", NB]],
-  [["    /// 甩出去的速度低于这个就不带惯性", CM]],
-  [["    static let ", BL], ["minimumSpeed", PL], [" = ", DF], ["200.0", NB]],
-  [["    /// 速度降到这个以下就停", CM]],
-  [["    static let ", BL], ["stopSpeed", PL], [" = ", DF], ["40.0", NB]],
-  [[""]],
-  [["    private var ", BL], ["vx", PL], [": ", DF], ["Double", TY]],
-  [["    private var ", BL], ["vy", PL], [": ", DF], ["Double", TY]],
-  [[""]],
-  [["    /// 下一帧的位移；停下时返回 nil", CM]],
-  [["    mutating func ", BL], ["next", FN], ["() -> (", DF], ["dx", PL], [": ", DF], ["Double", TY], [",", DF]],
-  [["        dy", PL], [": ", DF], ["Double", TY], [", ", DF], ["phase", PL], [": ", DF], ["MomentumPhase", TY], [")? {", DF]],
-  [["        vx ", PL], ["*= ", DF], ["Self", BL], [".", DF], ["decay", PL]],
-  [["        vy ", PL], ["*= ", DF], ["Self", BL], [".", DF], ["decay", PL]],
-  [["        guard ", KW], ["hypot", FN], ["(vx, vy) >= ", DF], ["Self", BL], [".", DF], ["stopSpeed", PL]],
-  [["        else ", KW], ["{ ", DF], ["return ", KW], ["nil", BL], [" }", DF]],
-  [["        defer ", KW], ["{ started = ", DF], ["true", BL], [" }", DF]],
-  [["        return ", KW], ["(vx / ", DF], ["Self", BL], [".", DF], ["frameRate", PL], [",", DF]],
-  [["                vy / ", DF], ["Self", BL], [".", DF], ["frameRate", PL], [",", DF]],
-  [["                started ? .", DF], ["continue", PL], [" : .", DF], ["begin", PL], [")", DF]],
-  [["    }", DF]],
-  [["}", DF]],
-];
-export const CodeApp: React.FC<{ size?: number }> = ({ size = 15.5 }) => (
-  <Frame app="Code" title="Scrolling.swift — snug" dark folder={false} menus={["File", "Edit", "Selection", "View", "Go"]}>
-    <div style={{ position: "absolute", left: 0, top: 0, right: 0, height: 34, background: "#252526", display: "flex" }}>
-      <div style={{ padding: "0 16px", display: "flex", alignItems: "center", gap: 8, background: "#1e1e1e", borderTop: "2px solid #0078d4", fontFamily: SF, fontSize: 13.5, color: "#fff" }}>
-        <span style={{ color: "#f05138", fontWeight: 800 }}>⌁</span>Scrolling.swift
-      </div>
-    </div>
-    <div style={{ position: "absolute", left: 0, top: 34, right: 0, bottom: 0, background: "#1e1e1e", fontFamily: MONO, fontSize: size, lineHeight: 1.55, whiteSpace: "pre", paddingTop: 8 }}>
-      {CODE.map((toks, i) => (
-        <div key={i} style={{ display: "flex" }}>
-          <span style={{ width: 44, textAlign: "right", paddingRight: 14, color: "#6e7681" }}>{44 + i}</span>
-          <span>
-            {toks.map(([t, c], j) => (
-              <span key={j} style={{ color: c ?? DF }}>
-                {t}
-              </span>
-            ))}
-          </span>
-        </div>
-      ))}
-    </div>
-  </Frame>
-);
 
 /** Safari 里打开的 Snug 仓库页（窄屏下 GitHub 的排版） */
 export const SafariApp: React.FC<{ scroll?: number }> = ({ scroll = 0 }) => (
@@ -172,6 +109,7 @@ export const SafariApp: React.FC<{ scroll?: number }> = ({ scroll = 0 }) => (
 
 /** ChatGPT 桌面版里的 Codex：左边一列图标，右上一条用户消息，下面是回复和输入框 */
 const GPT_REPLY = "找到了：Safari 限定了窗口的最小宽度，比手机屏的 540 点宽一点，所以铺不满。\n\n处理方式：\n1. 放不下时窗口靠左放置，不强行缩小\n2. 在屏上说明原因，避免看起来像出错\n3. 补了一条测试，覆盖最小宽度大于屏宽的情况\n\n改动在 Windows.swift，测试全部通过。";
+export const GPT_LEN = [...GPT_REPLY].length;
 export const ChatgptApp: React.FC<{ reveal?: number }> = ({ reveal = Infinity }) => (
   <Frame app="ChatGPT" title="修复窗口铺满的边界情况" folder={false} menus={["File", "Edit", "View", "Window"]}>
     <div style={{ position: "absolute", inset: 0, background: "#fff", fontFamily: SF }}>
@@ -204,6 +142,7 @@ export const ChatgptApp: React.FC<{ reveal?: number }> = ({ reveal = Infinity })
 
 /** Claude 桌面版：米白底，用户消息在浅灰气泡里，回复是衬线字，底下输入框带橙色发送钮 */
 const CLAUDE_REPLY = "几个方向：\n\n1. 让 Mac 在手机上拥有原生级的操作体验\n2. 手机上的 Mac，像 App 一样顺手\n3. 一块专属竖屏，窗口铺满，字号放大\n\n第一句最贴近产品本身，也最适合放在 README 顶部。";
+export const CLAUDE_LEN = [...CLAUDE_REPLY].length;
 export const ClaudeApp: React.FC<{ reveal?: number }> = ({ reveal = Infinity }) => (
   <Frame app="Claude" title="Snug 宣传文案" folder={false} menus={["File", "Edit", "View", "Window"]}>
     <div style={{ position: "absolute", inset: 0, background: "#faf9f5", fontFamily: SF }}>

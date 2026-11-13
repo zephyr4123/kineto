@@ -101,7 +101,7 @@ export const Menu: React.FC = () => {
         </UUSnug>
         <Touch x={finger.x} y={finger.y} press={1} show={show} ring={holdRing(f, down)} />
       </Phone>
-      <Hero at={2} until={at(8) - 6} title="RIGHT CLICK" sub="长按松开 调出右键菜单" />
+      <Hero at={2} until={at(8) - 6} title="RIGHT CLICK" sub="长按松开 · 右键菜单" />
     </AbsoluteFill>
   );
 };
