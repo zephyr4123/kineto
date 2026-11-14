@@ -4,8 +4,8 @@ import { b, C, SF, ZH } from "../theme";
 
 // 舞台：底、颗粒、字幕、镜头切换。全片共用一块底（放在 Video.tsx 最下层），场景之间只换上面的东西。
 
-/** 砸下的几拍：底的光在这些拍上亮一下 */
-const HITS = [12, 48, 60, 88, 120, 140, 156].map(b);
+/** 重拍：底的光在这些拍上亮一下（两次砸下、蓄力起势和几个段落开头） */
+const HITS = [12, 48, 60, 104, 120, 140, 156].map(b);
 
 /**
  * 底（浅色，取 Snug 图标的白、青、蓝），从下往上：
@@ -208,7 +208,7 @@ export const Shot: React.FC<{ frames: number; enter?: boolean; exit?: boolean; c
 
 /** 两段砸下里每小节的第一拍：整个画面往前顶一下（很轻），跟着音乐的重拍走 */
 const DROPS = [
-  [48, 112],
+  [48, 88],
   [120, 156],
 ] as const;
 const BARS = DROPS.flatMap(([from, to]) => Array.from({ length: (to - from) / 4 }, (_, i) => b(from + 4 * i)));
