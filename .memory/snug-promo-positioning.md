@@ -1,11 +1,11 @@
 ---
 name: snug-promo-positioning
-description: Snug 宣传片的定位：UU远程 的 iPhone 辅助插件（Make UU Remote Native on iPhone），主打 mobile native，不拉踩别人
+description: Snug 宣传片的定位：UU远程 的 iPhone 辅助插件（Make UU Remote Native on iPhone），通篇只讲 iPhone 原生手感，不拉踩、不放无关场景和 AI 卖点
 metadata:
   node_type: memory
   type: feedback
   originSessionId: ada5fca0-4236-45b3-ae1f-c34f0cc84b7e
-  modified: 2026-11-13T17:48:17.171Z
+  modified: 2026-11-14T04:18:22.710Z
 ---
 
 Snug 宣传片的定位（主人 2026-11-13 看完第三版后纠正）：
@@ -16,7 +16,10 @@ Snug 宣传片的定位（主人 2026-11-13 看完第三版后纠正）：
 - 负面对比要有，但要温和、讲事实，落在「桌面的操作方式搬到手机上的落差」，不是「UU 不行」。
 - 开场不能一上来就甩问题，要有过渡。
 - 「惯性滑动」这类实现细节观众听不懂，不当卖点讲。
+- **通篇紧扣一个主题：「让 UU远程 在 iPhone 上接近原生体验」**，每一段都得是这句话的证据（第四版后主人再次纠正，原话「没有扣紧主题」「方向走偏了」）。不放：与主题无关的生活场景（暂离工位、日历提醒、人在途中）、UU远程 本身的功能介绍（点开 UU、连回 Mac、键盘打字）、AI 能力（Any AI、/resume 接续会话）。
+- 多窗口那段的立意是「终端 CLI、桌面 App、浏览器、笔记，不管哪类窗口，配合 Snug 都是 iPhone 原生手感」，AI 只是其中一种窗口里的内容，不是卖点。
+- 手势要有实打实的对照：原版跟着触控板走，Snug 跟着手机走。对照的事实以 snug 仓库 README 的两张对比表为准（「核心体验」「手势：为触屏重新设计」：单指滑动 = 鼠标拖拽 vs 页面滚动；长按松开 = 普通点击 vs 右键菜单；切换窗口 = 在缩小的桌面里找 vs 窗口列表）。
 
-**Why:** 第三版的三个痛点（太小、只连自家 AI、终端接不上）被主人认为定位错了、像甩臭脸。
+**Why:** 第三版的三个痛点（太小、只连自家 AI、终端接不上）被主人认为定位错了、像甩臭脸；第四版开头的暂离工位、UU REMOTE、BUILT FOR DESKTOP 被认为像在给 UU远程 拍宣传片，中段 ANY AI 跑偏。
 
-**How to apply:** 改 snug-promo 的文案和段落前先对照这几条；画面文字同时守 [[video-caption-copy]]。
+**How to apply:** 改 snug-promo 的文案和段落前先对照这几条；每加一段先问「这段证明了 iPhone 原生手感的哪一点」，答不上就不放。画面文字同时守 [[video-caption-copy]]。
