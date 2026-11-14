@@ -18,7 +18,7 @@ import { b, MUSIC, VIDEO_FRAMES, VOLUME } from "./theme";
 // 成片时间线：只排场景和配乐。场景按拍排（from / to 是片子的第几拍），全片共用一块底。
 // enter / exit：场景首尾要不要「快推入、切出」；手机一镜到底接着演的场景不加，直接接上。
 // 段落和音乐：前奏里立题（0–12），原版的竖屏、横屏（12–40），抽空的一小节蓄力、第一次砸下 Snug 亮相（40–60），
-// 并排对照（60–88），终端、ChatGPT（88–120，第 112 拍接进第二轮），第二次砸下进浏览器（120），插件本分、落版（140–184）。
+// 手势对照，每个动作先原版、再拨到 Snug（60–88），终端、ChatGPT（88–120，第 112 拍接进第二轮），第二次砸下进浏览器（120），插件本分、落版（140–184）。
 export const SCENES = [
   { name: "Title", Scene: Title, from: 0, to: 12, enter: false, exit: false },
   { name: "Portrait", Scene: Portrait, from: 12, to: 20, enter: false, exit: false },

@@ -4,7 +4,7 @@ import { GhosttyApp } from "../components/apps";
 import { KB_CLOSE, KB_TOP } from "../components/keyboard";
 import { aim, Phone, TOOLBAR_TOP, Touch } from "../components/phone";
 import { press01, WIN } from "../components/snug";
-import { Hero } from "../components/stage";
+import { Headline } from "../components/stage";
 import { ASK_TESTS, SHELL_HISTORY, TESTS } from "../components/story";
 import { BANNER, CC, charCount, INPUT, PROMPT, streamed, type Line } from "../components/terminal";
 import { strokes, typingAt, UUSnug } from "../components/uu";
@@ -71,7 +71,7 @@ export const Shell: React.FC = () => {
         {typing.finger ? <Touch x={typing.finger.x} y={typing.finger.y} press={1} show={0.85} /> : null}
         <Touch x={KB_CLOSE.x} y={KB_TOP + KB_CLOSE.y} press={press01(f, CLOSE)} show={interpolate(f, [CLOSE - 10, CLOSE - 2, CLOSE + 8, CLOSE + 14], [0, 1, 1, 0], clamp)} />
       </Phone>
-      <Hero at={4} until={at(16) - 4} y={110} eyebrow="ANY WINDOW · 01" title="TERMINAL" sub="Claude Code · 键盘直输" />
+      <Headline at={4} until={at(16) - 4} y={110} kicker="ANY WINDOW · 01" title="终端" sub="Claude Code · 键盘直输" />
     </AbsoluteFill>
   );
 };

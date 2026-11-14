@@ -28,7 +28,7 @@ const Line: React.FC<{ at: number; top: number; size: number; children: React.Re
           transform: `translateY(${(1 - p) * 105}%)`,
           filter: p < 1 ? `blur(${(1 - p) * 6}px)` : undefined,
           ...(grad
-            ? { background: `linear-gradient(100deg, ${C.deep} 0%, ${C.blue} 45%, ${C.cyan} 100%)`, WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }
+            ? { background: `linear-gradient(100deg, ${C.deep} 0%, ${C.blue2} 100%)`, WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }
             : { color: C.ink }),
         }}
       >
@@ -60,13 +60,13 @@ export const Title: React.FC = () => {
         src={staticFile(assets.iconUu)}
         style={{ position: "absolute", left: uuX - size / 2, top: y - size / 2, width: size, height: size, opacity: Math.min(1, uu * 1.5), transform: `translateY(${(1 - uu) * -120}px) scale(${0.7 + 0.3 * uu})`, filter: "drop-shadow(0 26px 50px rgba(20,50,120,0.22))" }}
       />
-      <div style={{ position: "absolute", left: uuX - 200, top: y + size / 2 + 6, width: 400, textAlign: "center", fontFamily: ZH, fontSize: 38, fontWeight: 600, color: C.ink2, opacity: uu * label }}>UU远程</div>
-      <div style={{ position: "absolute", left: 540 - 50, top: y - 50, width: 100, height: 100, textAlign: "center", fontFamily: SF, fontSize: 96 - 30 * lift, fontWeight: 300, lineHeight: "100px", color: C.ink3, opacity: snug }}>+</div>
+      <div style={{ position: "absolute", left: uuX - 200, top: y + size / 2 + 6, width: 400, textAlign: "center", fontFamily: ZH, fontSize: 44, fontWeight: 600, color: C.ink, opacity: uu * label }}>UU远程</div>
+      <div style={{ position: "absolute", left: 540 - 50, top: y - 50, width: 100, height: 100, textAlign: "center", fontFamily: SF, fontSize: 96 - 30 * lift, fontWeight: 300, lineHeight: "100px", color: C.ink2, opacity: snug }}>+</div>
       <Img
         src={staticFile(assets.snugIcon)}
         style={{ position: "absolute", left: snugX - size / 2, top: y - size / 2, width: size, height: size, opacity: snug, transform: `rotate(${(1 - snug) * 18}deg)`, filter: "drop-shadow(0 30px 60px rgba(20,50,120,0.28))" }}
       />
-      <div style={{ position: "absolute", left: snugX - 200, top: y + size / 2 + 6, width: 400, textAlign: "center", fontFamily: SF, fontSize: 40, fontWeight: 700, color: C.ink2, opacity: snug * label }}>Snug</div>
+      <div style={{ position: "absolute", left: snugX - 200, top: y + size / 2 + 6, width: 400, textAlign: "center", fontFamily: SF, fontSize: 46, fontWeight: 700, color: C.ink, opacity: snug * label }}>Snug</div>
       <Line at={at(4)} top={650} size={104}>
         Make UU Remote
       </Line>
@@ -76,7 +76,7 @@ export const Title: React.FC = () => {
       <Line at={at(6)} top={1062} size={104}>
         on iPhone
       </Line>
-      <div style={{ position: "absolute", left: 0, right: 0, top: 1240, textAlign: "center", fontFamily: ZH, fontSize: 48, fontWeight: 600, letterSpacing: "0.12em", color: C.ink2, opacity: zh, transform: `translateY(${(1 - zh) * 20}px)` }}>
+      <div style={{ position: "absolute", left: 0, right: 0, top: 1230, textAlign: "center", fontFamily: ZH, fontSize: 70, fontWeight: 600, letterSpacing: "0.08em", color: C.ink, opacity: zh, transform: `translateY(${(1 - zh) * 20}px)` }}>
         UU远程 · iPhone 原生体验
       </div>
       <Shock at={2} x={540} y={ICON_Y} size={1000} />

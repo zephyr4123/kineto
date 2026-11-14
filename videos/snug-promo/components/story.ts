@@ -32,7 +32,7 @@ const taskChars = progress([
 ]);
 /** 片子第 abs 帧时这个会话在终端里的样子 */
 export const taskAt = (abs: number) => streamed(TASK_BEFORE, ANSWER, taskChars(abs), abs, "Working", 48);
-/** 写完以后的样子（并排对照那一段一直是它） */
+/** 写完以后的样子（手势对照那一段一直是它） */
 export const TASK_DONE = streamed(TASK_BEFORE, ANSWER, charCount(ANSWER), 0);
 /** 讲手势的那一段（ANSWER 第 9 行）在 TASK_DONE 里是第几行，选字、拷贝用 */
 export const TASK_GESTURE_LINE = TASK_BEFORE.length + 9;

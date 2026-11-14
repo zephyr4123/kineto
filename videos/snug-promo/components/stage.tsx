@@ -99,34 +99,20 @@ export const Grain: React.FC = () => {
   );
 };
 
-/**
- * 字幕：英文大写主角词 + 中文短句配角。at 起 8 帧推进来（从大、从虚到实），until 起 6 帧往上退。
- * 主角词按字母错开一点点进场，像被拍子一个个敲上去。
- */
-export const Hero: React.FC<{
-  at: number;
-  until?: number;
-  title: string;
-  sub?: string;
-  y?: number;
-  size?: number;
-  subSize?: number;
-  color?: string;
-  stagger?: number;
-  /** 主角词一开始就在（同一个主角词跨好几个场景时，后面的场景用它，只有副标题重新进场） */
-  instant?: boolean;
-  /** 主角词上面一行小字（字距拉开），标明这一段属于哪一组 */
-  eyebrow?: string;
-  /** 字幕底下那层由浅到透明的底；字幕放在两台手机中间时不要 */
-  backing?: boolean;
-}> = ({ at, until = Number.POSITIVE_INFINITY, title, sub, y = 210, size: want = 150, subSize = 50, color = C.ink, stagger = 1.2, instant = false, eyebrow, backing = true }) => {
+/** 估一行字的宽度（em）：中文一个字 1 em，英文数字约 0.58 em，空格和「·」约 0.32 em */
+const emWidth = (text: string, track: number) =>
+  [...text].reduce((w, ch) => w + (/[\u2e80-\u9fff\uff00-\uffef]/.test(ch) ? 1 : ch === " " || ch === "·" ? 0.32 : 0.58) + track, 0);
+
+const KICKER_SIZE = 40;
+/** 英文小标占的高度（字 + 和主标题的间距），单独放小标时用来对齐主标题 */
+export const KICKER_H = Math.round(KICKER_SIZE * 1.3 + 14);
+
+/** 英文小标：一行字距拉开的大写字母，标明这一段是什么。at 起落下来，until 起退掉 */
+export const Kicker: React.FC<{ at: number; until?: number; text: string; y: number }> = ({ at, until = Number.POSITIVE_INFINITY, text, y }) => {
   const f = useCurrentFrame();
-  // 词太长时缩字号，保证一行放得下（SF Black 大写字母平均约 0.66 em 宽）
-  const size = Math.min(want, 980 / (0.66 * [...title].length));
-  if (f < at - 1 || f > until + 8) return null;
+  const p = interpolate(f, [at, at + 10], [0, 1], { ...clamp, easing: outExpo });
   const out = Number.isFinite(until) ? interpolate(f, [until, until + 6], [0, 1], clamp) : 0;
-  const chars = [...title];
-  const subIn = interpolate(f, [at + 4, at + 14], [0, 1], { ...clamp, easing: outExpo });
+  if (p <= 0 || out >= 1) return null;
   return (
     <div
       style={{
@@ -135,81 +121,65 @@ export const Hero: React.FC<{
         right: 0,
         top: y,
         textAlign: "center",
-        zIndex: 10,
-        isolation: "isolate",
-        opacity: 1 - out,
-        transform: `translateY(${-40 * out}px)`,
-        filter: out > 0 ? `blur(${8 * out}px)` : undefined,
+        zIndex: 11,
+        fontFamily: SF,
+        fontWeight: 800,
+        fontSize: KICKER_SIZE,
+        lineHeight: 1.3,
+        letterSpacing: "0.2em",
+        color: C.deep,
+        opacity: p * (1 - out),
+        transform: `translateY(${(1 - p) * -12 - 20 * out}px)`,
       }}
     >
-      {/* 字幕底下垫一层由深到透明的底，镜头推近时手机顶上来也压不住字 */}
-      {backing ? <div style={{ position: "absolute", left: 0, right: 0, top: -y, height: y + size * 2.6, background: "linear-gradient(180deg, rgba(248,251,255,0.94) 0%, rgba(244,248,255,0.8) 62%, rgba(244,248,255,0) 100%)", zIndex: -1 }} /> : null}
-      {eyebrow ? (
-        <div style={{ marginBottom: 0.12 * size, fontFamily: SF, fontWeight: 700, fontSize: 30, letterSpacing: "0.32em", color: C.blue, opacity: subIn, transform: `translateY(${(1 - subIn) * -10}px)` }}>{eyebrow}</div>
-      ) : null}
-      <div style={{ fontFamily: SF, fontWeight: 900, fontSize: size, letterSpacing: "-0.035em", lineHeight: 0.95, color, whiteSpace: "pre" }}>
-        {chars.map((ch, i) => {
-          const p = instant ? 1 : interpolate(f, [at + i * stagger, at + i * stagger + 9], [0, 1], { ...clamp, easing: outExpo });
+      {text}
+    </div>
+  );
+};
+
+/**
+ * 字幕：中文主标题是主角（大字、深色），上面一行英文小标，下面可选一行中文副标题。
+ * at 起进场：小标落下，主标题一个字一个字从下面顶上来（从虚到实），副标题跟着浮上来；until 起 6 帧往上退。
+ * 字幕底下垫一层由浅到透明的底，镜头推近时手机顶上来也压不住字，字和底的对比度保持在 4.5:1 以上。
+ */
+export const Headline: React.FC<{
+  at: number;
+  until?: number;
+  title: string;
+  kicker?: string;
+  sub?: string;
+  /** 整块字幕的顶 */
+  y?: number;
+  size?: number;
+  subSize?: number;
+  backing?: boolean;
+}> = ({ at, until = Number.POSITIVE_INFINITY, title, kicker, sub, y = 150, size: want = 116, subSize = 52, backing = true }) => {
+  const f = useCurrentFrame();
+  const size = Math.min(want, 980 / emWidth(title, 0.02));
+  if (f < at - 1 || f > until + 8) return null;
+  const out = Number.isFinite(until) ? interpolate(f, [until, until + 6], [0, 1], clamp) : 0;
+  const subIn = interpolate(f, [at + 6, at + 16], [0, 1], { ...clamp, easing: outExpo });
+  const titleTop = kicker ? KICKER_H : 0;
+  const height = titleTop + size * 1.2 + (sub ? 16 + subSize * 1.3 : 0);
+  return (
+    <div style={{ position: "absolute", left: 0, right: 0, top: y, zIndex: 10, isolation: "isolate", opacity: 1 - out, transform: `translateY(${-30 * out}px)`, filter: out > 0 ? `blur(${8 * out}px)` : undefined }}>
+      {backing ? <div style={{ position: "absolute", left: 0, right: 0, top: -y, height: y + height + 150, background: "linear-gradient(180deg, rgba(248,251,255,0.95) 0%, rgba(244,248,255,0.86) 66%, rgba(244,248,255,0) 100%)", zIndex: -1 }} /> : null}
+      {kicker ? <Kicker at={at} text={kicker} y={0} /> : null}
+      <div style={{ position: "absolute", left: 0, right: 0, top: titleTop, textAlign: "center", fontFamily: ZH, fontWeight: 600, fontSize: size, lineHeight: 1.2, letterSpacing: "0.02em", color: C.ink, whiteSpace: "pre" }}>
+        {[...title].map((ch, i) => {
+          const p = interpolate(f, [at + 2 + i * 1.6, at + 12 + i * 1.6], [0, 1], { ...clamp, easing: outExpo });
           return (
-            <span
-              key={i}
-              style={{
-                display: "inline-block",
-                opacity: p,
-                transform: `translateY(${(1 - p) * 0.45 * size}px) scale(${1 + 0.35 * (1 - p)})`,
-                filter: p < 1 ? `blur(${(1 - p) * 10}px)` : undefined,
-              }}
-            >
-              {ch === " " ? " " : ch}
+            <span key={i} style={{ display: "inline-block", opacity: p, transform: `translateY(${(1 - p) * 0.5 * size}px) scale(${1 + 0.25 * (1 - p)})`, filter: p < 1 ? `blur(${(1 - p) * 10}px)` : undefined }}>
+              {ch}
             </span>
           );
         })}
       </div>
       {sub ? (
-        <div
-          style={{
-            marginTop: 0.26 * size,
-            fontFamily: ZH,
-            fontWeight: 600,
-            fontSize: subSize,
-            letterSpacing: "0.08em",
-            color: C.ink2,
-            opacity: subIn,
-            transform: `translateY(${(1 - subIn) * 18}px)`,
-          }}
-        >
+        <div style={{ position: "absolute", left: 0, right: 0, top: titleTop + size * 1.2 + 16, textAlign: "center", fontFamily: ZH, fontWeight: 600, fontSize: subSize, lineHeight: 1.3, letterSpacing: "0.06em", color: C.ink2, opacity: subIn, transform: `translateY(${(1 - subIn) * 18}px)` }}>
           {sub}
         </div>
       ) : null}
-    </div>
-  );
-};
-
-/** 画面里的一行小注（手势叫什么、原版怎么操作）：浅色胶囊，不抢主角词 */
-export const Note: React.FC<{ at: number; until?: number; text: string; y: number; dim?: boolean }> = ({ at, until = Infinity, text, y, dim = false }) => {
-  const f = useCurrentFrame();
-  const p = interpolate(f, [at, at + 10], [0, 1], { ...clamp, easing: outExpo });
-  const out = Number.isFinite(until) ? interpolate(f, [until, until + 6], [0, 1], clamp) : 0;
-  if (p <= 0 || out >= 1) return null;
-  return (
-    <div style={{ position: "absolute", top: y, left: 0, right: 0, textAlign: "center", zIndex: 11, opacity: p * (1 - out), transform: `translateY(${(1 - p) * 12}px)` }}>
-      <span
-        style={{
-          display: "inline-block",
-          padding: "10px 26px",
-          borderRadius: 30,
-          background: dim ? "rgba(255,255,255,0.62)" : "rgba(255,255,255,0.9)",
-          border: "1.5px solid rgba(20,40,90,0.08)",
-          boxShadow: "0 8px 24px rgba(20,40,90,0.1)",
-          fontFamily: ZH,
-          fontSize: 34,
-          fontWeight: 600,
-          letterSpacing: "0.06em",
-          color: dim ? C.ink3 : C.ink2,
-        }}
-      >
-        {text}
-      </span>
     </div>
   );
 };

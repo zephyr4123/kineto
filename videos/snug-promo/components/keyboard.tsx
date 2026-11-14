@@ -84,7 +84,6 @@ const UUBar: React.FC<{ tab: "ime" | "pc"; g?: BarGeo }> = ({ tab, g = BAR_P }) 
 /** 输入栏上「电脑键盘」标签、关闭钮的中心（键盘内坐标） */
 export const KB_CLOSE = { x: BAR_P.close, y: BAR_P.h / 2 };
 export const PC_TAB_L = { x: BAR_L.pc, y: BAR_L.h / 2 };
-export const KB_CLOSE_L = { x: BAR_L.close, y: BAR_L.h / 2 };
 
 export const Keyboard: React.FC<{ show: number; pressed?: string | null; suggest?: readonly [string, string, string]; layer?: "abc" | "123" }> = ({
   show,

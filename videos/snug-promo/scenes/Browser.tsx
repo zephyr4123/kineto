@@ -6,7 +6,7 @@ import { flick } from "../components/gesture";
 import { toPhone } from "../components/mac";
 import { Phone, Touch } from "../components/phone";
 import { press01, switching, SWITCH, WIN } from "../components/snug";
-import { Hero } from "../components/stage";
+import { Headline } from "../components/stage";
 import { UUSnug } from "../components/uu";
 import { local } from "../theme";
 
@@ -64,7 +64,7 @@ export const Browser: React.FC = () => {
       <Flash at={0} dur={16} max={0.8} />
       <Shock at={0} x={540} y={HOME.y} size={1600} dur={30} />
       <Sweep at={4} />
-      <Hero at={2} until={at(17)} y={110} eyebrow="ANY WINDOW · 03" title="BROWSER" sub="Safari · GitHub" />
+      <Headline at={2} until={at(17)} y={110} kicker="ANY WINDOW · 03" title="浏览器" sub="Safari · GitHub" />
     </AbsoluteFill>
   );
 };

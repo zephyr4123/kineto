@@ -5,7 +5,7 @@ import { KB_CLOSE, KB_TOP } from "../components/keyboard";
 import { toPhone } from "../components/mac";
 import { aim, Phone, TOOLBAR_TOP, Touch } from "../components/phone";
 import { press01, switching, SWITCH, WIN } from "../components/snug";
-import { Hero } from "../components/stage";
+import { Headline } from "../components/stage";
 import { strokes, typingAt, UUSnug } from "../components/uu";
 import { local } from "../theme";
 import { SHELL_DONE } from "./Shell";
@@ -63,7 +63,7 @@ export const Chat: React.FC = () => {
         {t.finger ? <Touch x={t.finger.x} y={t.finger.y} press={1} show={0.85} /> : null}
         <Touch x={KB_CLOSE.x} y={KB_TOP + KB_CLOSE.y} press={press01(f, CLOSE)} show={interpolate(f, [CLOSE - 10, CLOSE - 2, CLOSE + 8, CLOSE + 14], [0, 1, 1, 0], clamp)} />
       </Phone>
-      <Hero at={4} until={at(16) - 4} y={110} eyebrow="ANY WINDOW · 02" title="APP" sub="ChatGPT · 对话输入" />
+      <Headline at={4} until={at(16) - 4} y={110} kicker="ANY WINDOW · 02" title="App" sub="ChatGPT · 对话输入" />
     </AbsoluteFill>
   );
 };

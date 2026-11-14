@@ -4,7 +4,7 @@ import { Callout, Smear } from "../components/fx";
 import { FRONT, MacDesktop } from "../components/mac";
 import { aimL, Landscape as Land, onStageL, Phone, Touch } from "../components/phone";
 import { press01 } from "../components/snug";
-import { Hero, Note } from "../components/stage";
+import { Headline } from "../components/stage";
 import { taskAt } from "../components/story";
 import { contentHeight, layout, LINE_H, Terminal } from "../components/terminal";
 import { FIT_L, LAND_K, landToScreen, mixLand, screenToLand, UULandscape, UUOriginal, type LandView } from "../components/uu";
@@ -13,7 +13,8 @@ import { PORTRAIT_POSE } from "./Portrait";
 
 // 原版 UU远程 · 横屏（照实机录屏）：竖屏太空，横过来才稍微能用，可字号还是缩了一半多，手指一按就盖住好几行。
 // 手机转过来；镜头推到终端的字上，一根手指按上去比较大小；单指往上一滑想翻页，结果是鼠标拖拽，选中一大片；
-// 想拖选一行，手指稍微一偏就多选一行；双指放大能看清，但只剩一角。最后拉回整台手机，下一场转回竖屏。
+// 想拖选一行，手指稍微一偏就多选一行；双指放大能看清，但只剩一角。每一下都有一支箭头指着结果（上面一行小字是动作，下面大字是结果）。
+// 最后拉回整台手机，下一场转回竖屏。
 const START = 20;
 const at = local(START);
 export const LAND_POSE = { x: 540, y: 1150, s: 1.0 };
@@ -77,6 +78,10 @@ export const Landscape: React.FC = () => {
   const close = interpolate(f, [UNPINCH, UNPINCH + 24], [90, 16], { ...clamp, easing: outQuint });
   const unpinchShow = interpolate(f, [UNPINCH - 8, UNPINCH, UNPINCH + 26, UNPINCH + 34], [0, 1, 1, 0], clamp);
   const fingerStage = onStageL(pose.x, pose.y, s, P1.x, P1.y);
+  // 箭头指向：误选的那一片中间、多选出来的那一行、两指中间
+  const swipeAt = onStageL(pose.x, pose.y, s, P1.x - 60, (P1.y + 6 + swipeY) / 2);
+  const extraAt = onStageL(pose.x, pose.y, s, P2.x + 60, tY + LH * LAND_K * 1.5);
+  const pinchAt = onStageL(pose.x, pose.y, s, 430, 220);
   const turning = Math.abs(r01 - 0.5) < 0.5 && f < 30 ? Math.sin(Math.PI * r01) : 0;
 
   const desk = <MacDesktop front={<Terminal lines={lines} size={SIZE} width={FRONT.w} height={TERM_H} anchor="bottom" selRows={selRows} />} />;
@@ -105,11 +110,11 @@ export const Landscape: React.FC = () => {
           </Land>
         </Phone>
       </Smear>
-      <Callout at={at(3.6)} until={SWIPE - 4} x={fingerStage.x + 40} y={fingerStage.y - 40} tx={740} ty={820} text="指尖 · 盖住数行" side="right" />
-      <Hero at={10} until={at(20) - 4} title="LANDSCAPE" sub="横屏 · 字号过小" />
-      <Note at={SWIPE} until={at(9) - 6} text="单指滑动 · 误选文字" y={500} />
-      <Note at={DRAG - 10} until={at(13.5)} text="拖动选字 · 难以精准" y={500} />
-      <Note at={PINCH} until={at(19.4)} text="双指放大 · 只见局部" y={500} />
+      <Callout at={at(3.6)} until={SWIPE - 4} x={fingerStage.x + 30} y={fingerStage.y - 34} tx={760} ty={720} side="up" note="一根手指" text="盖住数行" />
+      <Callout at={SWIPE + 8} until={at(8.8)} x={swipeAt.x} y={swipeAt.y} tx={360} ty={720} side="up" note="单指滑动" text="误选一片" />
+      <Callout at={DRAG + 10} until={at(13)} x={extraAt.x} y={extraAt.y} tx={720} ty={720} side="up" note="拖动选字" text="多选一行" />
+      <Callout at={PINCH + 10} until={at(19.4)} x={pinchAt.x} y={pinchAt.y} tx={540} ty={720} side="up" note="双指放大" text="只见局部" bend={0} />
+      <Headline at={10} until={at(20) - 4} kicker="LANDSCAPE" title="横屏 · 字号过小" />
     </AbsoluteFill>
   );
 };

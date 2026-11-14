@@ -5,7 +5,7 @@ import { GhosttyApp } from "../components/apps";
 import { Callout, Flash, Shock, Sweep } from "../components/fx";
 import { FRONT, MacDesktop, toPhone } from "../components/mac";
 import { aim, DISPLAY_H, DISPLAY_TOP, Landscape as Land, onStage, Phone, SH, SW, UUToolbar } from "../components/phone";
-import { Hero } from "../components/stage";
+import { Headline } from "../components/stage";
 import { taskAt } from "../components/story";
 import { Terminal } from "../components/terminal";
 import { deskToScreen, FIT, UULandscape, UUOriginal, UUSnug } from "../components/uu";
@@ -15,13 +15,14 @@ import { PORTRAIT_POSE } from "./Portrait";
 
 // Snug 亮相（全片第一次砸下）：手机转回竖屏，又是那一大片黑边；音乐抽空的一小节里四周压暗，Snug 的图标从上面落下来、
 // 一拍一跳地蓄力，最后一拍扎进手机屏幕 —— 砸下：缩在中间的整块桌面炸开，换成 Snug 手机屏，Ghostty 窗口竖着铺满。
-// 随后字号放大、镜头推到字上；拉回来，手机轻轻转着，三条标注依次点出铺满、字号、底部横条；最后手机退到下一场的位置。
+// 随后字号放大、镜头推到字上；拉回来，手机轻轻转着，三支箭头依次点出铺满、字号、底部横条；最后手机退到下一场的位置。
 const START = 40;
 const at = local(START);
 const SNAP = at(8);
 /** 原版画面里 Ghostty 那个小窗口的中心（手机屏幕点），从这里炸开 */
 const O = deskToScreen(FIT, FRONT.x + FRONT.w / 2, FRONT.y + FRONT.h / 2);
-export const DUO_BOTTOM = { x: 540, y: 1405, s: 0.86 };
+/** 下一场（手势对照）里 Snug 竖屏的位置：偏左，右边留给标注 */
+export const DUO_SNUG = { x: 455, y: 1220, s: 1.04 };
 const HOME_Y = 1228;
 
 export const Native: React.FC = () => {
@@ -38,13 +39,13 @@ export const Native: React.FC = () => {
   const settle = interpolate(f, [SNAP, at(11)], [0, 1], { ...clamp, easing: inOutQuint });
   let s = LAND_POSE.s + (PORTRAIT_POSE.s - LAND_POSE.s) * r;
   s = s * punch(f, SNAP, 0.07, 26) + 0.5 * push;
-  s = s + (DUO_BOTTOM.s - s) * toDuo;
+  s = s + (DUO_SNUG.s - s) * toDuo;
   const y0 = LAND_POSE.y + (PORTRAIT_POSE.y - LAND_POSE.y) * r + (HOME_Y - PORTRAIT_POSE.y) * settle;
   const pushPose = aim(180, 560, s, 540, 1560);
   let x = 540 + (pushPose.x - 540) * push;
   let y = y0 + (pushPose.y - y0) * push;
-  x = x + (DUO_BOTTOM.x - x) * toDuo;
-  y = y + (DUO_BOTTOM.y - y) * toDuo;
+  x = x + (DUO_SNUG.x - x) * toDuo;
+  y = y + (DUO_SNUG.y - y) * toDuo;
   const orbit = interpolate(f, [at(11), at(12), at(16.5), at(17.5)], [0, 1, 1, 0], clamp);
   const tiltY = 11 * Math.sin((f - at(11)) / 34) * orbit;
   const sh = shake(f, SNAP, 18, 16, "native");
@@ -99,10 +100,10 @@ export const Native: React.FC = () => {
       <Flash at={SNAP} dur={18} max={0.9} y={60} />
       <Shock at={SNAP} x={540} y={y} size={1500} dur={30} />
       <Sweep at={SNAP + 3} />
-      <Callout at={at(12)} until={at(16.6)} x={title.x} y={title.y} tx={208} ty={title.y - 130} text="窗口铺满" side="left" />
-      <Callout at={at(12.8)} until={at(16.6)} x={text.x} y={text.y} tx={872} ty={text.y - 120} text="字号放大" side="right" />
-      <Callout at={at(13.6)} until={at(16.6)} x={bar.x} y={bar.y} tx={208} ty={bar.y - 110} text="底部横条" side="left" />
-      <Hero at={SNAP} until={at(17)} eyebrow="WITH SNUG" title="NATIVE" sub="专属竖屏 · 窗口铺满 · 字号放大" />
+      <Callout at={at(12)} until={at(16.6)} x={title.x} y={title.y} tx={300} ty={title.y - 100} side="up" text="窗口铺满" />
+      <Callout at={at(12.8)} until={at(16.6)} x={text.x} y={text.y} tx={820} ty={text.y - 150} side="right" text="字号放大" />
+      <Callout at={at(13.6)} until={at(16.6)} x={bar.x} y={bar.y} tx={300} ty={bar.y - 150} side="left" text="底部横条" note="切换窗口" />
+      <Headline at={SNAP} until={at(17)} kicker="WITH SNUG" title="iPhone 专属竖屏" />
     </AbsoluteFill>
   );
 };

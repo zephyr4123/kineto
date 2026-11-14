@@ -34,8 +34,8 @@ export const Outro: React.FC = () => {
         <Img src={staticFile(assets.snugIcon)} style={{ position: "absolute", left: 540 - 170, top: 250, width: 340, height: 340, opacity: icon, transform: `translateY(${(1 - icon) * 50}px) scale(${0.8 + 0.2 * icon})`, filter: "drop-shadow(0 30px 60px rgba(20,50,120,0.28))" }} />
         <div style={{ position: "absolute", left: 0, right: 0, top: 590, textAlign: "center", fontFamily: SF, fontWeight: 800, fontSize: 200, letterSpacing: "-0.04em", color: C.ink, opacity: name, transform: `translateY(${(1 - name) * 30}px)` }}>Snug</div>
         <div style={{ position: "absolute", left: 0, right: 0, top: 860, textAlign: "center", opacity: line, transform: `translateY(${(1 - line) * 24}px)` }}>
-          <div style={{ fontFamily: SF, fontWeight: 700, fontSize: 56, letterSpacing: "-0.01em", color: C.blue }}>Make UU Remote Native on iPhone</div>
-          <div style={{ marginTop: 22, fontFamily: ZH, fontWeight: 600, fontSize: 46, letterSpacing: "0.1em", color: C.ink2 }}>UU远程 · iPhone 原生体验</div>
+          <div style={{ fontFamily: SF, fontWeight: 700, fontSize: 56, letterSpacing: "-0.01em", color: C.deep }}>Make UU Remote Native on iPhone</div>
+          <div style={{ marginTop: 26, fontFamily: ZH, fontWeight: 600, fontSize: 64, letterSpacing: "0.06em", color: C.ink }}>UU远程 · iPhone 原生体验</div>
         </div>
       </div>
       {/* GitHub 仓库卡片 */}
@@ -85,10 +85,10 @@ export const Outro: React.FC = () => {
       </div>
       {card > 0 && f < click + 40 ? <Cursor x={cx} y={cy} down={down} /> : null}
       <div style={{ position: "absolute", left: 0, right: 0, top: 1610, textAlign: "center", opacity: url, transform: `translateY(${(1 - url) * 20}px)` }}>
-        <div style={{ fontFamily: MONO, fontWeight: 600, fontSize: 44, color: C.blue }}>github.com/zephyr4123/snug</div>
-        <div style={{ marginTop: 14, fontFamily: ZH, fontSize: 34, letterSpacing: "0.08em", color: C.ink2 }}>MIT 开源 · 免费下载 · macOS 14+</div>
+        <div style={{ fontFamily: MONO, fontWeight: 600, fontSize: 46, color: C.deep }}>github.com/zephyr4123/snug</div>
+        <div style={{ marginTop: 16, fontFamily: ZH, fontWeight: 600, fontSize: 42, letterSpacing: "0.06em", color: C.ink2 }}>MIT 开源 · 免费下载 · macOS 14+</div>
       </div>
-      <div style={{ position: "absolute", left: 0, right: 0, top: 1800, textAlign: "center", fontFamily: ZH, fontSize: 24, color: C.ink3, opacity: credit }}>
+      <div style={{ position: "absolute", left: 0, right: 0, top: 1790, textAlign: "center", fontFamily: ZH, fontSize: 30, fontWeight: 500, color: C.ink2, opacity: credit }}>
         承接自 aoyamashou/UUyc-companion · 谨向 UU远程 致谢
       </div>
     </AbsoluteFill>
