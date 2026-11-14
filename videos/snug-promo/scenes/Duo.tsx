@@ -9,7 +9,7 @@ import { BACK, FRONT, MacDesktop, MacWindow, MH, MissionControl, MW, toPhone, ty
 import { ContextMenu, CTX_H, CTX_W } from "../components/menu";
 import { Landscape as Land, onStage, onStageL, Phone, Touch } from "../components/phone";
 import { OTHERS, press01, switching, SWITCH, WIN } from "../components/snug";
-import { Headline, Kicker, KICKER_H } from "../components/stage";
+import { Headline } from "../components/stage";
 import { SHELL_IDLE, TASK_DONE, TASK_GESTURE_LINE } from "../components/story";
 import { cellPos, contentHeight, layout, LINE_H, Terminal, type Line, type Sel } from "../components/terminal";
 import { FIT_L, LAND_K, landToScreen, lTool, screenToLand, UULandscape, UUSnug, type LandView } from "../components/uu";
@@ -18,16 +18,17 @@ import { DUO_SNUG } from "./Native";
 
 // 手势对照：三个动作，每个都先演原版、再拨到 Snug。顶上一个分段开关「UU远程 原版 | Snug」，拨到哪边手机就变成哪边：
 // 原版是横屏的 UU远程（竖屏太空，只能横过来用），Snug 是竖屏。主标题跟着开关换，原版一句「同 Mac 的什么」，Snug 一句「同 iPhone」。
+// 前两个动作属于第一章「原生手势」（章节卡 GesturesCard 盖在这一段之前），第三个属于第二章「流转自如」（SwitchCard 盖在第 20–24 拍）：
 // ① 滚动：原版双指拖动才滚（同触控板）；Snug 单指一划就滚。
 // ② 拷贝：原版拖选一行 → 键盘 → 电脑键盘 → 组合键模式 → ⌘ → C，步骤标签一步步弹出来；Snug 长按拖选 → 右键菜单 → 拷贝。
-// ③ 切窗口：原版点「展开所有窗口」，在一堆缩略图里逐个辨认；Snug 点底部横条，窗口列表里轻点即开。
-// 最后手机升到正中，引出「任意窗口」。
-const START = 60;
+//    Snug 长按落在歌里静音的那一拍（片子第 78 拍），按住时没声音，开始拖选时鼓声回来。
+// ③ 切窗口：原版点「展开所有窗口」，在调度中心的缩略图里逐个辨认；Snug 点底部指示条，窗口列表里轻点即开。
+// 这一段结束时第三章的章节卡（WindowsCard）从上面盖下来。
+const START = 64;
 const at = local(START);
 const SNUG = DUO_SNUG;
 const LAND = { x: 540, y: 1090, s: 0.98 };
-const HOME = { x: 540, y: 1228, s: 1.27 };
-const K_Y = 140;
+const HL_Y = 150;
 const TOGGLE_Y = 476;
 
 // —— 横屏原版里的终端 ——
@@ -67,13 +68,14 @@ const centerOf = (r: Rect) => landToScreen(FIT_L, r.x + r.w / 2, r.y + r.h / 2);
 
 // —— 时间（帧）——
 // 开关拨回原版、拨到 Snug 的时刻；手机跟着转（MORPH 帧），开关滑块快一点（FLIP 帧）
-const P1 = at(0.2);
+const P1 = at(0.5);
 const P1_SNUG = at(3);
 const P2 = at(8);
 const P2_SNUG = at(13.4);
-const P3 = at(18);
-const P3_SNUG = at(21.6);
-const EXIT = at(25.5);
+/** 第二章的章节卡盖上来的那一拍（卡进场要十几帧，这之后前两个动作的字可以撤了） */
+const CARD2 = at(20);
+const P3 = at(24.5);
+const P3_SNUG = at(27.6);
 const FLIPS: readonly (readonly [number, number])[] = [
   [P1, 0],
   [P1_SNUG, 1],
@@ -106,26 +108,24 @@ const S_MENU = at(15.8);
 const S_UP = S_MENU + HOLD + 2;
 const S_COPY = S_UP + 12;
 // ③ 切窗口
-const C_ALL = at(19);
-const C_PICK = at(20.8);
-const C_BAR = at(22.5);
+const C_ALL = at(25.3);
+const C_PICK = at(26.9);
+/** 点指示条；约 3 拍后窗口铺满，要赶在第三章的卡盖下来之前 */
+const C_BAR = at(28.4);
 
 const tap = (f: number, x: number, y: number, t: number) => <Touch x={x} y={y} press={press01(f, t)} show={interpolate(f, [t - 10, t - 2, t + 8, t + 14], [0, 1, 1, 0], clamp)} />;
 
 export const Duo: React.FC = () => {
   const f = useCurrentFrame();
 
-  // —— 机位：开关在原版时横屏居中，在 Snug 时竖屏偏左（右边留给标注）；最后升到正中 ——
+  // —— 机位：开关在原版时横屏居中，在 Snug 时竖屏偏左（右边留给标注）——
   const landAt = (t: number) => 1 - toggleAt(t, MORPH);
   const r = landAt(f);
-  const rise = interpolate(f, [EXIT, EXIT + 48], [0, 1], { ...clamp, easing: inOutQuint });
-  const mixPose = (k: number) => ({ x: SNUG.x + (LAND.x - SNUG.x) * k, y: SNUG.y + (LAND.y - SNUG.y) * k, s: SNUG.s + (LAND.s - SNUG.s) * k });
-  const base = mixPose(r);
-  const pose = { x: base.x + (HOME.x - base.x) * rise, y: base.y + (HOME.y - base.y) * rise, s: base.s + (HOME.s - base.s) * rise };
+  const pose = { x: SNUG.x + (LAND.x - SNUG.x) * r, y: SNUG.y + (LAND.y - SNUG.y) * r, s: SNUG.s + (LAND.s - SNUG.s) * r };
   const turn = Math.abs(landAt(f + 0.5) - landAt(f - 0.5));
   const land = interpolate(r, [0.35, 0.65], [0, 1], clamp);
   const settledLand = r > 0.999;
-  const settledSnug = r < 0.001 && rise === 0;
+  const settledSnug = r < 0.001;
   const pair = f < P2 ? 1 : f < P3 ? 2 : 3;
 
   // —— 原版（横屏）——
@@ -159,7 +159,7 @@ export const Duo: React.FC = () => {
   // 调度中心里手指先停在 Safari 上，再挪到那个 shell 窗口
   const safariC = centerOf({ x: 800, y: 150, w: 520, h: 406 });
   const shellC = centerOf(MC_SHELL);
-  const huntT = [C_ALL + 22, at(19.9), at(20.2), C_PICK - 2];
+  const huntT = [C_ALL + 22, at(26.2), at(26.45), C_PICK - 2];
   const hunt = { x: interpolate(f, huntT, [lTool("all").x, safariC.x, safariC.x, shellC.x], { ...clamp, easing: inOutQuint }), y: interpolate(f, huntT, [lTool("all").y, safariC.y, safariC.y, shellC.y], { ...clamp, easing: inOutQuint }) };
   const huntShow = interpolate(f, [C_ALL + 16, C_ALL + 22, C_PICK + 8, C_PICK + 14], [0, 1, 1, 0], clamp);
   const pcTab = { x: PC_TAB_L.x, y: LKB_TOP + PC_TAB_L.y };
@@ -206,7 +206,6 @@ export const Duo: React.FC = () => {
   const mcAt = onL(centerOf(MC_SHELL).x, centerOf(MC_SHELL).y - 30);
   const listAt = onS(toPhone(150, 520).x, toPhone(150, 520).y);
   const RIGHT = SNUG.x + 270;
-  const HL_Y = K_Y + KICKER_H;
 
   return (
     <AbsoluteFill>
@@ -237,7 +236,7 @@ export const Duo: React.FC = () => {
           {land < 1 ? (
             <div style={{ position: "absolute", inset: 0, opacity: 1 - land }}>
               <UUSnug>{snugScreen}</UUSnug>
-              {settledSnug || rise > 0 ? (
+              {settledSnug ? (
                 <>
                   {/* ① 单指一划，再划回来 */}
                   <Touch x={toPhone(330, 380).x} y={toPhone(330, 380 + a1.y).y} press={1} show={a1.show} />
@@ -246,7 +245,7 @@ export const Duo: React.FC = () => {
                   <Touch x={toPhone(fpSel.x, fpSel.y).x} y={toPhone(fpSel.x, fpSel.y).y} press={1} show={interpolate(f, [S_DOWN - 6, S_DOWN, S_DRAG + 18, S_DRAG + 24], [0, 1, 1, 0], clamp)} ring={f < S_DRAG ? holdRing(f, S_DOWN) : 0} />
                   <Touch x={toPhone(fpTo.x, fpTo.y).x} y={toPhone(fpTo.x, fpTo.y).y} press={1} show={interpolate(f, [S_MENU - 6, S_MENU, S_UP, S_UP + 6], [0, 1, 1, 0], clamp)} ring={holdRing(f, S_MENU)} />
                   <Touch x={copy.x} y={copy.y} press={press01(f, S_COPY)} show={interpolate(f, [S_COPY - 10, S_COPY - 3, S_COPY + 10, S_COPY + 16], [0, 1, 1, 0], clamp)} />
-                  {/* ③ 横条 → 窗口列表 */}
+                  {/* ③ 指示条 → 窗口列表 */}
                   {sw?.finger ? <Touch x={sw.finger.x} y={sw.finger.y} press={sw.finger.press} show={sw.finger.show} /> : null}
                 </>
               ) : null}
@@ -264,17 +263,14 @@ export const Duo: React.FC = () => {
         </div>
       ))}
 
-      {/* 顶上：英文小标（每个动作一个）、主标题（跟着开关换）、分段开关 */}
-      <Kicker at={0} until={P2 - 2} y={K_Y} text="NATIVE SCROLL" />
-      <Kicker at={P2} until={P3 - 2} y={K_Y} text="NATIVE COPY" />
-      <Kicker at={P3} until={EXIT} y={K_Y} text="NATIVE SWITCH" />
+      {/* 顶上：主标题（跟着开关换）、分段开关（英文小标只放在章节卡上） */}
       <Headline at={P1 + 6} until={P1_SNUG} y={HL_Y} title="双指滚动" sub="同 Mac 触控板" />
       <Headline at={P1_SNUG + 2} until={P2} y={HL_Y} title="单指滚动" sub="同 iPhone" />
       <Headline at={P2 + 2} until={P2_SNUG} y={HL_Y} title="组合键拷贝" sub="同 Mac 键盘" />
-      <Headline at={P2_SNUG + 2} until={P3} y={HL_Y} title="长按拷贝" sub="同 iPhone" />
-      <Headline at={P3 + 2} until={P3_SNUG} y={HL_Y} title="缩略图里找" sub="展开所有窗口" />
-      <Headline at={P3_SNUG + 2} until={EXIT} y={HL_Y} title="轻点即开" sub="横条 · 窗口列表" />
-      <Toggle at={0} until={EXIT} y={TOGGLE_Y} snug={toggleAt(f, FLIP)} />
+      <Headline at={P2_SNUG + 2} until={CARD2 + 6} y={HL_Y} title="长按拷贝" sub="同 iPhone" />
+      <Headline at={P3 + 2} until={P3_SNUG} y={HL_Y} title="缩略图切换" sub="同 Mac 调度中心" />
+      <Headline at={P3_SNUG + 2} y={HL_Y} title="轻点切换" sub="同 iPhone" />
+      <Toggle at={8} y={TOGGLE_Y} snug={toggleAt(f, FLIP)} />
 
       {/* ① 滚动 */}
       <Callout at={TWO + 4} until={P1_SNUG - 2} x={twoAt.x} y={twoAt.y + 26} tx={540} ty={1420} side="down" text="双指" bend={0.1} />
@@ -300,7 +296,7 @@ export const Duo: React.FC = () => {
           { at: S_UP, text: "右键菜单" },
           { at: S_COPY, text: "拷贝" },
         ]}
-        until={P3}
+        until={CARD2 + 6}
         x={RIGHT + 14}
         y={900}
         w={330}
@@ -311,7 +307,6 @@ export const Duo: React.FC = () => {
       <Callout at={C_ALL + 22} until={C_PICK + 6} x={mcAt.x} y={mcAt.y} tx={540} ty={1420} side="down" text="逐个辨认" bend={-0.12} />
       <Callout at={C_BAR + SWITCH.MOVE} until={C_BAR + SWITCH.OPENING} x={listAt.x} y={listAt.y} tx={RIGHT} ty={listAt.y - 250} side="right" text="App · 窗口名" tone="snug" />
 
-      <Headline at={EXIT + 10} kicker="ANY WINDOW" title="任意窗口" sub="终端 · App · 浏览器" />
     </AbsoluteFill>
   );
 };

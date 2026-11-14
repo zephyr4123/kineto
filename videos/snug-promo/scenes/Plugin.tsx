@@ -1,5 +1,5 @@
 import { AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame } from "remotion";
-import { backOut, clamp, inOutQuint, outExpo } from "../../../engine/motion";
+import { clamp, inOutQuint, outExpo } from "../../../engine/motion";
 import { assets } from "../assets.gen";
 import { SafariApp } from "../components/apps";
 import { Steps } from "../components/compare";
@@ -12,13 +12,15 @@ import { Terminal } from "../components/terminal";
 import { UUSnug } from "../components/uu";
 import { PhoneGlyph, WELCOME_DONE, WELCOME_GRANT, WELCOME_H, WELCOME_W, WelcomeWindow } from "../components/welcome";
 import { C, local } from "../theme";
+import { BOX_HANDOFF_BEAT, BOX_ICON } from "./BoxCard";
 import { PLUGIN_PHONE } from "./Browser";
 
 // 开箱即用（照 snug 仓库 README 的「安装」：下载、拖进应用程序打开、按欢迎页授权，之后常驻菜单栏、无需任何操作）：
-// MacBook 升上来，手机缩在下面连着。Snug 的图标落到 Mac 屏幕上、打开成欢迎页，镜头推近；光标点「授权」，那一行变绿「已授权」，
+// 开头是第四章的章节卡（BoxCard，盖在这一段前 2.4 拍上），卡褪掉时 MacBook 从下面升上来，手机缩在下面连着；
+// 卡里的 Snug 图标落进 Mac 屏幕、打开成欢迎页，镜头推近；光标点「授权」，那一行变绿「已授权」，
 // 再点「完成」，窗口收进菜单栏的 iPhone 图标里，镜头拉回。顶上三步标签跟着一步步弹出：下载安装 · 开启权限 · 此后无需操作。
 // 断开即复原：第 10 拍音乐静音一拍，手机在这一拍断开退下，手机屏移除；声音回来时 Safari 从右边回到原来的位置，一支箭头指着它。
-const START = 140;
+const START = 156;
 const at = local(START);
 const SCREEN_W = 940;
 const K = SCREEN_W / DW;
@@ -33,25 +35,27 @@ const WIN = { x: (DW - WELCOME_W) / 2, y: (DH - WELCOME_H) / 2 - 40 };
 const WIN_C = { x: LEFT + (WIN.x + WELCOME_W / 2) * K, y: TOP + (WIN.y + WELCOME_H / 2) * K };
 const ZOOM = 2.4;
 
-const DROP = at(0.8);
-const LAUNCH = at(1.9);
-const GRANT = at(3.7);
-const DONE = at(5);
+/** 章节卡交接：图标从卡里的位置飞进 Mac 屏幕 */
+const DROP = at(BOX_HANDOFF_BEAT);
+const LAUNCH = at(3.4);
+const GRANT = at(5);
+const DONE = at(6.3);
 const OFF = at(10);
 
 export const Plugin: React.FC = () => {
   const f = useCurrentFrame();
-  const on = interpolate(f, [0, 14], [0, 1], { ...clamp, easing: outExpo });
+  const on = interpolate(f, [DROP - 12, DROP + 4], [0, 1], { ...clamp, easing: outExpo });
   const off = interpolate(f, [OFF, OFF + 14], [0, 1], { ...clamp, easing: inOutQuint });
   const back = interpolate(f, [at(11), at(13)], [0, 1], { ...clamp, easing: inOutQuint });
   // Safari 从右边（手机屏那块虚拟屏）回到原位
   const rect: Rect = { x: BACK.x + (DW + 40 - BACK.x) * (1 - back), y: BACK.y, w: BACK.w, h: BACK.h };
 
-  // 图标落到屏幕上，弹一下，再打开成欢迎页
-  const drop = interpolate(f, [DROP, DROP + 18], [0, 1], { ...clamp, easing: backOut });
+  // 图标从章节卡里的位置落进 Mac 屏幕，再打开成欢迎页
+  const drop = interpolate(f, [DROP, DROP + 18], [0, 1], { ...clamp, easing: inOutQuint });
   const launch = interpolate(f, [LAUNCH, LAUNCH + 12], [0, 1], { ...clamp, easing: outExpo });
-  const iconY = -260 + (WIN_C.y + 260) * drop;
-  const iconS = 220 * (1 - 0.7 * launch);
+  const iconX = BOX_ICON.x + (WIN_C.x - BOX_ICON.x) * drop;
+  const iconY = BOX_ICON.y + (WIN_C.y - BOX_ICON.y) * drop;
+  const iconS = (BOX_ICON.size + (220 - BOX_ICON.size) * drop) * (1 - 0.7 * launch);
   // 欢迎页：打开时从小放大；点「完成」后缩进菜单栏图标
   const granted = interpolate(f, [GRANT + 6, GRANT + 14], [0, 1], clamp);
   const close = interpolate(f, [DONE + 6, DONE + 24], [0, 1], { ...clamp, easing: inOutQuint });
@@ -99,8 +103,8 @@ export const Plugin: React.FC = () => {
           </MacBook>
           {ring >= 0 ? <div style={{ position: "absolute", left: MENU_ICON.x - 30, top: MENU_ICON.y - 30, width: 60, height: 60, borderRadius: 30, border: `3px solid rgba(31,99,255,${(1 - ring) * (1 - off)})`, transform: `scale(${0.6 + 0.8 * ring})` }} /> : null}
         </div>
-        {/* 连着的手机，断开时往下退掉 */}
-        <div style={{ opacity: 1 - off, transform: `translateY(${off * 160}px)` }}>
+        {/* 连着的手机，跟 MacBook 一起升上来，断开时往下退掉 */}
+        <div style={{ opacity: on * (1 - off), transform: `translateY(${off * 160 + (1 - on) * 60}px)` }}>
           <svg style={{ position: "absolute", left: 0, top: 0 }} width={1080} height={1920}>
             <path d="M 540 1260 L 540 1330" stroke={C.blue} strokeWidth="5" strokeDasharray="10 10" strokeDashoffset={-f} />
           </svg>
@@ -111,11 +115,11 @@ export const Plugin: React.FC = () => {
           </Phone>
         </div>
       </div>
-      {/* Snug 的图标落下来，打开成欢迎页 */}
-      {drop > 0 && launch < 1 ? (
-        <Img src={staticFile(assets.snugIcon)} style={{ position: "absolute", left: WIN_C.x - iconS / 2, top: iconY - iconS / 2, width: iconS, height: iconS, opacity: 1 - launch, filter: "drop-shadow(0 26px 50px rgba(20,50,120,0.35))" }} />
+      {/* Snug 的图标落进屏幕，打开成欢迎页 */}
+      {f >= DROP && launch < 1 ? (
+        <Img src={staticFile(assets.snugIcon)} style={{ position: "absolute", left: iconX - iconS / 2, top: iconY - iconS / 2, width: iconS, height: iconS, opacity: 1 - launch, filter: "drop-shadow(0 26px 50px rgba(20,50,120,0.35))" }} />
       ) : null}
-      <Shock at={DROP + 12} x={WIN_C.x} y={WIN_C.y} size={900} />
+      <Shock at={DROP + 16} x={WIN_C.x} y={WIN_C.y} size={900} />
       <Steps
         items={[
           { at: DROP, text: "下载安装" },
@@ -124,13 +128,13 @@ export const Plugin: React.FC = () => {
         ]}
         until={OFF - 6}
         x={40}
-        y={430}
+        y={190}
         w={1000}
+        size={46}
       />
       <Callout at={DONE + 36} until={OFF} x={menuAt.x} y={menuAt.y + 16} tx={menuAt.x - 60} ty={TOP - 40} side="up" text="常驻菜单栏" bend={-0.15} />
       <Callout at={at(12.6)} until={at(16) - 6} x={safariAt.x} y={safariAt.y} tx={760} ty={1380} side="down" text="窗口归位" bend={0.15} />
-      <Headline at={2} until={OFF - 6} kicker="OUT OF THE BOX" title="开箱即用" />
-      <Headline at={OFF} until={at(16) - 6} kicker="AUTO RESTORE" title="断开即复原" sub="窗口归位 · 字号复原" />
+      <Headline at={OFF} until={at(16) - 6} title="断开即复原" sub="窗口归位 · 字号复原" />
     </AbsoluteFill>
   );
 };

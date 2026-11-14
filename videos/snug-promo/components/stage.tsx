@@ -4,8 +4,8 @@ import { b, C, SF, ZH } from "../theme";
 
 // 舞台：底、颗粒、字幕、镜头切换。全片共用一块底（放在 Video.tsx 最下层），场景之间只换上面的东西。
 
-/** 重拍：底的光在这些拍上亮一下（两次砸下、蓄力起势和几个段落开头） */
-const HITS = [12, 48, 60, 104, 120, 140, 156].map(b);
+/** 重拍：底的光在这些拍上亮一下（两次砸下、蓄力起势、章节卡和几个段落开头） */
+const HITS = [12, 48, 60, 84, 96, 120, 136, 156, 172].map(b);
 
 /**
  * 底（浅色，取 Snug 图标的白、青、蓝），从下往上：
@@ -105,10 +105,10 @@ const emWidth = (text: string, track: number) =>
 
 const KICKER_SIZE = 40;
 /** 英文小标占的高度（字 + 和主标题的间距），单独放小标时用来对齐主标题 */
-export const KICKER_H = Math.round(KICKER_SIZE * 1.3 + 14);
+const KICKER_H = Math.round(KICKER_SIZE * 1.3 + 14);
 
 /** 英文小标：一行字距拉开的大写字母，标明这一段是什么。at 起落下来，until 起退掉 */
-export const Kicker: React.FC<{ at: number; until?: number; text: string; y: number }> = ({ at, until = Number.POSITIVE_INFINITY, text, y }) => {
+const Kicker: React.FC<{ at: number; until?: number; text: string; y: number }> = ({ at, until = Number.POSITIVE_INFINITY, text, y }) => {
   const f = useCurrentFrame();
   const p = interpolate(f, [at, at + 10], [0, 1], { ...clamp, easing: outExpo });
   const out = Number.isFinite(until) ? interpolate(f, [until, until + 6], [0, 1], clamp) : 0;
@@ -208,8 +208,8 @@ export const Shot: React.FC<{ frames: number; enter?: boolean; exit?: boolean; c
 
 /** 两段砸下里每小节的第一拍：整个画面往前顶一下（很轻），跟着音乐的重拍走 */
 const DROPS = [
-  [48, 88],
-  [120, 156],
+  [48, 100],
+  [136, 172],
 ] as const;
 const BARS = DROPS.flatMap(([from, to]) => Array.from({ length: (to - from) / 4 }, (_, i) => b(from + 4 * i)));
 export const Pulse: React.FC<{ children: React.ReactNode }> = ({ children }) => {

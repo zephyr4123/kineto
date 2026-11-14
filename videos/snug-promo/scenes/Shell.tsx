@@ -10,10 +10,10 @@ import { BANNER, CC, charCount, INPUT, PROMPT, streamed, type Line } from "../co
 import { strokes, typingAt, UUSnug } from "../components/uu";
 import { local } from "../theme";
 
-// 任意窗口 · 终端：刚打开的那个 Ghostty（仓库目录下的 shell）。点 UU 工具栏的「键盘」，键盘升起、远程画面往上推；
+// 万窗皆宜 · 终端：刚打开的那个 Ghostty（仓库目录下的 shell）。点 UU 工具栏的「键盘」，键盘升起、远程画面往上推；
 // 一个键一个键敲 claude 回车，Claude Code 启动；再敲 run the tests 回车，点 ⊗ 收起键盘，看它跑完测试、回一句。
 // 键盘照实机录屏画，联想栏跟着敲出的字变。
-const START = 88;
+const START = 104;
 const at = local(START);
 const SIZE = 17;
 const STEP = 6;
@@ -71,7 +71,7 @@ export const Shell: React.FC = () => {
         {typing.finger ? <Touch x={typing.finger.x} y={typing.finger.y} press={1} show={0.85} /> : null}
         <Touch x={KB_CLOSE.x} y={KB_TOP + KB_CLOSE.y} press={press01(f, CLOSE)} show={interpolate(f, [CLOSE - 10, CLOSE - 2, CLOSE + 8, CLOSE + 14], [0, 1, 1, 0], clamp)} />
       </Phone>
-      <Headline at={4} until={at(16) - 4} y={110} kicker="ANY WINDOW · 01" title="终端" sub="Claude Code · 键盘直输" />
+      <Headline at={4} until={at(16) - 4} y={110} title="终端" sub="Claude Code · 键盘直输" />
     </AbsoluteFill>
   );
 };

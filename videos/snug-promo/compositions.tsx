@@ -1,9 +1,9 @@
 import { AbsoluteFill, Composition } from "remotion";
 import { Backdrop, Grain } from "./components/stage";
 import { FPS, H, VIDEO_FRAMES, W } from "./theme";
-import { SPANS, Video } from "./Video";
+import { CARD_SPANS, SPANS, Video } from "./Video";
 
-// 成片 + 每个场景各一个 composition（场景在 Studio 里可单独预览，时长和成片里一样，带上全片共用的底）
+// 成片 + 每个场景、每张章节卡各一个 composition（在 Studio 里可单独预览，时长和成片里一样，带上全片共用的底）
 const staged = (Scene: React.FC) => {
   const Staged: React.FC = () => (
     <AbsoluteFill style={{ background: "#f4f8ff" }}>
@@ -25,6 +25,11 @@ const ChatStaged = staged(chat.Scene);
 const BrowserStaged = staged(browser.Scene);
 const PluginStaged = staged(plugin.Scene);
 const OutroStaged = staged(outro.Scene);
+const [gesturesCard, switchCard, windowsCard, boxCard] = CARD_SPANS;
+const GesturesCardStaged = staged(gesturesCard.Card);
+const SwitchCardStaged = staged(switchCard.Card);
+const WindowsCardStaged = staged(windowsCard.Card);
+const BoxCardStaged = staged(boxCard.Card);
 
 export const Compositions: React.FC = () => {
   return (
@@ -40,6 +45,10 @@ export const Compositions: React.FC = () => {
       <Composition id="snug-promo-browser" component={BrowserStaged} durationInFrames={browser.frames} fps={FPS} width={W} height={H} />
       <Composition id="snug-promo-plugin" component={PluginStaged} durationInFrames={plugin.frames} fps={FPS} width={W} height={H} />
       <Composition id="snug-promo-outro" component={OutroStaged} durationInFrames={outro.frames} fps={FPS} width={W} height={H} />
+      <Composition id="snug-promo-gestures-card" component={GesturesCardStaged} durationInFrames={gesturesCard.frames} fps={FPS} width={W} height={H} />
+      <Composition id="snug-promo-switch-card" component={SwitchCardStaged} durationInFrames={switchCard.frames} fps={FPS} width={W} height={H} />
+      <Composition id="snug-promo-windows-card" component={WindowsCardStaged} durationInFrames={windowsCard.frames} fps={FPS} width={W} height={H} />
+      <Composition id="snug-promo-box-card" component={BoxCardStaged} durationInFrames={boxCard.frames} fps={FPS} width={W} height={H} />
     </>
   );
 };

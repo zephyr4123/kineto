@@ -10,9 +10,9 @@ import { strokes, typingAt, UUSnug } from "../components/uu";
 import { local } from "../theme";
 import { SHELL_DONE } from "./Shell";
 
-// 任意窗口 · App：点底部横条回到窗口列表，点 ChatGPT。点一下输入框，点「键盘」，敲一句 regex for a semver tag 回车；
+// 万窗皆宜 · App：点底部指示条回到窗口列表，点 ChatGPT。点一下输入框，点「键盘」，敲一句 regex for a semver tag 回车；
 // 收起键盘，看回复写出来（正文 + 一段代码）。窗口里的东西都是 ChatGPT 桌面版自己的界面。
-const START = 104;
+const START = 120;
 const at = local(START);
 const STEP = 6;
 const HOME = { x: 540, y: 1228, s: 1.27 };
@@ -63,7 +63,7 @@ export const Chat: React.FC = () => {
         {t.finger ? <Touch x={t.finger.x} y={t.finger.y} press={1} show={0.85} /> : null}
         <Touch x={KB_CLOSE.x} y={KB_TOP + KB_CLOSE.y} press={press01(f, CLOSE)} show={interpolate(f, [CLOSE - 10, CLOSE - 2, CLOSE + 8, CLOSE + 14], [0, 1, 1, 0], clamp)} />
       </Phone>
-      <Headline at={4} until={at(16) - 4} y={110} kicker="ANY WINDOW · 02" title="App" sub="ChatGPT · 对话输入" />
+      <Headline at={4} until={at(16) - 4} y={110} title="App" sub="ChatGPT · 对话输入" />
     </AbsoluteFill>
   );
 };

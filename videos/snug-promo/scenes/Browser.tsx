@@ -10,10 +10,10 @@ import { Headline } from "../components/stage";
 import { UUSnug } from "../components/uu";
 import { local } from "../theme";
 
-// 任意窗口 · 浏览器（第二次砸下）：横条 → 列表 → Safari，起始页上点「个人收藏」里 Snug 仓库的书签，页面载入；
+// 万窗皆宜 · 浏览器（第二次砸下）：指示条 → 列表 → Safari，起始页上点「个人收藏」里 Snug 仓库的书签，页面载入；
 // 单指甩两下，带惯性滑到 README 的对比表；手机侧过来转一圈亮个相。（UU 弹出键盘时整个画面往上推，Safari 的地址栏在最上面会被推出屏幕，
 // 照实演就看不到输入的字，所以这一段不打字，写字放在终端和 ChatGPT 两段。）最后手机缩到下一场的位置。
-const START = 120;
+const START = 136;
 const at = local(START);
 const HOME = { x: 540, y: 1228, s: 1.27 };
 export const PLUGIN_PHONE = { x: 540, y: 1590, s: 0.58 };
@@ -64,7 +64,7 @@ export const Browser: React.FC = () => {
       <Flash at={0} dur={16} max={0.8} />
       <Shock at={0} x={540} y={HOME.y} size={1600} dur={30} />
       <Sweep at={4} />
-      <Headline at={2} until={at(17)} y={110} kicker="ANY WINDOW · 03" title="浏览器" sub="Safari · GitHub" />
+      <Headline at={2} until={at(17)} y={110} title="浏览器" sub="Safari · GitHub" />
     </AbsoluteFill>
   );
 };
