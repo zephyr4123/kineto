@@ -8,6 +8,7 @@
 - [GitHub 账号锁定](gh-account-lock.md) — 专用 gh 配置 + ship 自锁，不受别的会话切号影响；推送 403 先查这里
 - [代码画界面的宣传片](video-ui-fidelity.md) — 要有真实交互、终端排满整行、现代 iPhone、底色跟品牌走
 - [剪配乐顺着歌的段落](video-music-edit.md) — 每段放够再换段，不来回硬切；接点在小节头、前后小节频谱相近
-- [宣传片画面文字](video-caption-copy.md) — 书面短词；中文是主角要大、英文小标；对比度 ≥ 4.5:1；说明用箭头引出、拆成小块
-- [Snug 宣传片定位](snug-promo-positioning.md) — UU远程 的 iPhone 插件，通篇只讲 iPhone 原生手感；手势先演原版再演 Snug；Mac 端讲开箱即用；不拉踩，不放生活场景、UU 功能介绍、AI 卖点
+- [宣传片画面文字](video-caption-copy.md) — 凝练书面语（四字格），不平铺直叙；中文是主角要大、英文小标；对比度 ≥ 4.5:1；说明用箭头引出、拆成小块
+- [多 feature 用总分结构](video-feature-structure.md) — 每章先一屏章节卡点题再演；四张卡底、版式、转场各不相同，免得像 PPT
+- [Snug 宣传片定位](snug-promo-positioning.md) — UU远程 的 iPhone 插件，通篇只讲 iPhone 原生手感；四章：原生手势 / 流转自如 / 万窗皆宜 / 开箱即用；手势先演原版再演 Snug；不拉踩，不放生活场景、UU 功能介绍、AI 卖点
 - [UU远程 界面事实](uu-remote-ui-facts.md) — 竖屏黑边、横屏右侧工具栏、键盘弹出整体上推、电脑键盘排布，及各自出处
