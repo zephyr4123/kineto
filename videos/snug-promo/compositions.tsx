@@ -1,5 +1,7 @@
-import { AbsoluteFill, Composition } from "remotion";
+import { AbsoluteFill, Composition, Still } from "remotion";
 import { Backdrop, Grain } from "./components/stage";
+import { CoverLandscape } from "./scenes/Cover";
+import { Outro } from "./scenes/Outro";
 import { FPS, H, VIDEO_FRAMES, W } from "./theme";
 import { CARD_SPANS, SPANS, Video } from "./Video";
 
@@ -30,6 +32,14 @@ const GesturesCardStaged = staged(gesturesCard.Card);
 const SwitchCardStaged = staged(switchCard.Card);
 const WindowsCardStaged = staged(windowsCard.Card);
 const BoxCardStaged = staged(boxCard.Card);
+/** 竖版封面：落版的最后一帧（那张总括图），横版封面见 scenes/Cover.tsx */
+const CoverPortrait: React.FC = () => (
+  <AbsoluteFill style={{ background: "#f4f8ff" }}>
+    <Backdrop />
+    <Outro frame={outro.frames - 1} />
+    <Grain />
+  </AbsoluteFill>
+);
 
 export const Compositions: React.FC = () => {
   return (
@@ -49,6 +59,8 @@ export const Compositions: React.FC = () => {
       <Composition id="snug-promo-switch-card" component={SwitchCardStaged} durationInFrames={switchCard.frames} fps={FPS} width={W} height={H} />
       <Composition id="snug-promo-windows-card" component={WindowsCardStaged} durationInFrames={windowsCard.frames} fps={FPS} width={W} height={H} />
       <Composition id="snug-promo-box-card" component={BoxCardStaged} durationInFrames={boxCard.frames} fps={FPS} width={W} height={H} />
+      <Still id="snug-promo-cover" component={CoverLandscape} width={1920} height={1080} />
+      <Still id="snug-promo-cover-portrait" component={CoverPortrait} width={W} height={H} />
     </>
   );
 };
