@@ -5,7 +5,7 @@ import { b, C, SF, ZH } from "../theme";
 // 舞台：底、颗粒、字幕、镜头切换。全片共用一块底（放在 Video.tsx 最下层），场景之间只换上面的东西。
 
 /** 砸下的几拍：底的光在这些拍上亮一下 */
-const HITS = [48, 64, 112, 192, 228].map(b);
+const HITS = [12, 48, 60, 88, 120, 140, 156].map(b);
 
 /**
  * 底（浅色，取 Snug 图标的白、青、蓝），从下往上：
@@ -115,7 +115,11 @@ export const Hero: React.FC<{
   stagger?: number;
   /** 主角词一开始就在（同一个主角词跨好几个场景时，后面的场景用它，只有副标题重新进场） */
   instant?: boolean;
-}> = ({ at, until = Number.POSITIVE_INFINITY, title, sub, y = 210, size: want = 150, subSize = 50, color = C.ink, stagger = 1.2, instant = false }) => {
+  /** 主角词上面一行小字（字距拉开），标明这一段属于哪一组 */
+  eyebrow?: string;
+  /** 字幕底下那层由浅到透明的底；字幕放在两台手机中间时不要 */
+  backing?: boolean;
+}> = ({ at, until = Number.POSITIVE_INFINITY, title, sub, y = 210, size: want = 150, subSize = 50, color = C.ink, stagger = 1.2, instant = false, eyebrow, backing = true }) => {
   const f = useCurrentFrame();
   // 词太长时缩字号，保证一行放得下（SF Black 大写字母平均约 0.66 em 宽）
   const size = Math.min(want, 980 / (0.66 * [...title].length));
@@ -139,7 +143,10 @@ export const Hero: React.FC<{
       }}
     >
       {/* 字幕底下垫一层由深到透明的底，镜头推近时手机顶上来也压不住字 */}
-      <div style={{ position: "absolute", left: 0, right: 0, top: -y, height: y + size * 2.6, background: "linear-gradient(180deg, rgba(248,251,255,0.94) 0%, rgba(244,248,255,0.8) 62%, rgba(244,248,255,0) 100%)", zIndex: -1 }} />
+      {backing ? <div style={{ position: "absolute", left: 0, right: 0, top: -y, height: y + size * 2.6, background: "linear-gradient(180deg, rgba(248,251,255,0.94) 0%, rgba(244,248,255,0.8) 62%, rgba(244,248,255,0) 100%)", zIndex: -1 }} /> : null}
+      {eyebrow ? (
+        <div style={{ marginBottom: 0.12 * size, fontFamily: SF, fontWeight: 700, fontSize: 30, letterSpacing: "0.32em", color: C.blue, opacity: subIn, transform: `translateY(${(1 - subIn) * -10}px)` }}>{eyebrow}</div>
+      ) : null}
       <div style={{ fontFamily: SF, fontWeight: 900, fontSize: size, letterSpacing: "-0.035em", lineHeight: 0.95, color, whiteSpace: "pre" }}>
         {chars.map((ch, i) => {
           const p = instant ? 1 : interpolate(f, [at + i * stagger, at + i * stagger + 9], [0, 1], { ...clamp, easing: outExpo });
@@ -227,6 +234,19 @@ export const Shot: React.FC<{ frames: number; enter?: boolean; exit?: boolean; c
       {children}
     </AbsoluteFill>
   );
+};
+
+/** 两段砸下里每小节的第一拍：整个画面往前顶一下（很轻），跟着音乐的重拍走 */
+const DROPS = [
+  [48, 112],
+  [120, 156],
+] as const;
+const BARS = DROPS.flatMap(([from, to]) => Array.from({ length: (to - from) / 4 }, (_, i) => b(from + 4 * i)));
+export const Pulse: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const f = useCurrentFrame();
+  const last = BARS.filter((t) => t <= f).pop();
+  const k = last === undefined ? 0 : Math.exp(-(f - last) / 9);
+  return <AbsoluteFill style={{ transform: k > 0.01 ? `scale(${1 + 0.014 * k})` : undefined }}>{children}</AbsoluteFill>;
 };
 
 /** 手机的默认机位：画面下方，上面留给字幕 */

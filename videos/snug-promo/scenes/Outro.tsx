@@ -5,7 +5,7 @@ import { C, local, MONO, SF, ZH } from "../theme";
 
 // 落版：图标、名字、slogan 和一句定位；GitHub 仓库卡片升上来，光标点亮 Star；最后是地址、开源许可和致谢。
 // 仓库刚发布（v2.0.0，2026-11-13），星标数很小，卡片上不放数字，只演示点亮。
-const at = local(228);
+const at = local(156);
 
 const Cursor: React.FC<{ x: number; y: number; down: number }> = ({ x, y, down }) => (
   <svg style={{ position: "absolute", left: x, top: y, transform: `scale(${1 - 0.12 * down})`, transformOrigin: "0 0" }} width="40" height="52" viewBox="0 0 20 26">
@@ -35,7 +35,7 @@ export const Outro: React.FC = () => {
         <div style={{ position: "absolute", left: 0, right: 0, top: 590, textAlign: "center", fontFamily: SF, fontWeight: 800, fontSize: 200, letterSpacing: "-0.04em", color: C.ink, opacity: name, transform: `translateY(${(1 - name) * 30}px)` }}>Snug</div>
         <div style={{ position: "absolute", left: 0, right: 0, top: 860, textAlign: "center", opacity: line, transform: `translateY(${(1 - line) * 24}px)` }}>
           <div style={{ fontFamily: SF, fontWeight: 700, fontSize: 56, letterSpacing: "-0.01em", color: C.blue }}>Make UU Remote Native on iPhone</div>
-          <div style={{ marginTop: 22, fontFamily: ZH, fontWeight: 600, fontSize: 46, letterSpacing: "0.1em", color: C.ink2 }}>UU远程 手机屏插件</div>
+          <div style={{ marginTop: 22, fontFamily: ZH, fontWeight: 600, fontSize: 46, letterSpacing: "0.1em", color: C.ink2 }}>UU远程 · iPhone 原生体验</div>
         </div>
       </div>
       {/* GitHub 仓库卡片 */}

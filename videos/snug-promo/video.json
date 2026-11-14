@@ -5,7 +5,7 @@
   "status": "draft",
   "tags": [],
   "createdAt": "2026-11-13T16:10:18.582Z",
-  "updatedAt": "2026-11-13T17:19:52.594Z",
+  "updatedAt": "2026-11-14T04:58:03.628Z",
   "assets": {
     "song": "sha256:6347145a192a34956249906235e6bc7151665444001fe5c330b1ff9c615a2f87",
     "snugIcon": "sha256:650577ae9022a88483cc83994b1b27ce5a7c21ddb57e7cd5b20d7f196358fa5f",
@@ -16,16 +16,11 @@
     "iconClaude": "sha256:bc2f427a385cd3bc213d84dc7f25ca0fd598e27a56ac208d6e569c670388fb81",
     "iconVscode": "sha256:ce9b48e16be2ed945619f1378f2b214ae9409285dd35e8b026559cc733ec60a9",
     "iconCursor": "sha256:b2578ad9d82836197f22c8e5154a31f9e22382c433d3e7a399fe518724605cb3",
-    "iconTypeless": "sha256:e773ca0f0b3914e5705b9ebc4041cb74f0c104a68dfcde13dfaf403e16f029fc",
-    "iconClash": "sha256:d12e46161de30e9f927d05907dc394747de5b5ba168e20bc5b71fd415fc33f88",
     "iconSettings": "sha256:2764bbdb0945e1fae33a71d6e38692114ed68c5d73df28cbaf83ea3c21a30b21",
-    "iconTerminal": "sha256:bba4da1e3cec093b11b9a63c1ef3d53410e8708cf121b50766f96da14dd6f4fa",
     "iconUu": "sha256:7dcede9737986d2a63a00b0befccc234c4c0971d5a496fe0ed13e719bdc66953",
     "iconNotion": "sha256:932e2ef85a6df2068d4d7e4aeae1b502e79d7fc572e9e18bcf016240cec850c8",
     "iconWechat": "sha256:dbe54b40d210b1a61f4866e158437ac10cfeb5f5d72a59d2ade24ff9bbabe1da",
-    "iconIterm": "sha256:ef1c4f6beacb978b4f6423bed4b0c5adf56a1c7454db3a4629b858f7249decd0",
     "fontMono": "sha256:48715a42ec242c21e9f02692891e147d022299a52e48d5e413e1a942193ffeda",
-    "appleLogo": "sha256:319c9d9732be88d8b9431c13bdfb2db25fecb30b11616e2f40edfb0a30ae9921",
-    "iconCalendar": "sha256:11385fe20f406bfd905f1905ce01f27fe5bd08d768c53ab7a688c6b153245dfb"
+    "appleLogo": "sha256:319c9d9732be88d8b9431c13bdfb2db25fecb30b11616e2f40edfb0a30ae9921"
   }
 }

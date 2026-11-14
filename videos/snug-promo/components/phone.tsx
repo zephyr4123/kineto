@@ -19,6 +19,13 @@ export const aim = (px: number, py: number, s: number, cx: number, cy: number) =
   y: cy - (py + RIM - BODY_H / 2) * s,
 });
 
+/** 手机中心在 (cx, cy)、每点 s 像素时，屏幕点 (px, py) 落在画面哪里 */
+export const onStage = (cx: number, cy: number, s: number, px: number, py: number) => ({ x: cx + (px - SW / 2) * s, y: cy + (py - SH / 2) * s });
+/** 横屏（手机转 −90°）时，横屏屏幕点 (lx, ly) 落在画面哪里 */
+export const onStageL = (cx: number, cy: number, s: number, lx: number, ly: number) => ({ x: cx + (lx - SH / 2) * s, y: cy + (ly - SW / 2) * s });
+/** 横屏时让横屏屏幕点 (lx, ly) 落在画面的 (X, Y)：返回手机中心 */
+export const aimL = (lx: number, ly: number, s: number, X: number, Y: number) => ({ x: X - (lx - SH / 2) * s, y: Y - (ly - SW / 2) * s });
+
 /** 手机壳比机身每边厚多少点；壳沿压住机身边框，正面只露出黑色玻璃边和屏幕 */
 const CASE = 13;
 const CASE_R = 72 + CASE;
@@ -32,10 +39,13 @@ export const Phone: React.FC<{
   y: number;
   scale: number;
   rotate?: number;
+  tiltX?: number;
   tiltY?: number;
   children?: React.ReactNode;
   glow?: number;
-}> = ({ x, y, scale, rotate = 0, tiltY = 0, children, glow = 0 }) => (
+  /** 状态栏上的时间和信号（横屏时 iOS 不显示，灵动岛照样在） */
+  bar?: boolean;
+}> = ({ x, y, scale, rotate = 0, tiltX = 0, tiltY = 0, children, glow = 0, bar = true }) => (
   <div
     style={{
       position: "absolute",
@@ -43,7 +53,7 @@ export const Phone: React.FC<{
       top: y - BODY_H / 2,
       width: BODY_W,
       height: BODY_H,
-      transform: `perspective(2400px) rotateY(${tiltY}deg) rotate(${rotate}deg) scale(${scale})`,
+      transform: `perspective(2400px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) rotate(${rotate}deg) scale(${scale})`,
       transformOrigin: "50% 50%",
     }}
   >
@@ -90,7 +100,7 @@ export const Phone: React.FC<{
     {/* 屏幕 */}
     <div style={{ position: "absolute", left: RIM, top: RIM, width: SW, height: SH, borderRadius: 63, overflow: "hidden", background: CHROME }}>
       {children}
-      <StatusBar />
+      <StatusBar bar={bar} />
       {/* 屏幕玻璃上的一道斜光 */}
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(115deg, rgba(255,255,255,0.07) 0%, transparent 28%, transparent 70%, rgba(255,255,255,0.04) 100%)", pointerEvents: "none" }} />
     </div>
@@ -101,16 +111,16 @@ export const Phone: React.FC<{
 export const CHROME = "#f4f5f8";
 
 /** 状态栏（浅色模式，黑字）：左边时间，中间灵动岛，右边信号、Wi-Fi、电池 */
-const StatusBar: React.FC = () => (
+const StatusBar: React.FC<{ bar: boolean }> = ({ bar }) => (
   <>
-    <div style={{ position: "absolute", left: 0, width: 150, top: 19, textAlign: "center", fontFamily: SF, fontWeight: 600, fontSize: 17, color: "#000", letterSpacing: "-0.01em" }}>
+    {bar ? <div style={{ position: "absolute", left: 0, width: 150, top: 19, textAlign: "center", fontFamily: SF, fontWeight: 600, fontSize: 17, color: "#000", letterSpacing: "-0.01em" }}>
       9:41
-    </div>
+    </div> : null}
     <div style={{ position: "absolute", left: (SW - 126) / 2, top: 11, width: 126, height: 37, borderRadius: 19, background: "#000" }}>
       {/* 灵动岛里前置摄像头的一点反光 */}
       <div style={{ position: "absolute", right: 22, top: 12, width: 13, height: 13, borderRadius: 7, background: "radial-gradient(circle at 40% 35%, #2a3550 0%, #0a0d16 60%)" }} />
     </div>
-    <svg style={{ position: "absolute", left: 318, top: 22 }} width="96" height="14" viewBox="0 0 96 14">
+    {bar ? <svg style={{ position: "absolute", left: 318, top: 22 }} width="96" height="14" viewBox="0 0 96 14">
       {[0, 1, 2, 3].map((i) => (
         <rect key={i} x={i * 5} y={10 - i * 3} width={3.2} height={3 + i * 3} rx={0.9} fill="#000" />
       ))}
@@ -118,8 +128,48 @@ const StatusBar: React.FC = () => (
       <rect x={56} y={1.5} width={25} height={12} rx={3.6} fill="none" stroke="rgba(0,0,0,0.4)" strokeWidth={1.1} />
       <rect x={58} y={3.5} width={18} height={8} rx={2} fill="#000" />
       <path d="M82.6 5.6v3.8a2 2 0 0 0 0-3.8z" fill="rgba(0,0,0,0.4)" />
-    </svg>
+    </svg> : null}
   </>
+);
+
+/**
+ * 横屏：手机整台转 −90°（灵动岛到左边）时，屏幕里放一块 956×440 的横向画面，先顺时针转 90° 抵消，看上去就是正的。
+ * 里面的坐标是横屏的屏幕点：左上 (0,0)，右下 (LW, LH)。
+ */
+export const LW = SH;
+export const LH = SW;
+export const Landscape: React.FC<{ children: React.ReactNode; opacity?: number }> = ({ children, opacity = 1 }) => (
+  <div style={{ position: "absolute", left: (SW - SH) / 2, top: (SH - SW) / 2, width: SH, height: SW, transform: "rotate(90deg)", overflow: "hidden", opacity }}>{children}</div>
+);
+
+export type ToolKind = "all" | "desk" | "kb" | "op";
+/** UU 工具栏的四个图标（照实机录屏）：展开所有窗口、显示桌面、键盘、操作 */
+export const ToolIcon: React.FC<{ kind: ToolKind; color?: string }> = ({ kind, color = "#3a3a3c" }) => (
+  <svg width="24" height="22" viewBox="0 0 24 22" style={{ display: "block", margin: "0 auto" }}>
+    {kind === "all" ? (
+      <g fill="none" stroke={color} strokeWidth="1.6">
+        <rect x="3" y="3" width="18" height="15" rx="2.5" />
+        <path d="M3 10.5h18M12 10.5V18M9 3v7.5" />
+      </g>
+    ) : kind === "desk" ? (
+      <g fill="none" stroke={color} strokeWidth="1.6">
+        <rect x="4" y="2.5" width="16" height="13" rx="2.2" />
+        <path d="M8 19.5h8M7.5 7.5h3M7.5 10.5h5" />
+      </g>
+    ) : kind === "kb" ? (
+      <g fill="none" stroke={color} strokeWidth="1.6">
+        <rect x="2.5" y="5" width="19" height="12" rx="2.2" />
+        <path d="M6 9h1.2M9.4 9h1.2M12.8 9h1.2M16.2 9h1.2M8 13h8" strokeLinecap="round" />
+      </g>
+    ) : (
+      <g fill="none" stroke={color} strokeWidth="1.6">
+        <rect x="3" y="3" width="18" height="7" rx="3.5" />
+        <rect x="3" y="12" width="18" height="7" rx="3.5" />
+        <circle cx="16.5" cy="6.5" r="1.6" fill={color} />
+        <circle cx="7.5" cy="15.5" r="1.6" fill={color} />
+      </g>
+    )}
+  </svg>
 );
 
 /** UU远程 底部工具栏，照实机录屏 */
@@ -129,31 +179,7 @@ export const UUToolbar: React.FC<{ opacity?: number }> = ({ opacity = 1 }) => {
     <div style={{ position: "absolute", left: 0, top: TOOLBAR_TOP, width: SW, height: SH - TOOLBAR_TOP, background: "rgba(246,247,250,0.96)", borderTop: "0.5px solid rgba(0,0,0,0.12)", opacity }}>
       {items.map((label, i) => (
         <div key={label} style={{ position: "absolute", left: i * 110, width: 110, top: 16, textAlign: "center" }}>
-          <svg width="24" height="22" viewBox="0 0 24 22" style={{ display: "block", margin: "0 auto" }}>
-            {i === 0 ? (
-              <g fill="none" stroke="#3a3a3c" strokeWidth="1.6">
-                <rect x="3" y="3" width="18" height="15" rx="2.5" />
-                <path d="M3 10.5h18M12 10.5V18M9 3v7.5" />
-              </g>
-            ) : i === 1 ? (
-              <g fill="none" stroke="#3a3a3c" strokeWidth="1.6">
-                <rect x="4" y="2.5" width="16" height="13" rx="2.2" />
-                <path d="M8 19.5h8M7.5 7.5h3M7.5 10.5h5" />
-              </g>
-            ) : i === 2 ? (
-              <g fill="none" stroke="#3a3a3c" strokeWidth="1.6">
-                <rect x="2.5" y="5" width="19" height="12" rx="2.2" />
-                <path d="M6 9h1.2M9.4 9h1.2M12.8 9h1.2M16.2 9h1.2M8 13h8" strokeLinecap="round" />
-              </g>
-            ) : (
-              <g fill="none" stroke="#3a3a3c" strokeWidth="1.6">
-                <rect x="3" y="3" width="18" height="7" rx="3.5" />
-                <rect x="3" y="12" width="18" height="7" rx="3.5" />
-                <circle cx="16.5" cy="6.5" r="1.6" fill="#3a3a3c" />
-                <circle cx="7.5" cy="15.5" r="1.6" fill="#3a3a3c" />
-              </g>
-            )}
-          </svg>
+          <ToolIcon kind={(["all", "desk", "kb", "op"] as const)[i]} />
           <div style={{ marginTop: 5, fontFamily: ZH, fontSize: 11.5, color: "#3a3a3c" }}>{label}</div>
         </div>
       ))}

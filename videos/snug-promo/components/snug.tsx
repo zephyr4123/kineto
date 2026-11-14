@@ -115,22 +115,18 @@ export const Opening: React.FC<{ w: Win; frame: number }> = ({ w, frame }) => (
 /** 这支片子里用到的窗口（Mac 上真实存在的 App，图标从本机导出） */
 export const WIN = {
   ghostty: { icon: "iconGhostty", app: "Ghostty", title: "✳ 项目目录结构" },
-  ghostty2: { icon: "iconGhostty", app: "Ghostty", title: "◐ PR 14 修复方案" },
-  safari: { icon: "iconSafari", app: "Safari", title: "zephyr4123/snug: 为 UU远程 打造的 Mac 移…" },
-  chatgpt: { icon: "iconChatgpt", app: "ChatGPT", title: "Codex · 修复窗口铺满的边界情况" },
-  claude: { icon: "iconClaude", app: "Claude", title: "Snug 宣传文案" },
+  safari: { icon: "iconSafari", app: "Safari", title: "Start Page" },
+  chatgpt: { icon: "iconChatgpt", app: "ChatGPT", title: "ChatGPT" },
+  claude: { icon: "iconClaude", app: "Claude", title: "Claude" },
   vscode: { icon: "iconVscode", app: "Code", title: "Scrolling.swift — snug" },
   cursor: { icon: "iconCursor", app: "Cursor", title: "ZoomBook.swift — snug" },
   finder: { icon: "iconFinder", app: "Finder", title: "Downloads" },
-  typeless: { icon: "iconTypeless", app: "Typeless", title: "Typeless" },
   settings: { icon: "iconSettings", app: "System Settings", title: "Login Items" },
-  notion: { icon: "iconNotion", app: "Notion", title: "Snug 2.0 发布清单" },
   shell: { icon: "iconGhostty", app: "Ghostty", title: ".../coding/personal/snug" },
-  wechat: { icon: "iconWechat", app: "WeChat", title: "WeChat" },
 } as const satisfies Record<string, Win>;
 
 /** 窗口列表里「其他窗口」那一组的默认内容 */
-export const OTHERS = [WIN.vscode, WIN.chatgpt, WIN.safari, WIN.notion, WIN.claude, WIN.finder, WIN.settings] as const;
+export const OTHERS = [WIN.shell, WIN.chatgpt, WIN.safari, WIN.vscode, WIN.claude, WIN.finder, WIN.settings] as const;
 
 /** 列表里第 i 行的中心（Mac 点），用来放手指 */
 export const rowCenter = (i: number, current: boolean) => {

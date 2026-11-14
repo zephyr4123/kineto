@@ -1,9 +1,7 @@
-import { Img, staticFile } from "remotion";
-import { assets } from "../assets.gen";
-import { SF } from "../theme";
+import { ZH } from "../theme";
 import { Keyboard, keyPos, KB_TOP } from "./keyboard";
 import { DH, DW, MacDesktop, SnugDisplay } from "./mac";
-import { DISPLAY_H, DISPLAY_TOP, SH, SW, UUToolbar } from "./phone";
+import { DISPLAY_H, DISPLAY_TOP, LH, LW, SW, ToolIcon, UUToolbar, type ToolKind } from "./phone";
 
 // UU远程 在手机上的样子：上面远程画面，下面工具栏；弹键盘时键盘盖住工具栏，远程画面往上推。
 
@@ -30,17 +28,8 @@ export const UUSnug: React.FC<{
 export const DESK_K = SW / DW;
 export type DeskView = { z: number; fx: number; fy: number; sy: number };
 export const FIT: DeskView = { z: 1, fx: DW / 2, fy: DH / 2, sy: DISPLAY_TOP + DISPLAY_H / 2 };
-export const mixView = (a: DeskView, b: DeskView, t: number): DeskView => ({
-  z: a.z + (b.z - a.z) * t,
-  fx: a.fx + (b.fx - a.fx) * t,
-  fy: a.fy + (b.fy - a.fy) * t,
-  sy: a.sy + (b.sy - a.sy) * t,
-});
 /** 桌面点 → 手机屏幕点 */
 export const deskToScreen = (v: DeskView, x: number, y: number) => ({ x: SW / 2 + (x - v.fx) * DESK_K * v.z, y: v.sy + (y - v.fy) * DESK_K * v.z });
-/** 手机屏幕点 → 桌面点 */
-export const screenToDesk = (v: DeskView, x: number, y: number) => ({ x: v.fx + (x - SW / 2) / (DESK_K * v.z), y: v.fy + (y - v.sy) / (DESK_K * v.z) });
-
 /** 原版 UU远程：远程画面（黑底，桌面按 view 摆）+ 底部工具栏 */
 export const UUOriginal: React.FC<{ front: React.ReactNode; back?: React.ReactNode | null; soft?: number; view?: DeskView }> = ({ front, back, soft = 0.7, view = FIT }) => {
   const k = DESK_K * view.z;
@@ -110,57 +99,51 @@ export const typingAt = (ss: readonly Stroke[], frame: number) => {
   return { typed, pressed, layer, finger, done: last ? frame >= last.at + 5 : true };
 };
 
-// iPhone 主屏：四列图标，UU远程 在第二排第二个，清楚；别的图标虚化、压淡，只当背景。
-// launch 0→1 是点开以后图标放大铺满屏幕（iOS 打开 App 的样子），铺满时露出底下的 UU远程 画面。
-const HOME_ICONS = ["iconSafari", "iconWechat", "iconNotion", "iconFinder", "iconChatgpt", "iconUu", "iconClaude", "iconSettings", "iconTerminal", "iconTypeless", "iconCursor", "iconVscode"] as const;
-const DOCK_ICONS = ["iconSafari", "iconWechat", "iconChatgpt", "iconFinder"] as const;
-const ICON = 68;
-const col = (i: number) => 64 + (i % 4) * 104;
-const row = (i: number) => 120 + Math.floor(i / 4) * 112;
-/** UU远程 图标在主屏上的中心（屏幕点） */
-export const UU_ICON = { x: col(5), y: row(5) };
-export const UUHome: React.FC<{ launch?: number; press?: number; children?: React.ReactNode }> = ({ launch = 0, press = 0, children }) => {
-  // 图标放大到整屏：从图标的方块插值到屏幕的方块
-  const w = ICON + (SW - ICON) * launch;
-  const h = ICON + (SH - ICON) * launch;
-  const x = UU_ICON.x - ICON / 2 + (0 - (UU_ICON.x - ICON / 2)) * launch;
-  const y = UU_ICON.y - ICON / 2 + (0 - (UU_ICON.y - ICON / 2)) * launch;
+/**
+ * 原版 UU远程 横屏（照实机录屏）：没有状态栏，桌面按屏高等比缩放、左右留黑；右边一列竖排工具栏，从上到下
+ * 「操作」「键盘」「显示桌面」「展开所有窗口」。实机是深色模式，这里跟竖屏一样用浅色的工具栏。坐标是横屏屏幕点。
+ */
+export const L_TB = 96;
+export const L_REMOTE_W = LW - L_TB;
+export const LAND_K = LH / DH;
+/** 横屏里桌面的摆法：桌面点 (fx, fy) 放到屏幕点 (sx, sy)，每个桌面点占 LAND_K × z 个屏幕点 */
+export type LandView = { z: number; fx: number; fy: number; sx: number; sy: number };
+export const FIT_L: LandView = { z: 1, fx: DW / 2, fy: DH / 2, sx: L_REMOTE_W / 2, sy: LH / 2 };
+export const mixLand = (a: LandView, b: LandView, t: number): LandView => ({
+  z: a.z + (b.z - a.z) * t,
+  fx: a.fx + (b.fx - a.fx) * t,
+  fy: a.fy + (b.fy - a.fy) * t,
+  sx: a.sx + (b.sx - a.sx) * t,
+  sy: a.sy + (b.sy - a.sy) * t,
+});
+export const landToScreen = (v: LandView, x: number, y: number) => ({ x: v.sx + (x - v.fx) * LAND_K * v.z, y: v.sy + (y - v.fy) * LAND_K * v.z });
+export const screenToLand = (v: LandView, x: number, y: number) => ({ x: v.fx + (x - v.sx) / (LAND_K * v.z), y: v.fy + (y - v.sy) / (LAND_K * v.z) });
+const L_ITEMS: { kind: ToolKind; label: string; y: number }[] = [
+  { kind: "op", label: "操作", y: 50 },
+  { kind: "kb", label: "键盘", y: 160 },
+  { kind: "desk", label: "显示桌面", y: 270 },
+  { kind: "all", label: "展开所有窗口", y: 380 },
+];
+/** 横屏工具栏上某个图标的中心（横屏屏幕点），放手指用 */
+export const lTool = (kind: ToolKind) => ({ x: L_REMOTE_W + L_TB / 2, y: L_ITEMS.find((i) => i.kind === kind)!.y - 11 });
+
+export const UULandscape: React.FC<{ desk: React.ReactNode; view?: LandView; kb?: React.ReactNode; press?: ToolKind | null }> = ({ desk, view = FIT_L, kb, press = null }) => {
+  const k = LAND_K * view.z;
   return (
-    <>
-      {launch > 0 ? children : null}
-      <div style={{ position: "absolute", inset: 0, opacity: 1 - launch, background: "linear-gradient(170deg, #cfe4ff 0%, #e9e3ff 45%, #ffe6ef 100%)" }}>
-        {HOME_ICONS.map((k, i) =>
-          k === "iconUu" ? null : (
-            <div key={k} style={{ position: "absolute", left: col(i) - ICON / 2, top: row(i) - ICON / 2, width: ICON, textAlign: "center", filter: "blur(3px)", opacity: 0.55 }}>
-              <Img src={staticFile(assets[k])} style={{ width: ICON * 1.22, height: ICON * 1.22, margin: `${-ICON * 0.11}px 0 0 ${-ICON * 0.11}px` }} />
-            </div>
-          ),
-        )}
-        <div style={{ position: "absolute", left: UU_ICON.x - 50, top: UU_ICON.y + ICON / 2 + 6, width: 100, textAlign: "center", fontFamily: SF, fontSize: 13, fontWeight: 500, color: "#1c1c1e" }}>UU远程</div>
-        {/* 程序坞：毛玻璃底板上四个图标，同样虚化 */}
-        <div style={{ position: "absolute", left: 16, right: 16, top: SH - 112, height: 92, borderRadius: 38, background: "rgba(255,255,255,0.38)", border: "1px solid rgba(255,255,255,0.5)" }}>
-          {DOCK_ICONS.map((k, i) => (
-            <Img key={k} src={staticFile(assets[k])} style={{ position: "absolute", left: 48 + i * 104 - ICON * 0.61 - 16, top: 46 - ICON * 0.61, width: ICON * 1.22, height: ICON * 1.22, filter: "blur(3px)", opacity: 0.55 }} />
-          ))}
-        </div>
+    <div style={{ position: "absolute", inset: 0, background: "#000" }}>
+      <div style={{ position: "absolute", left: 0, top: 0, width: L_REMOTE_W, height: LH, overflow: "hidden" }}>
+        <div style={{ position: "absolute", left: 0, top: 0, width: DW, height: DH, transform: `translate(${view.sx - view.fx * k}px, ${view.sy - view.fy * k}px) scale(${k})`, transformOrigin: "0 0", filter: "blur(0.5px)" }}>{desk}</div>
       </div>
-      {/* UU远程 图标（Mac 上导出的图标四周带透明边，放大 1.22 倍裁掉，只留圆角方块） */}
-      <div
-        style={{
-          position: "absolute",
-          left: x,
-          top: y,
-          width: w,
-          height: h,
-          borderRadius: 16 + 47 * launch,
-          overflow: "hidden",
-          opacity: launch < 0.85 ? 1 : 1 - (launch - 0.85) / 0.15,
-          transform: `scale(${1 - 0.08 * press})`,
-          background: "#f4f6fa",
-        }}
-      >
-        <Img src={staticFile(assets.iconUu)} style={{ position: "absolute", left: "50%", top: "50%", width: ICON * 1.22, height: ICON * 1.22, transform: `translate(-50%, -50%) scale(${1 + 1.2 * launch})` }} />
+      <div style={{ position: "absolute", left: L_REMOTE_W, top: 0, width: L_TB, height: LH, background: "rgba(246,247,250,0.97)", borderLeft: "0.5px solid rgba(0,0,0,0.12)" }}>
+        {L_ITEMS.map((it) => (
+          <div key={it.kind} style={{ position: "absolute", left: 0, width: L_TB, top: it.y - 22, textAlign: "center", opacity: press === it.kind ? 0.45 : 1 }}>
+            <ToolIcon kind={it.kind} />
+            <div style={{ margin: "5px auto 0", width: 52, fontFamily: ZH, fontSize: 11.5, lineHeight: 1.25, color: "#3a3a3c" }}>{it.label}</div>
+          </div>
+        ))}
       </div>
-    </>
+      {kb}
+      <div style={{ position: "absolute", left: (LW - 160) / 2, top: LH - 9, width: 160, height: 5, borderRadius: 3, background: kb ? "#111" : "rgba(255,255,255,0.8)" }} />
+    </div>
   );
 };

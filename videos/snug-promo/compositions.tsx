@@ -14,39 +14,31 @@ const staged = (Scene: React.FC) => {
   );
   return Staged;
 };
-const [away, connect, desktop, reveal, snap, scroll, select, menu, back, anyApp, resume, anywhere, restore, outro] = SPANS;
-const AwayStaged = staged(away.Scene);
-const ConnectStaged = staged(connect.Scene);
-const DesktopStaged = staged(desktop.Scene);
-const RevealStaged = staged(reveal.Scene);
-const SnapStaged = staged(snap.Scene);
-const ScrollStaged = staged(scroll.Scene);
-const SelectStaged = staged(select.Scene);
-const MenuStaged = staged(menu.Scene);
-const BackStaged = staged(back.Scene);
-const AnyAppStaged = staged(anyApp.Scene);
-const ResumeStaged = staged(resume.Scene);
-const AnywhereStaged = staged(anywhere.Scene);
-const RestoreStaged = staged(restore.Scene);
+const [title, portrait, landscape, native, duo, shell, chat, browser, plugin, outro] = SPANS;
+const TitleStaged = staged(title.Scene);
+const PortraitStaged = staged(portrait.Scene);
+const LandscapeStaged = staged(landscape.Scene);
+const NativeStaged = staged(native.Scene);
+const DuoStaged = staged(duo.Scene);
+const ShellStaged = staged(shell.Scene);
+const ChatStaged = staged(chat.Scene);
+const BrowserStaged = staged(browser.Scene);
+const PluginStaged = staged(plugin.Scene);
 const OutroStaged = staged(outro.Scene);
 
 export const Compositions: React.FC = () => {
   return (
     <>
       <Composition id="snug-promo" component={Video} durationInFrames={VIDEO_FRAMES} fps={FPS} width={W} height={H} />
-      <Composition id="snug-promo-away" component={AwayStaged} durationInFrames={away.frames} fps={FPS} width={W} height={H} />
-      <Composition id="snug-promo-connect" component={ConnectStaged} durationInFrames={connect.frames} fps={FPS} width={W} height={H} />
-      <Composition id="snug-promo-desktop" component={DesktopStaged} durationInFrames={desktop.frames} fps={FPS} width={W} height={H} />
-      <Composition id="snug-promo-reveal" component={RevealStaged} durationInFrames={reveal.frames} fps={FPS} width={W} height={H} />
-      <Composition id="snug-promo-snap" component={SnapStaged} durationInFrames={snap.frames} fps={FPS} width={W} height={H} />
-      <Composition id="snug-promo-scroll" component={ScrollStaged} durationInFrames={scroll.frames} fps={FPS} width={W} height={H} />
-      <Composition id="snug-promo-select" component={SelectStaged} durationInFrames={select.frames} fps={FPS} width={W} height={H} />
-      <Composition id="snug-promo-menu" component={MenuStaged} durationInFrames={menu.frames} fps={FPS} width={W} height={H} />
-      <Composition id="snug-promo-back" component={BackStaged} durationInFrames={back.frames} fps={FPS} width={W} height={H} />
-      <Composition id="snug-promo-any-app" component={AnyAppStaged} durationInFrames={anyApp.frames} fps={FPS} width={W} height={H} />
-      <Composition id="snug-promo-resume" component={ResumeStaged} durationInFrames={resume.frames} fps={FPS} width={W} height={H} />
-      <Composition id="snug-promo-anywhere" component={AnywhereStaged} durationInFrames={anywhere.frames} fps={FPS} width={W} height={H} />
-      <Composition id="snug-promo-restore" component={RestoreStaged} durationInFrames={restore.frames} fps={FPS} width={W} height={H} />
+      <Composition id="snug-promo-title" component={TitleStaged} durationInFrames={title.frames} fps={FPS} width={W} height={H} />
+      <Composition id="snug-promo-portrait" component={PortraitStaged} durationInFrames={portrait.frames} fps={FPS} width={W} height={H} />
+      <Composition id="snug-promo-landscape" component={LandscapeStaged} durationInFrames={landscape.frames} fps={FPS} width={W} height={H} />
+      <Composition id="snug-promo-native" component={NativeStaged} durationInFrames={native.frames} fps={FPS} width={W} height={H} />
+      <Composition id="snug-promo-duo" component={DuoStaged} durationInFrames={duo.frames} fps={FPS} width={W} height={H} />
+      <Composition id="snug-promo-shell" component={ShellStaged} durationInFrames={shell.frames} fps={FPS} width={W} height={H} />
+      <Composition id="snug-promo-chat" component={ChatStaged} durationInFrames={chat.frames} fps={FPS} width={W} height={H} />
+      <Composition id="snug-promo-browser" component={BrowserStaged} durationInFrames={browser.frames} fps={FPS} width={W} height={H} />
+      <Composition id="snug-promo-plugin" component={PluginStaged} durationInFrames={plugin.frames} fps={FPS} width={W} height={H} />
       <Composition id="snug-promo-outro" component={OutroStaged} durationInFrames={outro.frames} fps={FPS} width={W} height={H} />
     </>
   );

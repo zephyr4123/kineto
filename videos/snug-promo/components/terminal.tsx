@@ -180,9 +180,6 @@ export const Terminal: React.FC<{
   );
 };
 
-/** 打字机：from 帧起，每帧出 cps 个字符 */
-export const typedCount = (frame: number, from: number, cps = 2.2) => Math.max(0, Math.floor((frame - from) * cps));
-
 const RULE: Span = { t: "─", c: "#c9ccd2", fill: true };
 export const PROMPT: Span[] = [{ t: "snug % ", c: INK }];
 
@@ -242,16 +239,6 @@ export const ANSWER: readonly Line[] = [
   "",
   [{ t: "● ", c: INK }, { t: "构建通过，134 个测试全部通过。接下来可以挑一块深入：手机屏怎么调度窗口，或者手势怎么翻译。" }],
 ];
-export const SESSION: readonly Line[] = [ASK, "", ...ANSWER];
-/** 手势那一段在 SESSION 里是第几行（选字用） */
-export const GESTURE_LINE = 2 + 9;
-
-/** 接回会话时 Claude Code 先打的一段摘要（实机录屏里就是这样） */
-export const RECAP: Line = [
-  { t: "※ recap: ", c: DIM, b: true },
-  { t: "你让我介绍 Snug 的目录结构，我已经讲完了：代码分为纯逻辑、系统、应用三层，依赖只往下走，另外还有测试、文档和发版脚本。接下来请你挑一块想深入了解的，比如手机屏调度或手势翻译。", c: DIM, i: true },
-  { t: " (disable recaps in /config)", c: DIM },
-];
 
 /** Claude Code 的输入框和底部状态行；caret 为 true 时在输入的字后面放一个光标块 */
 export const INPUT = (text: string, caret = false): Line[] => [
@@ -259,21 +246,6 @@ export const INPUT = (text: string, caret = false): Line[] => [
   [{ t: "❯ ", c: INK }, { t: text }, ...(caret ? [{ t: " ", bg: INK }] : [])],
   [RULE],
   [{ t: "  ▸▸ auto mode on ", c: CC.brown }, { t: "(shift+tab to cycle)", c: DIM }],
-];
-
-/** /resume 的会话列表 */
-export const RESUME_LIST: readonly Line[] = [
-  [{ t: "Resume session", c: CC.purple, b: true }],
-  [{ t: "╭", c: "#c9ccd2" }, { t: "─", c: "#c9ccd2", fill: true }, { t: "╮", c: "#c9ccd2" }],
-  [{ t: "│ ", c: "#c9ccd2" }, { t: "⌕ Search…", c: DIM }, { t: " ", fill: true }, { t: "│", c: "#c9ccd2" }],
-  [{ t: "╰", c: "#c9ccd2" }, { t: "─", c: "#c9ccd2", fill: true }, { t: "╯", c: "#c9ccd2" }],
-  "",
-  [{ t: "❯ ", c: CC.purple }, { t: "项目目录结构", c: CC.purple, b: true }],
-  [{ t: "  57 seconds ago · main · 560.6KB", c: DIM }],
-  [{ t: "  PR 14 修复方案" }],
-  [{ t: "  3 minutes ago · main · 49.8MB", c: DIM }],
-  [{ t: "  窗口铺满的边界情况" }],
-  [{ t: "  2 hours ago · main · 1.2MB", c: DIM }],
 ];
 
 /** 把几行截到第 n 个字符为止（流式输出用：已经吐出来的部分），截断处那一行只留前半截 */
@@ -334,28 +306,3 @@ export const streamed = (
   const running = !done && last >= 0 && isTool(shown[last]) && charCount([shown[last]]) === charCount([stream[last]]);
   return [...before, ...shown, ...(running ? [RUNNING] : []), ...(done ? [] : ["", working(frame, verb, secs)]), "", ...input];
 };
-
-/** 流式回答：stream 从 from 帧起按每帧 cps 个字吐出 */
-export const streaming = (before: readonly Line[], stream: readonly Line[], frame: number, from: number, cps = 3, verb = "Thinking"): Line[] =>
-  streamed(before, stream, typedCount(frame, from, cps), frame, verb);
-
-/** 接回会话后在手机上敲的那一句：回答 recap 里「挑一块深入」 */
-export const FOLLOW = "gestures";
-export const FOLLOW_LINE: Line = [{ t: "❯ ", c: DIM }, { t: FOLLOW, bg: "#eef0f3" }];
-/** 对 FOLLOW 的回答：读两个文件，讲手势翻译。行数是 Snug 仓库里的真实行数，内容照 docs/how-it-works.md 的「手势翻译」 */
-export const GESTURES: readonly Line[] = [
-  [{ t: "● ", c: CC.green }, { t: "Read", b: true }, { t: "(SnugCore/Touch/TouchTranslator.swift)" }],
-  [{ t: "  ⎿  Read 186 lines", c: DIM }],
-  [{ t: "● ", c: CC.green }, { t: "Read", b: true }, { t: "(SnugCore/Touch/Scrolling.swift)" }],
-  [{ t: "  ⎿  Read 74 lines", c: DIM }],
-  "",
-  [{ t: "● ", c: INK }, { t: "手势翻译只接管 UU远程 注入、且在手机屏内按下的鼠标左键，本机的触控板、鼠标和其他显示器都不受影响：" }],
-  "",
-  [{ t: "  - 移动不少于 10 点：像素滚动，松手后按速度附加惯性，速度设有上限" }],
-  [{ t: "  - 惯性滚动中轻点：只停下滚动，不触发点击" }],
-  [{ t: "  - 按住 0.5 秒后拖动：补发按下事件，用来拖选文字" }],
-  [{ t: "  - 按住 0.5 秒后松开：右键" }],
-  [{ t: "  - 其余操作原样放行" }],
-  "",
-  [{ t: "● ", c: INK }, { t: "补发的事件都带有标记，不会被再次接管。" }],
-];

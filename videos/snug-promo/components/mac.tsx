@@ -137,22 +137,32 @@ export const DW = 1512;
 export const DH = 982;
 export type Rect = { x: number; y: number; w: number; h: number };
 export const FRONT: Rect = { x: 70, y: 62, w: 900, h: 700 };
-/** 整块 Mac 桌面。back 是后面那个 Safari 窗口里的内容，传 null 就不放这个窗口，露出壁纸 */
-export const MacDesktop: React.FC<{ front: React.ReactNode; back?: React.ReactNode | null; frontRect?: Rect; menuIcon?: React.ReactNode }> = ({ front, back = <BackPage />, frontRect = FRONT, menuIcon }) => (
-  <div style={{ position: "absolute", left: 0, top: 0, width: DW, height: DH, overflow: "hidden", background: "linear-gradient(160deg,#1b2d6b 0%,#3c3f9e 35%,#9a5bb8 62%,#f08a6c 88%,#ffb27a 100%)" }}>
-    <div style={{ position: "absolute", inset: 0, background: "radial-gradient(60% 50% at 30% 70%, rgba(255,255,255,0.18), transparent 70%), radial-gradient(50% 40% at 80% 20%, rgba(20,30,90,0.5), transparent 70%)" }} />
+export const BACK: Rect = { x: 640, y: 96, w: 820, h: 640 };
+const WALLPAPER = "linear-gradient(160deg,#1b2d6b 0%,#3c3f9e 35%,#9a5bb8 62%,#f08a6c 88%,#ffb27a 100%)";
+const WALL_GLOW = "radial-gradient(60% 50% at 30% 70%, rgba(255,255,255,0.18), transparent 70%), radial-gradient(50% 40% at 80% 20%, rgba(20,30,90,0.5), transparent 70%)";
+/** 整块 Mac 桌面。back 是后面那个 Safari 窗口里的内容，传 null 就不放这个窗口，露出壁纸；backRect 是它的位置（断开时它从手机屏那边回来） */
+export const MacDesktop: React.FC<{ front: React.ReactNode; back?: React.ReactNode | null; frontRect?: Rect; backRect?: Rect; frontTitle?: string; menuIcon?: React.ReactNode }> = ({
+  front,
+  back = <BackPage />,
+  frontRect = FRONT,
+  backRect = BACK,
+  frontTitle = "✳ 项目目录结构",
+  menuIcon,
+}) => (
+  <div style={{ position: "absolute", left: 0, top: 0, width: DW, height: DH, overflow: "hidden", background: WALLPAPER }}>
+    <div style={{ position: "absolute", inset: 0, background: WALL_GLOW }} />
     <MenuBar app="Ghostty" width={DW} height={26} size={13} />
     {menuIcon}
     {/* 后面的窗口：Safari */}
     {back === null ? null : (
-      <div style={{ position: "absolute", left: 640, top: 96, width: 820, height: 640, borderRadius: 12, overflow: "hidden", background: "#fff", boxShadow: "0 18px 50px rgba(0,0,0,0.35)" }}>
-        <TitleBar title="github.com/zephyr4123/snug" top={0} width={820} folder={false} />
+      <div style={{ position: "absolute", left: backRect.x, top: backRect.y, width: backRect.w, height: backRect.h, borderRadius: 12, overflow: "hidden", background: "#fff", boxShadow: "0 18px 50px rgba(0,0,0,0.35)" }}>
+        <TitleBar title="github.com/zephyr4123/snug" top={0} width={backRect.w} folder={false} />
         <div style={{ position: "absolute", top: 33, left: 0, right: 0, bottom: 0 }}>{back}</div>
       </div>
     )}
     {/* 前面的窗口：Ghostty */}
     <div style={{ position: "absolute", left: frontRect.x, top: frontRect.y, width: frontRect.w, height: frontRect.h, borderRadius: 12, overflow: "hidden", background: "#fbfcfd", boxShadow: "0 24px 70px rgba(0,0,0,0.45)" }}>
-      <TitleBar title="✳ 项目目录结构" top={0} width={frontRect.w} folder={false} />
+      <TitleBar title={frontTitle} top={0} width={frontRect.w} folder={false} />
       <div style={{ position: "absolute", top: 33, left: 0, right: 0, bottom: 0 }}>{front}</div>
     </div>
     {/* 程序坞 */}
@@ -179,6 +189,38 @@ export const MacDesktop: React.FC<{ front: React.ReactNode; back?: React.ReactNo
   </div>
 );
 
+/**
+ * 调度中心（Mission Control）：原版 UU远程 的「展开所有窗口」会在 Mac 上打开它。壁纸压暗，顶上一条桌面空间的名字，
+ * 所有窗口缩小平铺。items 里每个窗口从 from（在桌面上的位置）飞到 to（平铺后的位置），p 是进度；node 是窗口本身（原大）。
+ */
+export type McItem = { from: Rect; to: Rect; w: number; h: number; node: React.ReactNode };
+export const MissionControl: React.FC<{ p: number; items: readonly McItem[] }> = ({ p, items }) => (
+  <div style={{ position: "absolute", left: 0, top: 0, width: DW, height: DH, overflow: "hidden", background: WALLPAPER }}>
+    <div style={{ position: "absolute", inset: 0, background: WALL_GLOW }} />
+    <div style={{ position: "absolute", inset: 0, background: `rgba(10,14,30,${0.32 * p})` }} />
+    <div style={{ position: "absolute", left: 0, right: 0, top: 10, display: "flex", justifyContent: "center", gap: 46, fontFamily: SF, fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.9)", opacity: p }}>
+      <span>Desktop 1</span>
+      <span style={{ opacity: 0.6 }}>Desktop 2</span>
+    </div>
+    {items.map((it, i) => {
+      const r = { x: it.from.x + (it.to.x - it.from.x) * p, y: it.from.y + (it.to.y - it.from.y) * p, w: it.from.w + (it.to.w - it.from.w) * p };
+      return (
+        <div key={i} style={{ position: "absolute", left: r.x, top: r.y, width: it.w, height: it.h, transform: `scale(${r.w / it.w})`, transformOrigin: "0 0" }}>
+          {it.node}
+        </div>
+      );
+    })}
+  </div>
+);
+
+/** 一个原大的 Mac 窗口：圆角、影子、标题栏，内容放在标题栏下面 */
+export const MacWindow: React.FC<{ w: number; h: number; title: string; children: React.ReactNode; dark?: boolean }> = ({ w, h, title, children, dark }) => (
+  <div style={{ position: "relative", width: w, height: h, borderRadius: 12, overflow: "hidden", background: dark ? "#1e1e1e" : "#fff", boxShadow: "0 24px 70px rgba(0,0,0,0.45)" }}>
+    <TitleBar title={title} top={0} width={w} folder={false} dark={dark} />
+    <div style={{ position: "absolute", top: 33, left: 0, right: 0, bottom: 0 }}>{children}</div>
+  </div>
+);
+
 /** 一台 MacBook 的正面：屏幕 width 像素宽（里面放 DW×DH 点的桌面，按比例缩），下面一条机身 */
 export const MacBook: React.FC<{ left: number; top: number; width: number; children: React.ReactNode }> = ({ left, top, width, children }) => {
   const k = width / DW;
@@ -194,27 +236,3 @@ export const MacBook: React.FC<{ left: number; top: number; width: number; child
     </div>
   );
 };
-
-/** macOS 的通知横幅（右上角，菜单栏下面）：毛玻璃圆角卡片，左边 App 图标，标题加粗、正文一行，右上角时间。坐标是桌面点 */
-export const NOTE_W = 344;
-export const Notification: React.FC<{ icon: keyof typeof assets; title: string; body: string; time: string; p: number }> = ({ icon, title, body, time, p }) => (
-  <div
-    style={{
-      position: "absolute",
-      left: DW - NOTE_W - 12 + (1 - p) * (NOTE_W + 30),
-      top: 34,
-      width: NOTE_W,
-      height: 64,
-      borderRadius: 18,
-      background: "rgba(236,236,240,0.9)",
-      boxShadow: "0 10px 30px rgba(0,0,0,0.3), 0 0 0 0.5px rgba(0,0,0,0.15)",
-      fontFamily: SF,
-      color: "#1d1d1f",
-    }}
-  >
-    <Img src={staticFile(assets[icon])} style={{ position: "absolute", left: 10, top: 12, width: 40, height: 40 }} />
-    <div style={{ position: "absolute", left: 60, top: 13, right: 52, fontSize: 13, fontWeight: 700, whiteSpace: "nowrap" }}>{title}</div>
-    <div style={{ position: "absolute", left: 60, top: 33, right: 12, fontSize: 13, whiteSpace: "nowrap" }}>{body}</div>
-    <div style={{ position: "absolute", right: 12, top: 13, fontSize: 12, color: "#6e6e73" }}>{time}</div>
-  </div>
-);
