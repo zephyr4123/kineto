@@ -236,3 +236,10 @@ export const MacBook: React.FC<{ left: number; top: number; width: number; child
     </div>
   );
 };
+
+/** Mac 的鼠标指针（黑箭头、白描边）：(x, y) 是箭头尖，size 是高度，down 0→1 是按下（缩一点） */
+export const Pointer: React.FC<{ x: number; y: number; down?: number; size?: number }> = ({ x, y, down = 0, size = 26 }) => (
+  <svg style={{ position: "absolute", left: x, top: y, transform: `scale(${1 - 0.12 * down})`, transformOrigin: "0 0" }} width={(size * 20) / 26} height={size} viewBox="0 0 20 26">
+    <path d="M1 1v19.5l5-4.6 3.4 7.6 3.3-1.4-3.3-7.4h6.6z" fill="#000" stroke="#fff" strokeWidth="1.4" strokeLinejoin="round" />
+  </svg>
+);

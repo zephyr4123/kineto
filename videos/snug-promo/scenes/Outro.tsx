@@ -1,17 +1,12 @@
 import { AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame } from "remotion";
 import { clamp, inOutQuint, outExpo, punch } from "../../../engine/motion";
 import { assets } from "../assets.gen";
+import { Pointer } from "../components/mac";
 import { C, local, MONO, SF, ZH } from "../theme";
 
 // 落版：图标、名字、slogan 和一句定位；GitHub 仓库卡片升上来，光标点亮 Star；最后是地址、开源许可和致谢。
 // 仓库刚发布（v2.0.0，2026-11-13），星标数很小，卡片上不放数字，只演示点亮。
 const at = local(156);
-
-const Cursor: React.FC<{ x: number; y: number; down: number }> = ({ x, y, down }) => (
-  <svg style={{ position: "absolute", left: x, top: y, transform: `scale(${1 - 0.12 * down})`, transformOrigin: "0 0" }} width="40" height="52" viewBox="0 0 20 26">
-    <path d="M1 1v19.5l5-4.6 3.4 7.6 3.3-1.4-3.3-7.4h6.6z" fill="#000" stroke="#fff" strokeWidth="1.4" strokeLinejoin="round" />
-  </svg>
-);
 
 export const Outro: React.FC = () => {
   const f = useCurrentFrame();
@@ -83,7 +78,7 @@ export const Outro: React.FC = () => {
           </div>
         </div>
       </div>
-      {card > 0 && f < click + 40 ? <Cursor x={cx} y={cy} down={down} /> : null}
+      {card > 0 && f < click + 40 ? <Pointer x={cx} y={cy} down={down} size={52} /> : null}
       <div style={{ position: "absolute", left: 0, right: 0, top: 1610, textAlign: "center", opacity: url, transform: `translateY(${(1 - url) * 20}px)` }}>
         <div style={{ fontFamily: MONO, fontWeight: 600, fontSize: 46, color: C.deep }}>github.com/zephyr4123/snug</div>
         <div style={{ marginTop: 16, fontFamily: ZH, fontWeight: 600, fontSize: 42, letterSpacing: "0.06em", color: C.ink2 }}>MIT 开源 · 免费下载 · macOS 14+</div>
