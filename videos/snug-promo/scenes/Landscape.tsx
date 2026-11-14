@@ -110,10 +110,10 @@ export const Landscape: React.FC = () => {
           </Land>
         </Phone>
       </Smear>
-      <Callout at={at(3.6)} until={SWIPE - 4} x={fingerStage.x + 30} y={fingerStage.y - 34} tx={760} ty={720} side="up" note="一根手指" text="盖住数行" />
-      <Callout at={SWIPE + 8} until={at(8.8)} x={swipeAt.x} y={swipeAt.y} tx={360} ty={720} side="up" note="单指滑动" text="误选一片" />
-      <Callout at={DRAG + 10} until={at(13)} x={extraAt.x} y={extraAt.y} tx={720} ty={720} side="up" note="拖动选字" text="多选一行" />
-      <Callout at={PINCH + 10} until={at(19.4)} x={pinchAt.x} y={pinchAt.y} tx={540} ty={720} side="up" note="双指放大" text="只见局部" bend={0} />
+      <Callout at={at(3.6)} until={SWIPE - 4} x={fingerStage.x + 30} y={fingerStage.y - 34} tx={760} ty={720} side="up" note="指尖" text="遮挡数行" />
+      <Callout at={SWIPE + 8} until={at(8.8)} x={swipeAt.x} y={swipeAt.y} tx={360} ty={720} side="up" note="单指滑动" text="误选成片" />
+      <Callout at={DRAG + 10} until={at(13)} x={extraAt.x} y={extraAt.y} tx={720} ty={720} side="up" note="拖选文字" text="多选一行" />
+      <Callout at={PINCH + 10} until={at(19.4)} x={pinchAt.x} y={pinchAt.y} tx={540} ty={720} side="up" note="双指放大" text="仅见局部" bend={0} />
       <Headline at={10} until={at(20) - 4} kicker="LANDSCAPE" title="横屏 · 字号过小" />
     </AbsoluteFill>
   );

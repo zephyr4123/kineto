@@ -15,7 +15,7 @@ import { PORTRAIT_POSE } from "./Portrait";
 
 // Snug 亮相（全片第一次砸下）：手机转回竖屏，又是那一大片黑边；音乐抽空的一小节里四周压暗，Snug 的图标从上面落下来、
 // 一拍一跳地蓄力，最后一拍扎进手机屏幕 —— 砸下：缩在中间的整块桌面炸开，换成 Snug 手机屏，Ghostty 窗口竖着铺满。
-// 随后字号放大、镜头推到字上；拉回来，手机轻轻转着，三支箭头依次点出铺满、字号、底部横条；最后手机退到下一场的位置。
+// 随后字号放大、镜头推到字上；拉回来，手机轻轻转着，三支箭头依次点出铺满、字号、底部指示条；最后手机退到下一场的位置。
 const START = 40;
 const at = local(START);
 const SNAP = at(8);
@@ -102,7 +102,7 @@ export const Native: React.FC = () => {
       <Sweep at={SNAP + 3} />
       <Callout at={at(12)} until={at(16.6)} x={title.x} y={title.y} tx={300} ty={title.y - 100} side="up" text="窗口铺满" />
       <Callout at={at(12.8)} until={at(16.6)} x={text.x} y={text.y} tx={820} ty={text.y - 150} side="right" text="字号放大" />
-      <Callout at={at(13.6)} until={at(16.6)} x={bar.x} y={bar.y} tx={300} ty={bar.y - 150} side="left" text="底部横条" note="切换窗口" />
+      <Callout at={at(13.6)} until={at(16.6)} x={bar.x} y={bar.y} tx={300} ty={bar.y - 150} side="left" text="底部指示条" note="切换窗口" />
       <Headline at={SNAP} until={at(17)} kicker="WITH SNUG" title="iPhone 专属竖屏" />
     </AbsoluteFill>
   );
