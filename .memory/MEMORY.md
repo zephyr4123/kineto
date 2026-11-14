@@ -7,6 +7,6 @@
 - [不走 issue-driven](no-issue-driven.md) — 本项目不为干活、记技术债开 issue，问题在汇报里说
 - [GitHub 账号锁定](gh-account-lock.md) — 专用 gh 配置 + ship 自锁，不受别的会话切号影响；推送 403 先查这里
 - [代码画界面的宣传片](video-ui-fidelity.md) — 要有真实交互、终端排满整行、现代 iPhone、底色跟品牌走
-- [宣传片画面文字](video-caption-copy.md) — 书面短词，不用口语、不用主谓宾齐全的句子
-- [Snug 宣传片定位](snug-promo-positioning.md) — UU远程 的 iPhone 插件，通篇只讲 iPhone 原生手感；不拉踩，不放生活场景、UU 功能介绍、AI 卖点
+- [宣传片画面文字](video-caption-copy.md) — 书面短词；中文是主角要大、英文小标；对比度 ≥ 4.5:1；说明用箭头引出、拆成小块
+- [Snug 宣传片定位](snug-promo-positioning.md) — UU远程 的 iPhone 插件，通篇只讲 iPhone 原生手感；手势先演原版再演 Snug；不拉踩，不放生活场景、UU 功能介绍、AI 卖点
 - [UU远程 界面事实](uu-remote-ui-facts.md) — 竖屏黑边、横屏右侧工具栏、键盘弹出整体上推、电脑键盘排布，及各自出处
