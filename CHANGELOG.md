@@ -6,11 +6,14 @@ as a GitHub release; tags with a hyphen (`v1.1.0-rc.1`) become prereleases.
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-16
+
 ### Added
 
 - `./kineto storage clean` frees disk space. It deletes cached copies that the shared backend holds intact (the remote sha256 must match the local file; they are downloaded again when needed), the Studio staging area and work dirs left by killed processes, and keeps every cached file the backend does not hold intact. `--dry-run` reports what would go and how much space it frees. The local backend's store is never touched.
 - `engine/`: `Counter` (an odometer-style rolling number), `camera.ts` (per-chapter camera keyframes joined into one path), `Glyph` (an SVG icon scaled by its long side), and in `motion.ts` the easings `outExpo`, `outQuint`, `inOutQuint` and the helpers `prog`, `punch`, `typed`, `mix`.
-- `engine/speakmore/`: pieces shared by the SpeakMore promo series (floating bar, seal, Mac and Windows desktops, brand logos, icons), and the videos `speakmore-promo`, `speakmore-promo-2` and `speakmore-promo-3`.
+- `engine/speakmore/`: pieces shared by the SpeakMore promo series (floating bar, seal, Mac and Windows desktops, brand logos, icons), and the videos `speakmore-promo` to `speakmore-promo-4`.
+- `engine/snug/`: the iPhone frame and the GitHub repository card shared by the Snug videos, and the videos `snug-promo` (a vertical launch promo) and `snug-demo` (a demo cut from three screens recorded at once).
 - `npm run ship` lands a branch on main: it pushes the branch, waits for CI, then fast-forwards main to the same commit, so render records keep pointing at commits on main.
 - A `conventions` CI check on every push: no AI attribution lines in commits, commits that touch one video start their subject with its id, branches that change kineto itself update this changelog, and new render records point at commits in the branch's history.
 - `AGENTS.md` has a Git and GitHub section (branches, commits, changelog, landing on main, Dependabot) and the maintainer's collaboration rules; shared agent memory lives in `.memory/`.
@@ -68,6 +71,7 @@ First stable release.
 - Sample video `corner-hit` and the promo `kineto-promo`, both made with kineto.
 - CI on Node 22.18 and 24, release workflow on `v*` tags, Dependabot for actions and npm.
 
-[Unreleased]: https://github.com/zephyr4123/kineto/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/zephyr4123/kineto/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/zephyr4123/kineto/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/zephyr4123/kineto/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/zephyr4123/kineto/releases/tag/v1.0.0
