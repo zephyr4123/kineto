@@ -111,7 +111,8 @@ export const TAPS = {
   newWindow: { t: 10.4, x: 821, y: 584 },
   swipeHome: { t: 53.47, x: 711, y: 1856 },
   safari: { t: 56.57, x: 539, y: 1368 },
-  restore: { t: 80.42, x: 923, y: 880 },
+  // 78.7–80.0 秒手机屏换回 540 宽，指针被系统藏起来；80.1 秒指针重新出现在「还原」上，0.4 秒后 Safari 回到原位
+  restore: { t: 80.1, x: 923, y: 880 },
   allApps: { t: 82.5, x: 699, y: 424 },
   search: { t: 86.57, x: 543, y: 324 },
   chatgpt: { t: 91.57, x: 539, y: 280 },
