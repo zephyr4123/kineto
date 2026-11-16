@@ -1,7 +1,7 @@
 import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from "remotion";
 import { clamp } from "../../../engine/motion";
 import { H, W } from "../theme";
-import { Footage, IPhone, MacBook, Monitor, type Pose } from "./devices";
+import { Footage, IPhone, MacBook, Monitor, type Pose, type Screen, shownWidth } from "./devices";
 
 // 舞台：三台设备的版式和镜头按关键帧走。一个镜头 = 三台设备各自的位置 + 镜头看哪、推多近；
 // 关键帧之间逐项插值，所以版式之间是连贯的「变形」，设备自己滑到新位置，不是硬切。
@@ -65,7 +65,8 @@ export const World: React.FC<{ cam: Cam; children: React.ReactNode }> = ({ cam, 
 
 /**
  * 三台设备 + 各自的录像。offset/length 是场景在成片里的起止（帧）；shot 由场景按关键帧算好传进来。
- * overlays 叠在各自屏幕上：Mac 两块用百分比坐标，手机用远程画面的点坐标。
+ * overlays 叠在各自屏幕上：Mac 两块用百分比坐标，手机用远程画面的点坐标；hand 是手机上的手指层（不被屏幕边裁掉）。
+ * 每块屏按它此刻在画面上的宽度挑清晰度档位。
  */
 export const Devices: React.FC<{
   shot: Required<Shot>;
@@ -74,25 +75,28 @@ export const Devices: React.FC<{
   monOverlay?: React.ReactNode;
   macOverlay?: React.ReactNode;
   phoneOverlay?: React.ReactNode;
+  phoneHand?: React.ReactNode;
   /** 换成定格画面（落版用） */
-  still?: (screen: "external" | "builtin" | "phone") => React.ReactNode;
-}> = ({ shot, offset, length, monOverlay, macOverlay, phoneOverlay, still }) => {
-  const feed = (screen: "external" | "builtin" | "phone") => (still ? still(screen) : <Footage screen={screen} offset={offset} length={length} />);
+  still?: (screen: Screen, shown: number) => React.ReactNode;
+}> = ({ shot, offset, length, monOverlay, macOverlay, phoneOverlay, phoneHand, still }) => {
+  const z = shot.cam.z;
+  const feed = (screen: Screen, shown: number) =>
+    still ? still(screen, shown) : <Footage screen={screen} offset={offset} length={length} shown={shown} />;
   return (
     <>
       {shot.mon.op !== 0 ? (
         <Monitor pose={shot.mon} overlay={monOverlay}>
-          {feed("external")}
+          {feed("external", shownWidth("mon", shot.mon, z))}
         </Monitor>
       ) : null}
       {shot.mac.op !== 0 ? (
         <MacBook pose={shot.mac} overlay={macOverlay}>
-          {feed("builtin")}
+          {feed("builtin", shownWidth("mac", shot.mac, z))}
         </MacBook>
       ) : null}
       {shot.phone.op !== 0 ? (
-        <IPhone pose={shot.phone} overlay={phoneOverlay}>
-          {feed("phone")}
+        <IPhone pose={shot.phone} overlay={phoneOverlay} hand={phoneHand}>
+          {feed("phone", shownWidth("phone", shot.phone, z))}
         </IPhone>
       ) : null}
     </>

@@ -1,52 +1,55 @@
 import { Audio } from "@remotion/media";
-import { AbsoluteFill, interpolate, Sequence, staticFile } from "remotion";
+import { AbsoluteFill, interpolate, Sequence, staticFile, useCurrentFrame } from "remotion";
 import { clamp } from "../../engine/motion";
 import { assets } from "./assets.gen";
-import { RecBadge, Wipe } from "./components/wipe";
+import { Whip } from "./components/transition";
+import { Hud } from "./components/type";
 import { Apps, APPS_FROM, APPS_LEN } from "./scenes/Apps";
 import { Create, CREATE_FROM, CREATE_LEN } from "./scenes/Create";
 import { Intro, INTRO_FROM, INTRO_LEN } from "./scenes/Intro";
 import { Model, MODEL_FROM, MODEL_LEN } from "./scenes/Model";
 import { Outro, OUTRO_FROM, OUTRO_LEN } from "./scenes/Outro";
 import { Swap, SWAP_FROM, SWAP_LEN } from "./scenes/Swap";
-import { ACTS, sec, SPLICE_AT, SPLICE_SHIFT } from "./theme";
+import { ACTS, MUSIC_FROM, PAL, sec } from "./theme";
 
-// 成片时间线：只排场景、转场和配乐。开场到第一幕是镜头连着推过去的，其余每次换幕盖一下深色转场（落在小节头上）。
+// 成片时间线：只排场景、转场、录制角标和配乐。不分章：开场到第一个动作、机型到落版是镜头连着推过去的，
+// 中间三次换段各盖一下不带字的深色快切。配乐一刀不剪，从歌的饱满段起一直放到片尾的小节头，最后 2.7 秒随画面淡出。
 
 export const VIDEO_FRAMES = sec(ACTS.end);
 
 const SCENES = [
-  { name: "开场", Scene: Intro, from: INTRO_FROM, len: INTRO_LEN },
-  { name: "第一幕 新建窗口", Scene: Create, from: CREATE_FROM, len: CREATE_LEN },
-  { name: "第二幕 两屏联动", Scene: Swap, from: SWAP_FROM, len: SWAP_LEN },
-  { name: "第三幕 搜索直开", Scene: Apps, from: APPS_FROM, len: APPS_LEN },
-  { name: "第四幕 机型自选", Scene: Model, from: MODEL_FROM, len: MODEL_LEN },
+  { name: "点题", Scene: Intro, from: INTRO_FROM, len: INTRO_LEN },
+  { name: "新建窗口 · Claude", Scene: Create, from: CREATE_FROM, len: CREATE_LEN },
+  { name: "两屏联动 · 还原", Scene: Swap, from: SWAP_FROM, len: SWAP_LEN },
+  { name: "搜索 · ChatGPT · 退出", Scene: Apps, from: APPS_FROM, len: APPS_LEN },
+  { name: "机型", Scene: Model, from: MODEL_FROM, len: MODEL_LEN },
   { name: "落版", Scene: Outro, from: OUTRO_FROM, len: OUTRO_LEN },
 ] as const;
 
-const SPLICE = sec(SPLICE_AT);
 const VOLUME = 0.6;
-/** 起头 0.2 秒淡入，最后 1.6 秒跟着画面淡出 */
-const musicVolume = (f: number) => VOLUME * interpolate(f, [0, 12, VIDEO_FRAMES - 96, VIDEO_FRAMES], [0, 1, 1, 0], clamp);
+const FADE = sec(2.7);
+/** 起头 6 帧淡入（从歌中间的一拍起，免得咔一声），最后 2.7 秒淡出 */
+const musicVolume = (f: number) => VOLUME * interpolate(f, [0, 6, VIDEO_FRAMES - FADE, VIDEO_FRAMES], [0, 1, 1, 0], clamp);
+
+/** 片尾整幅画面淡进落版的底色 */
+const FadeOut: React.FC = () => {
+  const frame = useCurrentFrame();
+  const o = interpolate(frame, [VIDEO_FRAMES - FADE, VIDEO_FRAMES - 6], [0, 1], clamp);
+  return o > 0 ? <AbsoluteFill style={{ background: PAL.outro.mid, opacity: o }} /> : null;
+};
 
 export const Video: React.FC = () => (
-  <AbsoluteFill style={{ background: "#ffffff" }}>
+  <AbsoluteFill style={{ background: PAL.hook.mid }}>
     {SCENES.map(({ name, Scene, from, len }) => (
       <Sequence key={name} name={name} from={from} durationInFrames={len} premountFor={60}>
         <Scene />
       </Sequence>
     ))}
-    <RecBadge from={CREATE_FROM} to={OUTRO_FROM} />
-    <Wipe at={SWAP_FROM} kind="sweep" title="两屏联动" en="02 / 04" />
-    <Wipe at={APPS_FROM} kind="iris" title="搜索直开" en="03 / 04" />
-    <Wipe at={MODEL_FROM} kind="shutter" title="机型自选" en="04 / 04" />
-    <Wipe at={OUTRO_FROM} kind="slide" title="Snug" en="OPEN SOURCE" />
-    {/* 配乐：歌的第 12–21 小节拿掉，接点在第 12 小节头（见 theme.ts） */}
-    <Sequence name="配乐 前段" durationInFrames={SPLICE}>
-      <Audio src={staticFile(assets.music)} volume={musicVolume} />
-    </Sequence>
-    <Sequence name="配乐 后段" from={SPLICE} durationInFrames={VIDEO_FRAMES - SPLICE}>
-      <Audio src={staticFile(assets.music)} trimBefore={sec(SPLICE_AT + SPLICE_SHIFT)} volume={(f) => musicVolume(f + SPLICE)} />
-    </Sequence>
+    <Hud from={150} to={OUTRO_FROM} />
+    <Whip at={SWAP_FROM} />
+    <Whip at={APPS_FROM} dir={-1} />
+    <Whip at={MODEL_FROM} />
+    <FadeOut />
+    <Audio src={staticFile(assets.music)} trimBefore={sec(MUSIC_FROM)} volume={musicVolume} />
   </AbsoluteFill>
 );

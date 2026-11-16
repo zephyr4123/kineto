@@ -1,51 +1,53 @@
-import { clamp, outExpo } from "../../../engine/motion";
-import { interpolate } from "remotion";
+import { outExpo } from "../../../engine/motion";
 import { phonePt, screenPoint } from "../components/devices";
-import { cam, MON_HERO, PHONE_MAX, TOP_ROW, tilt, withCam } from "../components/layouts";
-import { Caption, Flight, Frame, Ripple, ScrollHint, Tag } from "../components/overlays";
+import { cam, MON_HERO, PHONE_MAX, READ, TOP_ROW, tilt, withCam } from "../components/layouts";
+import { Flight, Spotlight } from "../components/marks";
 import { Scene } from "../components/scene";
-import { type ShotKey } from "../components/stage";
-import { at, EVENTS, TAPS } from "../edl";
+import type { ShotKey } from "../components/stage";
+import { Echo, Headline, Label } from "../components/type";
+import { at, EVENTS, WINDOWS } from "../edl";
+import { TOUCH_TAPS } from "../touch";
 import { ACTS, PAL, sec } from "../theme";
 
-// 第一幕：在 Ghostty 卡片上点「新建窗口」→ 外接屏上新窗口全屏出生、退出全屏缩小、滑走 → 手机上铺满、字号 +2 →
-// 启动 Claude Code、发出「总结一下今天的提交」→ 回复出来，单指往下翻。
-// 字幕先在顶上的字幕带里出现两秒多，退场后镜头再推近，字和画面不抢。
+// 在 Ghostty 卡片上点「新建窗口」→ 外接屏上新窗口全屏出生、退出全屏缩小、滑走 → 手机上铺满、字号 +2 →
+// 启动 Claude Code、发出「总结一下今天的提交」→ 回复出来，单指往回翻、再往下读（这段落在歌里安静的第二轮主歌上）。
 
 export const CREATE_FROM = sec(ACTS.create);
 export const CREATE_LEN = sec(ACTS.swap) - CREATE_FROM;
 const END = CREATE_FROM + CREATE_LEN;
 
-const tapNew = at(TAPS.newWindow.t);
+const NEW = TOUCH_TAPS.find((t) => t.name === "newWindow")!;
+const tapNew = at(NEW.t);
 const extIn = at(EVENTS.extWindowIn);
 const settled = at(EVENTS.extWindowSettled);
 const extOut = at(EVENTS.extWindowOut);
 const filled = at(EVENTS.phoneFilled);
 const fontUp = at(EVENTS.fontUp);
 const claude = at(16.5);
-const reply = at(36.5);
-const scrollFrom = at(EVENTS.scrollFrom);
-const scrollTo = at(EVENTS.scrollTo);
+const prompt = at(25.5);
+const reading = at(32);
 
-// 外接屏上那扇新窗口退出全屏后停在左下角：Snug 日志记的原位是 800×632 点，外接屏 1920×1080 点，
-// 换算成 41.7% 宽、58.5% 高，录像里窗口顶边在 40.8% 处。镜头推过去看它缩小、滑走
-const MON_ZOOM = withCam(MON_HERO, cam(380, 700, 1.32));
+// 外接屏上那扇新窗口的中心（屏幕上的比例）：镜头推过去看它缩小、滑走
+const WIN = { u: (WINDOWS.ghostty.l + WINDOWS.ghostty.w / 2) / 100, v: (WINDOWS.ghostty.t + WINDOWS.ghostty.h / 2) / 100 };
 
 const KEYS: readonly ShotKey[] = [
   [CREATE_FROM, TOP_ROW],
-  [tapNew + 40, TOP_ROW],
-  [extIn - 6, MON_HERO],
-  [extIn + 40, MON_ZOOM, outExpo],
-  [extOut + 4, MON_ZOOM],
-  // 铺满以后两块 Mac 屏退场、手机放大，一直接到 Claude 开工；字幕退场后镜头慢慢推近、往下走
-  [filled + 14, PHONE_MAX],
-  [claude + 150, PHONE_MAX],
-  [reply - 1, withCam(PHONE_MAX, cam(540, 1260, 1.18))],
-  // 读回复：手机侧过来一点；字幕退场后推近到正文
-  [reply, withCam(tilt(PHONE_MAX, -12, 4), cam(560, 960, 1.0))],
-  [reply + 150, withCam(tilt(PHONE_MAX, -10, 4), cam(560, 980, 1.02))],
-  [END - 40, withCam(tilt(PHONE_MAX, -3, 2), cam(540, 1100, 1.3))],
-  [END, withCam(tilt(PHONE_MAX, 0, 0), cam(540, 1060, 0.92))],
+  [tapNew - 70, TOP_ROW],
+  // 点之前镜头往手机上半截靠一点
+  [tapNew - 6, withCam(TOP_ROW, cam(600, 1090, 1.18))],
+  [tapNew + 44, withCam(TOP_ROW, cam(600, 1090, 1.18))],
+  [extIn - 2, MON_HERO],
+  [extIn + 34, withCam(MON_HERO, cam(400, 740, 1.3)), outExpo],
+  [extOut - 8, withCam(MON_HERO, cam(400, 740, 1.3))],
+  // 拉回来看窗口飞上手机、铺满
+  [extOut + 26, MON_HERO],
+  [filled + 40, PHONE_MAX],
+  [claude + 120, PHONE_MAX],
+  [reading - 2, withCam(PHONE_MAX, cam(540, 1140, 1.14))],
+  // 读回复：手机让到右边、侧过来，左边竖排一行字；之后慢慢推近正文
+  [reading + 52, READ],
+  [END - 60, withCam(tilt(READ, -4, 2), cam(610, 1060, 1.14))],
+  [END, withCam(tilt(READ, 0, 0), cam(600, 1010, 1.04))],
 ];
 
 export const Create: React.FC = () => (
@@ -53,38 +55,53 @@ export const Create: React.FC = () => (
     offset={CREATE_FROM}
     length={CREATE_LEN}
     bg={[
-      [CREATE_FROM, PAL.create, "NEW WINDOW"],
-      [claude, PAL.claude, "CLAUDE"],
-      [reply, PAL.scroll, "SCROLL"],
+      [CREATE_FROM, PAL.create],
+      [claude, PAL.claude],
+      [reading + 30, PAL.read],
     ]}
     keys={KEYS}
-    phone={({ g }) => {
-      const t = phonePt(TAPS.newWindow.x, TAPS.newWindow.y);
-      return <Ripple frame={g} at={tapNew} x={t.x} y={t.y} />;
-    }}
-    mon={({ g }) => <Frame frame={g} at={settled} out={extOut + 4} l={0} t={40.8} w={41.7} h={58.5} radius={1} />}
-    world={({ g, shot }) => {
-      const from = screenPoint("mon", shot.mon, 0.21, 0.7);
-      const to = screenPoint("phone", shot.phone, 0.5, 0.45);
-      const top = screenPoint("phone", shot.phone, 0.74, 0);
-      return (
-        <>
-          <Flight frame={g} at={extOut - 2} dur={filled - extOut + 4} from={from} to={to} icon="ghostty" />
-          <Tag frame={g} at={fontUp} out={claude - 4} x={top.x} y={top.y - 170} text="字号 +2" size={36} />
-        </>
-      );
-    }}
+    mon={({ g }) => <Spotlight frame={g} at={settled - 4} out={extOut + 6} {...WINDOWS.ghostty} />}
+    world={({ g, shot }) => (
+      <Flight
+        frame={g}
+        at={extOut - 2}
+        dur={filled - extOut + 4}
+        from={screenPoint("mon", shot.mon, WIN.u, WIN.v)}
+        to={screenPoint("phone", shot.phone, 0.5, 0.45)}
+        icon="ghostty"
+      />
+    )}
     over={({ g, shot, screen }) => {
-      const side = screen(screenPoint("phone", shot.phone, 1, 0.55));
-      const hint = interpolate(g, [scrollFrom, scrollTo], [0, 1], clamp);
+      const tap = phonePt(NEW.x, NEW.y);
+      const tapAt = screen(screenPoint("phone", shot.phone, tap.x / 440, tap.y / 774));
+      const text = screen(screenPoint("phone", shot.phone, 0.32, 0.1));
       return (
         <>
-          <Caption frame={g} at={CREATE_FROM + 16} out={extIn - 8} zh="新建窗口" en="TAP · NEW WINDOW" x={540} y={190} align="center" size={88} />
-          <Caption frame={g} at={extIn + 4} out={filled - 6} zh="大屏出生 · 飞上手机" en="BORN ON 4K" x={64} y={1250} size={84} stack />
-          <Caption frame={g} at={filled} out={claude - 4} zh="竖屏铺满 · 字号放大" en="FULL SCREEN · BIGGER TEXT" x={540} y={190} align="center" size={72} />
-          <Caption frame={g} at={claude + 6} out={claude + 150} zh="Claude Code · 竖屏开工" en="AGENT IN PORTRAIT" x={540} y={190} align="center" size={72} />
-          <Caption frame={g} at={reply + 6} out={reply + 160} zh="单指滑动 · 原生手感" en="ONE-FINGER SCROLL" x={540} y={190} align="center" size={78} />
-          {hint > 0 && hint < 1 ? <ScrollHint frame={g} at={scrollFrom} out={scrollTo} x={Math.min(side.x + 60, 1030)} y={side.y + 120} /> : null}
+          <Label frame={g} at={tapNew + 2} out={tapNew + 56} anchor={tapAt} to={{ x: tapAt.x + 70, y: tapAt.y - 440 }} title="新建窗口" sub="按菜单项「New Window」" />
+          <Headline
+            frame={g}
+            at={extIn + 6}
+            out={filled + 34}
+            lines={["生于大屏", "归于掌心"]}
+            x={80}
+            y={1300}
+            size={104}
+            logs={[{ at: extIn + 24, text: "新建后 1.3s 出现，放上手机屏" }]}
+          />
+          <Label frame={g} at={fontUp + 2} out={claude - 6} anchor={text} to={{ x: text.x + 90, y: 330 }} title="字号自动放大" sub="字号比原来 +2 级" />
+          <Headline frame={g} at={claude + 10} out={prompt - 8} lines={["竖屏终端，照常开工"]} x={540} y={200} align="center" size={78} logs={[{ at: claude + 30, text: "$ claude-max" }]} />
+          <Echo frame={g} from={prompt + 2} to={prompt + 8} out={prompt + 150} text="总结一下今天的提交" x={540} y={230} size={80} note="手机键盘输入" />
+          <Headline
+            frame={g}
+            at={reading + 40}
+            out={reading + 300}
+            lines={["单指翻阅", "一如原生"]}
+            x={250}
+            y={500}
+            size={84}
+            vertical
+            logs={[{ at: reading + 76, text: "手势翻译已开启" }]}
+          />
         </>
       );
     }}

@@ -2,88 +2,92 @@ import { Img, interpolate, staticFile } from "remotion";
 import { clamp, outExpo, prog } from "../../../engine/motion";
 import { assets } from "../assets.gen";
 import { DESK, DESK_OUT, TOP_ROW } from "../components/layouts";
-import { Tag } from "../components/overlays";
 import { Scene } from "../components/scene";
 import { glide, type ShotKey } from "../components/stage";
-import { ACTS, C, PAL, SF, ZH, bar, sec } from "../theme";
+import { LogLine } from "../components/type";
+import { at } from "../edl";
+import { ACTS, C, DISPLAY, PAL, SERIF, SLOGAN, sec, TAGLINE } from "../theme";
 
-// 开场：标题先出来，三台设备从三个方向错开飞进来，在第一个小节头（2.28 秒）落位成一张桌面；
-// 手机这时正好连上 UU，Snug 手机屏出现、资源库读出来。最后镜头一推，变成第一幕「手机居中、Mac 屏在上」的版式。
+// 开场先说清这是什么：Snug 的图标和 slogan 在画面正中亮出来（配乐从饱满段的第一拍起），
+// 然后 slogan 退到顶上，三台设备从三个方向错开飞进来落成一张桌面 —— 这时手机正好连上 UU，Snug 的手机屏就绪、资源库读出来。
+// 最后镜头一推，交给第一个动作。
 
-export const INTRO_FROM = sec(ACTS.intro);
+export const INTRO_FROM = sec(ACTS.hook);
 export const INTRO_LEN = sec(ACTS.create) - INTRO_FROM;
 
-const LAND = sec(bar(0));
+const LAND = 150;
+const RISE = 84;
+const READY = at(2.89);
 const KEYS: readonly ShotKey[] = [
   [0, DESK_OUT],
   [LAND, DESK],
-  [INTRO_LEN - 50, DESK],
+  [INTRO_LEN - 44, DESK],
   [INTRO_LEN, TOP_ROW, glide],
 ];
+
+const WORDS = SLOGAN.split(" ");
 
 export const Intro: React.FC = () => (
   <Scene
     offset={INTRO_FROM}
     length={INTRO_LEN}
-    bg={[[0, PAL.intro, "SNUG"]]}
+    bg={[[0, PAL.hook]]}
     keys={KEYS}
     adjust={(s, g) => {
       if (g > LAND) return s;
-      // 三台设备错开入场：显示器先到，MacBook 次之，手机踩着小节头最后落下
+      // 三台设备错开入场：显示器先到，MacBook 次之，手机最后落下
       const k = (from: number) => prog(g, from, LAND - from, outExpo);
       const mix = (a: number, b: number, t: number) => a + (b - a) * t;
-      const km = k(56);
-      const kb = k(74);
-      const kp = k(92);
+      const km = k(RISE - 6);
+      const kb = k(RISE + 12);
+      const kp = k(RISE + 26);
       return {
         ...s,
-        mon: { ...DESK.mon, y: mix(DESK_OUT.mon.y, DESK.mon.y, km), rot: (1 - km) * -6 },
-        mac: { ...DESK.mac, x: mix(DESK_OUT.mac.x, DESK.mac.x, kb), rot: (1 - kb) * 8 },
-        phone: { ...DESK.phone, y: mix(DESK_OUT.phone.y, DESK.phone.y, kp), rot: (1 - kp) * 10 },
+        mon: { ...DESK.mon, y: mix(DESK_OUT.mon.y, DESK.mon.y, km), rot: (1 - km) * -5 },
+        mac: { ...DESK.mac, x: mix(DESK_OUT.mac.x, DESK.mac.x, kb), rot: (1 - kb) * 7 },
+        phone: { ...DESK.phone, y: mix(DESK_OUT.phone.y, DESK.phone.y, kp), rot: (1 - kp) * 9 },
       };
     }}
-    world={({ g, shot }) => {
-      const leave = interpolate(g, [INTRO_LEN - 50, INTRO_LEN - 20], [1, 0], clamp);
-      return (
-        <div style={{ opacity: leave }}>
-          <Tag frame={g} at={LAND + 8} out={INTRO_LEN} x={shot.mon.x} y={shot.mon.y + 448} text="外接显示器" size={30} />
-          <Tag frame={g} at={LAND + 16} out={INTRO_LEN} x={shot.mac.x} y={shot.mac.y + 250} text="MacBook" size={30} />
-          <Tag frame={g} at={LAND + 24} out={INTRO_LEN} x={shot.phone.x} y={shot.phone.y + 395} text="iPhone · UU远程" size={30} />
-        </div>
-      );
-    }}
     over={({ g }) => {
-      // 标题：先在中间亮相，设备进场时缩到顶上
-      const up = prog(g, 50, 60, outExpo);
-      const leave = interpolate(g, [INTRO_LEN - 46, INTRO_LEN - 16], [1, 0], clamp);
-      const icon = prog(g, 4, 26, outExpo);
+      // slogan：先在正中，设备进场时缩到顶上；镜头推走前退场
+      const up = prog(g, RISE, 64, outExpo);
+      const leave = interpolate(g, [INTRO_LEN - 40, INTRO_LEN - 12], [1, 0], clamp);
+      const icon = prog(g, 0, 26, outExpo);
+      const zh = prog(g, 30, 24, outExpo);
       return (
-        <>
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              top: interpolate(up, [0, 1], [560, 70]),
-              textAlign: "center",
-              transform: `scale(${interpolate(up, [0, 1], [1, 0.52])})`,
-              transformOrigin: "50% 0",
-              opacity: leave,
-            }}
-          >
-            <Img
-              src={staticFile(assets.snugIcon)}
-              style={{ width: 150, height: 150, borderRadius: 34, boxShadow: "0 18px 40px rgba(31,99,255,0.25)", transform: `scale(${0.5 + 0.5 * icon}) rotate(${(1 - icon) * -20}deg)`, opacity: icon }}
-            />
-            <div style={{ marginTop: 26, fontFamily: SF, fontSize: 30, fontWeight: 700, letterSpacing: "0.3em", color: C.ink2, opacity: prog(g, 10, 20) }}>SNUG · LIVE RECORDING</div>
-            <div style={{ marginTop: 10, fontFamily: ZH, fontSize: 168, fontWeight: 900, letterSpacing: "0.04em", color: C.ink, opacity: prog(g, 14, 20), transform: `translateY(${(1 - prog(g, 14, 30)) * 40}px)` }}>
-              三屏实录
-            </div>
-            <div style={{ marginTop: 6, fontFamily: ZH, fontSize: 60, fontWeight: 700, letterSpacing: "0.08em", color: C.ink2, opacity: prog(g, 24, 20) }}>
-              一部手机 <span style={{ color: C.blue }}>·</span> 两块屏幕
-            </div>
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: interpolate(up, [0, 1], [560, 118]),
+            textAlign: "center",
+            transform: `scale(${interpolate(up, [0, 1], [1, 0.66])})`,
+            transformOrigin: "50% 0",
+            opacity: leave,
+          }}
+        >
+          <Img
+            src={staticFile(assets.snugIcon)}
+            style={{ width: 132, height: 132, borderRadius: 30, boxShadow: "0 18px 40px rgba(31,99,255,0.22)", transform: `translateY(${(1 - icon) * 24}px) scale(${0.85 + 0.15 * icon})`, opacity: icon }}
+          />
+          <div style={{ marginTop: 34, fontFamily: DISPLAY, fontWeight: 800, fontSize: 104, lineHeight: 1.02, letterSpacing: "-0.035em", color: C.ink, padding: "0 60px" }}>
+            {WORDS.map((w, i) => {
+              const k = prog(g, 6 + i * 4, 26, outExpo);
+              return (
+                <span key={w} style={{ display: "inline-block", overflow: "hidden", verticalAlign: "top", paddingBottom: 8, marginRight: i < WORDS.length - 1 ? "0.24em" : 0 }}>
+                  <span style={{ display: "inline-block", transform: `translateY(${(1 - k) * 105}%)`, color: w === "Native" ? C.blue : C.ink }}>{w}</span>
+                </span>
+              );
+            })}
           </div>
-        </>
+          <div style={{ marginTop: 26, fontFamily: SERIF, fontWeight: 700, fontSize: 54, letterSpacing: "0.06em", color: C.ink2, opacity: zh, transform: `translateY(${(1 - zh) * 16}px)`, filter: `blur(${(1 - zh) * 6}px)` }}>
+            {TAGLINE}
+          </div>
+          <div style={{ marginTop: 26, display: "flex", justifyContent: "center", height: 40 }}>
+            <LogLine frame={g} at={Math.max(READY, LAND)} out={INTRO_LEN} text="手机屏 #164 已就绪（540 宽）" size={34} />
+          </div>
+        </div>
       );
     }}
   />

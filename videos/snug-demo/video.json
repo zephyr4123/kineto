@@ -5,9 +5,8 @@
   "status": "draft",
   "tags": [],
   "createdAt": "2026-11-16T09:40:17.668Z",
-  "updatedAt": "2026-11-16T10:08:39.878Z",
+  "updatedAt": "2026-11-16T11:43:02.251Z",
   "assets": {
-    "phone": "sha256:c8f74d527cbe5c6a6fd56278b6431186b59fee514969a05a63d17042888cb3cb",
     "external": "sha256:d1d9e6628485deccb47d4ba1554f298c4d3fd7396b0c2dbbbe7228c520ccdcd9",
     "builtin": "sha256:9b72a29d1dbd146e6b5cb0e1f5a6779d7ced40bcb65b690f3ae540ef83f1ad23",
     "music": "sha256:a908d4451f4b33bef50c080fc5766b8b0753cd1ffb34a7deff72a7f1c618d6f8",
@@ -15,6 +14,16 @@
     "iconGhostty": "sha256:bacb9ca9b3b3a1e9b0f07e5156ad2f87fff2261ea5e5c6d859fb902ba9cc1f53",
     "iconSafari": "sha256:3eb0bb4a5e8e9f4b2a5ed2f826c138de3a658d987b0c47c918de80bfd446ae0e",
     "iconChatgpt": "sha256:d2e1f178d2101956c7cca717bc9dba6b17cfb312a4fa646be1be7bda6d8ea42d",
-    "iconClaude": "sha256:bc2f427a385cd3bc213d84dc7f25ca0fd598e27a56ac208d6e569c670388fb81"
+    "iconClaude": "sha256:bc2f427a385cd3bc213d84dc7f25ca0fd598e27a56ac208d6e569c670388fb81",
+    "external1920": "sha256:744470b4587f3d3407e1ece28f2fe378adeb3b3b4a0f358528e7a074f1906261",
+    "external960": "sha256:94d94f4f8fc24bd46ee53d37b257fdc3714082b3b03f9265147d6d7190e6f3c4",
+    "external480": "sha256:41151763c59d4db33254d7779ec5977eedf7ccb459d9c9108ed654a2301488d4",
+    "builtin1512": "sha256:6eb0826281819bb438d19198a983e58cc0ba63a56d4f699482faa22e40a956e8",
+    "builtin756": "sha256:8687744506689caf7b3e44b568938b6c8a9641d6ba2e2d122dcdeb3532c867cc",
+    "fontSerif": "sha256:050080d9255a86808f2945bffac582b31ef32bc36411ce29563b4961670c66f9",
+    "fontMono": "sha256:48715a42ec242c21e9f02692891e147d022299a52e48d5e413e1a942193ffeda",
+    "fontDisplay": "sha256:413e7357809ddd12fd80a96a8a396de0e401638d4acd3cb3e37532f0472ac682",
+    "phoneScreen": "sha256:c91d407f6a0e62fcc96c055e30b035a38dc5a7e1ae7381960d1947a81f209dbb",
+    "phoneScreen540": "sha256:159c97eedb3ab3bbbd84fe01cc061498c68dd5f9b3be6f1e5722e22b49bdd7f6"
   }
 }

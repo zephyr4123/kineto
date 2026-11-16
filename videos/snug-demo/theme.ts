@@ -1,71 +1,82 @@
-// Snug 三屏实录演示：竖屏 1080×1920、60 帧，约 91.6 秒。
+import { loadFont } from "@remotion/fonts";
+import { staticFile } from "remotion";
+import { assets } from "./assets.gen";
+
+// Snug 三屏实录演示：竖屏 1080×1920、60 帧，98.2 秒。
 // 画面是主人 11-15 用 OBS 同一时间线录下的三块屏原画（MacBook 内建屏、外接 4K 屏、Snug 手机屏），
-// 只剪、加速、推近、加字幕和标注，不改画面里发生的事。手机屏装进 snug-promo 那台 iPhone 17 Pro Max（engine/snug/phone），
-// 两块 Mac 屏装进代码画的 MacBook 和显示器。
-// 结构：开场（三台设备落位）→ 第一幕 新建窗口 · Claude 开工 · 单指滑读 → 第二幕 两屏联动 · 网页铺满 · 一键还原 →
-// 第三幕 搜索直开 · 键盘对话 · 连点退出 → 第四幕 机型自选 → 落版。幕与幕之间用一下深色转场，其余时间底色都是浅色。
+// 只剪、加速、推近、加字幕和标注，不改画面里发生的事。
+// 结构不分章：先用 slogan 点题（Snug 是什么），三台设备落位，然后顺着真实使用的过程一路走完 ——
+// 新建窗口、Claude 开工、单指翻看、两屏联动、网页铺满、一键还原、搜索直开、键盘对话、连点退出、机型自选 —— 最后在 GitHub 上点亮 Star。
 
 export const W = 1080;
 export const H = 1920;
 export const FPS = 60;
 
-export const SF = `system-ui, "PingFang SC", sans-serif`;
-export const ZH = `"PingFang SC", system-ui, sans-serif`;
+// 字：中文标题用思源宋体（粗），英文 slogan 用 Bricolage Grotesque，日志行和角标用 JetBrains Mono，界面小字落到苹方
+export const SERIF = `"Noto Serif SC", "Songti SC", serif`;
+export const DISPLAY = `"Bricolage Grotesque", system-ui, sans-serif`;
+export const MONO = `"JetBrains Mono", "PingFang SC", monospace`;
+export const SANS = `"PingFang SC", system-ui, sans-serif`;
+await Promise.all([
+  loadFont({ family: "Noto Serif SC", url: staticFile(assets.fontSerif), weight: "200 900" }),
+  loadFont({ family: "Bricolage Grotesque", url: staticFile(assets.fontDisplay), weight: "200 800" }),
+  loadFont({ family: "JetBrains Mono", url: staticFile(assets.fontMono), weight: "100 800" }),
+]);
 
-// 配乐：ADTurnUp《purple sky》（SpeakMore 第一支宣传片那首），约 65.9 拍/分，一小节 3.6448 秒，
-// 第一个小节头在歌的 2.28 秒，之后每小节一下低音重拍。按小节量能量：2.28–31.4 秒较轻（8 小节）→ 31.4–60.6 秒饱满 →
-// 60.6–71.5 秒回落 → 71.5–115.3 秒饱满 → 115.3 秒起一小节收尾 → 118.9 秒起没有低音的柔和尾声。
-// 拿掉歌的第 12–21 小节（46.02–78.82 秒，9 小节）：接点前后的两小节频谱相关 0.993，饱满段连成一整块，尾声留给落版。
-// 片子第 t 秒放歌的第 t 秒（t < 46.02），之后放第 t + 32.80 秒；片子的小节网格和歌的一致：第 k 小节头在 2.28 + 3.6448k 秒。
-export const BAR = 3.6448;
-export const BEAT = BAR / 4;
-const DOWNBEAT0 = 2.28;
+// 配乐：ADTurnUp《purple sky》（SpeakMore 第一支宣传片那首），66 拍/分，一小节 3.6358 秒（按低音起音逐拍量，35 小节漂移不到 10 ms）。
+// 整首是两轮一样的结构，每轮 16 小节：8 小节轻的主歌 + 8 小节饱满段；第二轮主歌和第一轮相似度 0.99，第 19 小节起鼓回来。
+// 片子从第一轮饱满段的开头（歌的 31.373 秒，第 8 小节）起放，不剪歌，一直放到第 35 小节头（歌的 129.54 秒）——
+// 歌在 130.4 秒是硬停，所以片尾停在小节头上、最后 2.7 秒随画面淡出。
+// 片子第 k 小节 = 歌的第 k + 8 小节：0–8 饱满，8–11 第二轮主歌（安静），11 起鼓回来，16–23 饱满，23 收尾一小节，24 起没有低音的尾声。
+export const BAR = 3.6358;
+export const MUSIC_FROM = 31.3734;
 /** 片子第 k 小节头（可带小数）是第几秒 */
-export const bar = (k: number) => DOWNBEAT0 + k * BAR;
-export const SPLICE_AT = bar(12);
-export const SPLICE_SHIFT = 9 * BAR;
+export const bar = (k: number) => k * BAR;
 
 /** 秒 → 帧 */
 export const sec = (s: number) => Math.round(s * FPS);
 
-// 各幕的起点落在小节头上：第二幕正好是歌转饱满的那一下（第 8 小节），落版在收尾那一小节（第 22 小节）
+// 段落的起点：两屏联动那一下（Claude 飞回外接屏，素材 57.2 秒）正好踩在鼓回来的第 11 小节上；
+// 落版在收尾那一小节的中间进来，点亮 Star 落在尾声的第 25 小节
 export const ACTS = {
-  intro: 0,
-  create: bar(1),
-  swap: bar(8),
-  apps: bar(13),
-  model: bar(19),
-  outro: bar(22),
-  end: bar(24.5),
+  hook: 0,
+  create: bar(1.5),
+  swap: bar(11) - (57.2 - 53),
+  apps: bar(15),
+  model: bar(21),
+  outro: bar(23.5),
+  end: bar(27),
 } as const;
 
-// 配色：整片的底都是浅色，每段换一种淡彩；深色只在转场那半秒出现。
-// 字只用 ink / ink2 两种深色，压在最亮也最暗的底上都过 4.5:1。
+// 配色：浅色、低饱和，每段一种「影棚」底色（上浅下略深），深色只在转场那一下出现。
+// 字只用 ink / ink2，压在所有底上都过 4.5:1。
 export const C = {
-  ink: "#101828",
-  ink2: "#3b4660",
-  white: "#ffffff",
-  dark: "#0d1430",
-  dark2: "#1b2550",
+  ink: "#141821",
+  ink2: "#4a5367",
+  mute: "#7a8296",
   blue: "#2f6bff",
-  cyan: "#1fb6d9",
-  coral: "#ff6a4d",
-  tap: "#2f6bff",
+  red: "#ff453a",
+  dark: "#0c1122",
 } as const;
 
-/** 每一段的底：两种淡彩 + 一团光的颜色 */
-export type Palette = { a: string; b: string; glow: string; glow2: string };
+export type Palette = { top: string; mid: string; floor: string; glow: string; shape: string };
 export const PAL = {
-  intro: { a: "#eef4ff", b: "#ffffff", glow: "#bcd3ff", glow2: "#c9f1fb" },
-  create: { a: "#e9f8f1", b: "#f8fffb", glow: "#b9ecd6", glow2: "#d7f3c3" },
-  claude: { a: "#fff1e7", b: "#fffaf5", glow: "#ffd2b8", glow2: "#ffe6c2" },
-  scroll: { a: "#fff8dc", b: "#fffdf3", glow: "#ffe7a1", glow2: "#ffd8b6" },
-  swap: { a: "#f0ebff", b: "#fbf9ff", glow: "#d6c9ff", glow2: "#c7dcff" },
-  safari: { a: "#e7f3ff", b: "#f7fbff", glow: "#bfe0ff", glow2: "#c4f0f2" },
-  restore: { a: "#ffedf2", b: "#fff8fa", glow: "#ffc9d8", glow2: "#ffdccc" },
-  search: { a: "#e4f8f6", b: "#f6fffe", glow: "#b3ece6", glow2: "#cfe7ff" },
-  chat: { a: "#eef6ea", b: "#fbfef9", glow: "#cfe9c2", glow2: "#e8f3b8" },
-  quit: { a: "#fbf2e3", b: "#fffcf6", glow: "#f7dcb0", glow2: "#ffd1c4" },
-  model: { a: "#ecefff", b: "#fafbff", glow: "#c9d1ff", glow2: "#e0ccff" },
-  outro: { a: "#eaf2ff", b: "#ffffff", glow: "#b7d0ff", glow2: "#bdeefa" },
+  hook: { top: "#f3f6fb", mid: "#eef2f8", floor: "#e1e7f1", glow: "#ffffff", shape: "#c9dafc" },
+  create: { top: "#f2f7f3", mid: "#ecf3ee", floor: "#dde8e0", glow: "#ffffff", shape: "#c4e3cf" },
+  claude: { top: "#fbf5ef", mid: "#f7eee5", floor: "#ecdfd2", glow: "#fffaf5", shape: "#f3cdb2" },
+  read: { top: "#fbf8ee", mid: "#f6f1e1", floor: "#ebe3cc", glow: "#fffdf6", shape: "#efd99a" },
+  swap: { top: "#f5f3fb", mid: "#efecf8", floor: "#e1dcf0", glow: "#ffffff", shape: "#d3c8f5" },
+  safari: { top: "#f1f6fb", mid: "#eaf1f9", floor: "#dae5f1", glow: "#ffffff", shape: "#bcd7f3" },
+  restore: { top: "#fbf3f5", mid: "#f7ecef", floor: "#ecdde2", glow: "#ffffff", shape: "#f1c8d4" },
+  search: { top: "#f0f7f6", mid: "#e9f3f2", floor: "#d8e8e6", glow: "#ffffff", shape: "#b5e1da" },
+  chat: { top: "#f4f7f0", mid: "#eef3e8", floor: "#e0e8d6", glow: "#ffffff", shape: "#d0e6bd" },
+  quit: { top: "#fbf6ee", mid: "#f6efe3", floor: "#ebe1cf", glow: "#fffdf8", shape: "#f0d6ae" },
+  model: { top: "#f3f4fb", mid: "#eceef8", floor: "#dde0f0", glow: "#ffffff", shape: "#cad0f6" },
+  outro: { top: "#f3f6fb", mid: "#edf2f9", floor: "#dee6f2", glow: "#ffffff", shape: "#c3d6fb" },
 } satisfies Record<string, Palette>;
+
+export const SLOGAN = "Make UU Remote Native on iPhone";
+export const TAGLINE = "让 UU远程 在 iPhone 上更好用";
+export const REPO_URL = "github.com/zephyr4123/snug";
+/** 和 snug-promo 落版同一句致谢 */
+export const CREDIT = "承接自 aoyamashou/UUyc-companion · 谨向 UU远程 致谢";

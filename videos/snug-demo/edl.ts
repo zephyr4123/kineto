@@ -1,16 +1,16 @@
 import { ACTS, FPS } from "./theme";
 
 // 剪辑表：素材时间是粗剪 rough-v2（138.25 秒）里的秒数，三块屏同一条时间线，三个文件按同一张表放，天然对齐。
-// 每段给出素材起止和它在片子里占几秒；占的秒数比素材短就是加速。每一幕最后一段写 null，自动填满到下一幕的起点，
-// 这样幕的切换都落在小节头上。Mac 屏有变化的段（窗口飞走、飞回）一律原速。
+// 每段给出素材起止和它在片子里占几秒；占的秒数比素材短就是加速。每段落最后一段写 null，自动填满到下一段落的起点，
+// 这样段落的切换都落在小节头上。Mac 屏有变化的段（窗口飞走、飞回）一律原速。
 
 type Part = readonly [srcFrom: number, srcTo: number, seconds: number | null];
 
 const PLAN: readonly { from: number; to: number; parts: readonly Part[] }[] = [
-  // 开场：手机连上 UU，Snug 手机屏出现、资源库读出来
-  { from: ACTS.intro, to: ACTS.create, parts: [[0.5, 7.5, null]] },
-  // 第一幕：在 Ghostty 卡片上点「新建窗口」（原速：外接屏上新窗口出现、缩小、飞走，手机上铺满、字号 +2）→
-  // 启动 Claude Code、发出「总结一下今天的提交」、跑 git log → 给出总结、单指往下翻
+  // 点题：手机连上 UU，Snug 手机屏出现、资源库读出来
+  { from: ACTS.hook, to: ACTS.create, parts: [[0.5, 7.5, null]] },
+  // 在 Ghostty 卡片上点「新建窗口」（原速：外接屏上新窗口出生、缩小、飞走，手机上铺满、字号 +2）→
+  // 启动 Claude Code、发出「总结一下今天的提交」、跑 git log → 回复出来、单指往回翻、再翻回来（落在安静的主歌上，放慢一点）
   {
     from: ACTS.create,
     to: ACTS.swap,
@@ -18,35 +18,37 @@ const PLAN: readonly { from: number; to: number; parts: readonly Part[] }[] = [
       [7.5, 16.5, 9],
       [16.5, 25.5, 3],
       [25.5, 32, 4],
-      [32, 36.5, 2],
+      [32, 36.5, 2.25],
       [36.5, 53, null],
     ],
   },
-  // 第二幕：指示条回资源库、点 Safari（原速：Claude 回外接屏全屏，Safari 离开内建屏铺满手机）→ 在手机上看网页 → 点「还原」
+  // 上滑指示条回资源库、点 Safari（原速：Claude 回外接屏全屏，Safari 离开内建屏铺满手机）→ 在手机上看网页 → 点「还原」
+  // （还原段放到 82.2 秒，Safari 回到原位后还能停 1.7 秒）
   {
     from: ACTS.swap,
     to: ACTS.apps,
     parts: [
       [53, 61.5, 8.5],
       [61.5, 78, null],
-      [78, 81.5, 3.5],
+      [78, 82.2, 4.2],
     ],
   },
-  // 第三幕：「全部」里翻一下、搜 chat、点开没在跑的 ChatGPT → 打字（粗剪里已是 4 倍速）、发出、看回复 → 连点两下退出
+  // 「全部」里翻一翻、搜 chat、点开没在跑的 ChatGPT → 打字（粗剪里已是 4 倍速）、发出、看回复 → 连点两下退出
   {
     from: ACTS.apps,
     to: ACTS.model,
     parts: [
-      [81.5, 86.9, 2],
+      [82.2, 86.9, 2],
       [86.9, 92.9, 4],
       [92.9, 98.25, 5.35],
       [98.25, 108, 3.9],
       [108, 111.5, 3.5],
-      [111.5, 116.75, null],
+      [111.5, 116, null],
     ],
   },
-  // 第四幕：打开型号列表、翻品牌、选回 iPhone 17 Pro Max（粗剪最后半秒是淡出，不用）
-  { from: ACTS.model, to: ACTS.outro, parts: [[116.75, 137.6, null]] },
+  // 右上角打开型号列表（116.77 秒点下，从 116 秒起放，免得这一下落在转场里）、从 Apple 一路翻到华为、点「完成」，
+  // 停在 137.2 秒（之后是资源库里的一下拖动和粗剪的淡出），落版从这一帧定格
+  { from: ACTS.model, to: ACTS.outro, parts: [[116, 137.2, null]] },
 ];
 
 export type Segment = {
@@ -78,9 +80,6 @@ const build = (): Segment[] => {
 
 export const SEGMENTS = build();
 
-/** 粗剪里本身加过速的段（打字 4 倍速）：倍速角标要乘上去，才是相对真实时间的快慢 */
-const ROUGH_FAST: readonly (readonly [number, number, number])[] = [[94.75, 98.25, 4]];
-
 /** 片子第 frame 帧放的是素材第几秒 */
 export const srcAt = (frame: number) => {
   const s = SEGMENTS.find((g) => frame >= g.from && frame < g.to) ?? SEGMENTS[SEGMENTS.length - 1];
@@ -96,36 +95,53 @@ export const at = (t: number) => {
   return SEGMENTS[SEGMENTS.length - 1].to;
 };
 
-/** 片子第 frame 帧相对真实时间快几倍 */
+/** 素材第 t 秒有没有放进片子（落在剪掉的地方就是 false） */
+export const inCut = (t: number) => SEGMENTS.some((s) => t >= s.src[0] && t <= s.src[1]);
+
+// 粗剪 rough-v2 的剪辑表（原始录像 2026-11-15 08:37:10 开录）：[原始起, 原始止, 倍速, 粗剪起]
+const ROUGH: readonly (readonly [number, number, number, number])[] = [
+  [4.5, 21, 1, 0],
+  [49.5, 58.5, 1, 16.5],
+  [63.5, 70, 1, 25.5],
+  [73.5, 78, 1, 32],
+  [85, 131, 1, 36.5],
+  [132.2, 136.6, 1, 82.5],
+  [139.6, 145.6, 1, 86.9],
+  [155.65, 157.5, 1, 92.9],
+  [157.5, 171.5, 4, 94.75],
+  [171.5, 190, 1, 98.25],
+  [193, 214.5, 1, 116.75],
+];
+const RECORD_START = 8 * 3600 + 37 * 60 + 10;
+
+const roughAt = (t: number) => {
+  let seg = ROUGH[0];
+  for (const r of ROUGH) if (t >= r[3]) seg = r;
+  return seg;
+};
+
+/** 片子第 frame 帧相对真实时间快几倍（粗剪本身的倍速也乘进去） */
 export const speedAt = (frame: number) => {
   const s = SEGMENTS.find((g) => frame >= g.from && frame < g.to);
   if (!s) return 1;
-  const t = srcAt(frame);
-  const rough = ROUGH_FAST.find(([a, b]) => t >= a && t < b);
-  return s.rate * (rough ? rough[2] : 1);
+  return s.rate * roughAt(srcAt(frame))[2];
 };
 
-// 关键时刻（粗剪里的秒）：点按的位置来自逐帧追踪手机屏里的鼠标指针（UU 每次点按先把指针移过去），
-// Mac 屏的变化来自逐帧画面差和 Snug 日志。手机屏坐标是 1080×1900 的录像像素。
-export const TAPS = {
-  newWindow: { t: 10.4, x: 821, y: 584 },
-  swipeHome: { t: 53.47, x: 711, y: 1856 },
-  safari: { t: 56.57, x: 539, y: 1368 },
-  // 78.7–80.0 秒手机屏换回 540 宽，指针被系统藏起来；80.1 秒指针重新出现在「还原」上，0.4 秒后 Safari 回到原位
-  restore: { t: 80.1, x: 923, y: 880 },
-  allApps: { t: 82.5, x: 699, y: 424 },
-  search: { t: 86.57, x: 543, y: 324 },
-  chatgpt: { t: 91.57, x: 539, y: 280 },
-  send: { t: 98.1, x: 981, y: 1734 },
-  quit: { t: 109.1, x: 975, y: 624 },
-  model: { t: 116.77, x: 1017, y: 78 },
-  done: { t: 133.73, x: 1023, y: 78 },
-} as const;
+/** 片子第 frame 帧对应录制时的墙上时间（秒，当天 0 点起），角标里的时钟用它 */
+export const clockAt = (frame: number) => {
+  const t = srcAt(frame);
+  const [rawFrom, , speed, roughFrom] = roughAt(t);
+  return RECORD_START + rawFrom + (t - roughFrom) * speed;
+};
 
+/** 落版定格在素材的这一秒（机型段的最后一帧） */
+export const FREEZE_AT = 137.2;
+
+// 关键时刻（粗剪里的秒）：Mac 屏的变化来自逐帧画面差和 Snug 日志；手指操作见 touch.ts
 export const EVENTS = {
   /** 外接屏：新建的全屏窗口出现、退出全屏缩小 */
   extWindowIn: 11.87,
-  /** 外接屏：新窗口缩小完、停在左半边 */
+  /** 外接屏：新窗口缩小完、停在左下角 */
   extWindowSettled: 12.45,
   /** 外接屏：缩小的窗口滑走（去了手机） */
   extWindowOut: 13.33,
@@ -133,9 +149,8 @@ export const EVENTS = {
   phoneFilled: 14.1,
   /** 手机：字号 +2 */
   fontUp: 14.8,
-  /** 手机：单指往下翻总结 */
-  scrollFrom: 39,
-  scrollTo: 47,
+  /** 手机：发出「总结一下今天的提交」 */
+  promptSent: 25.9,
   /** 外接屏：Claude 的窗口飞回来、恢复全屏 */
   extClaudeBack: 57.2,
   extClaudeFull: 58.53,
@@ -145,15 +160,20 @@ export const EVENTS = {
   phoneSafari: 60.8,
   /** 内建屏：Safari 回来 */
   macSafariBack: 80.48,
+  /** 手机：搜索框里打出 chat */
+  typeChat: 87.0,
+  typeChatDone: 88.6,
   /** 内建屏：ChatGPT 冷启动、窗口出现后被放上手机 */
   macChatgptLaunch: 91.23,
-  phoneChatgpt: 92.62,
+  /** 手机：打出「你好呀，你是谁」（粗剪里 4 倍速） */
+  typeHello: 94.9,
+  typeHelloDone: 98.0,
   /** 内建屏：ChatGPT 退出前回到正中、关掉 */
   macChatgptBack: 110.2,
   macChatgptGone: 110.67,
 } as const;
 
-// 窗口在内建屏上的原位（Snug 日志「原位 (x,y w×h)」，内建屏 1512×982 点），换算成屏幕的百分比，标注框照这个画
+// 窗口在内建屏上的原位（Snug 日志「原位 (x,y w×h)」，内建屏 1512×982 点），换算成屏幕的百分比，标注照这个画
 const BUILTIN_PT = { w: 1512, h: 982 };
 const pct = (x: number, y: number, w: number, h: number) => ({
   l: (x / BUILTIN_PT.w) * 100,
@@ -166,4 +186,6 @@ export const WINDOWS = {
   safari: pct(93, 55, 1200, 885),
   /** ChatGPT：原位 (486,33 540x886) */
   chatgpt: pct(486, 33, 540, 886),
+  /** 外接屏上新建的 Ghostty 窗口退出全屏后：800×632 点（外接屏 1920×1080 点），顶边在 40.8% 处 */
+  ghostty: { l: 0, t: 40.8, w: 41.7, h: 58.5 },
 } as const;
