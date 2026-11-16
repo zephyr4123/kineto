@@ -13,3 +13,4 @@
 - [Snug 宣传片定位](snug-promo-positioning.md) — UU远程 的 iPhone 插件，通篇只讲 iPhone 原生手感；四章：原生手势 / 流转自如 / 万窗皆宜 / 开箱即用；手势先演原版再演 Snug；不拉踩，不放生活场景、UU 功能介绍、AI 卖点
 - [投稿文案标题三要素](publish-copy-titles.md) — 标题和正文第一句要有项目名、开源、一句话主旨
 - [UU远程 界面事实](uu-remote-ui-facts.md) — 竖屏黑边、横屏右侧工具栏、键盘弹出整体上推、电脑键盘排布，及各自出处
+- [Snug 三屏实录演示](snug-demo-direction.md) — 实录不演绎、用户名先打码再上传；浅色底、深色只做转场，字幕短，镜头和交互要丰富
