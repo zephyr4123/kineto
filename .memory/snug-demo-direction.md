@@ -29,6 +29,13 @@ Snug 第二支片子 snug-demo（2026-11-16 开做）是**实录演示**，不�
 - 开头先讲这是什么，用 slogan「Make UU Remote Native on iPhone」引子，不要一上来就说三屏实录；不要总分结构，按过程走。
 - 收尾要有 GitHub 卡片点亮 Star 的交互（同 snug-promo）。
 
+**第二版之后主人的意见（11-16），第三版照此改：**
+- 文案不要「中二」短句（「生于大屏，归于掌心」），直白诚实地讲这是什么、有什么功能；手势那段就是「iPhone 原生手势」。
+- 不要看图说话：「轻点一下，两屏同动」没人看得懂，那段要讲的是窗口自动吸附、自适应 —— 在手机上点开，窗口自动过来；换下来 / 还原时，自动回到原位。
+- 标题下的灰色副标题只留有信息的，Snug 日志原文、「540 宽铺不满，换到 580 宽」这类碎碎念砍掉。
+- 开屏 slogan 不能所有词一样大，要有排版主次（现在：Make 小、UU Remote 中、Native 最大用品牌蓝、on iPhone 右对齐）。
+通用的文案规矩见 [[video-caption-copy]]。
+
 **Why:** 片子的说服力来自真实；主人此前对深色底、口水话字幕、PPT 式轮播都明确反感过（[[video-ui-fidelity]]）。
 
 **How to apply:** 改 snug-demo 时守住「不改画面里发生的事」，标注和手指的时刻、位置要能从录像或 Snug 日志里找到依据（日志原文在 snug 仓库 `footage/cuts/rough-v2.edl.json` 的 events）；新加的画面文字先过 [[video-caption-copy]]。

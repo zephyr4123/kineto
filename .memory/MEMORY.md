@@ -8,7 +8,7 @@
 - [GitHub 账号锁定](gh-account-lock.md) — 专用 gh 配置 + ship 自锁，不受别的会话切号影响；推送 403 先查这里
 - [代码画界面的宣传片](video-ui-fidelity.md) — 要有真实交互、终端排满整行、现代 iPhone、底色跟品牌走
 - [剪配乐顺着歌的段落](video-music-edit.md) — 每段放够再换段，不来回硬切；接点在小节头、前后小节频谱相近
-- [宣传片画面文字](video-caption-copy.md) — 凝练书面语（四字格），不平铺直叙；中文是主角要大、英文小标；对比度 ≥ 4.5:1；说明用箭头引出、拆成小块
+- [宣传片画面文字](video-caption-copy.md) — 直白讲功能、讲画面看不出的信息；不写中二对仗、不看图说话；无信息的副标题砍掉；中文是主角要大；对比度 ≥ 4.5:1
 - [多 feature 用总分结构](video-feature-structure.md) — 每章先一屏章节卡点题再演；四张卡底、版式、转场各不相同，免得像 PPT
 - [Snug 宣传片定位](snug-promo-positioning.md) — UU远程 的 iPhone 插件，通篇只讲 iPhone 原生手感；四章：原生手势 / 流转自如 / 万窗皆宜 / 开箱即用；手势先演原版再演 Snug；不拉踩，不放生活场景、UU 功能介绍、AI 卖点
 - [投稿文案标题三要素](publish-copy-titles.md) — 标题和正文第一句要有项目名、开源、一句话主旨
