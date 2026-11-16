@@ -149,8 +149,6 @@ export const EVENTS = {
   phoneFilled: 14.1,
   /** 手机：字号 +2 */
   fontUp: 14.8,
-  /** 手机：发出「总结一下今天的提交」 */
-  promptSent: 25.9,
   /** 外接屏：Claude 的窗口飞回来、恢复全屏 */
   extClaudeBack: 57.2,
   extClaudeFull: 58.53,
@@ -160,9 +158,6 @@ export const EVENTS = {
   phoneSafari: 60.8,
   /** 内建屏：Safari 回来 */
   macSafariBack: 80.48,
-  /** 手机：搜索框里打出 chat */
-  typeChat: 87.0,
-  typeChatDone: 88.6,
   /** 内建屏：ChatGPT 冷启动、窗口出现后被放上手机 */
   macChatgptLaunch: 91.23,
   /** 手机：打出「你好呀，你是谁」（粗剪里 4 倍速） */

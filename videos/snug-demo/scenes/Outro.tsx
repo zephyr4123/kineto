@@ -7,18 +7,19 @@ import { cam, MODEL, OUTRO, withCam } from "../components/layouts";
 import { Scene } from "../components/scene";
 import type { ShotKey } from "../components/stage";
 import { Contact, Finger, Ripple } from "../components/touch";
+import { SloganLockup } from "../components/type";
 import { FREEZE_AT } from "../edl";
-import { ACTS, bar, C, CREDIT, DISPLAY, MONO, PAL, REPO_URL, SERIF, SLOGAN, sec, TAGLINE } from "../theme";
+import { ACTS, bar, C, CREDIT, MONO, PAL, REPO_URL, SERIF, sec } from "../theme";
 
 // 落版：机型段最后一帧定格，手机从特写退下去，三台设备收成画面下方的一张小桌面；
-// 上面是 Snug 的图标和 slogan，GitHub 仓库卡片升上来，一根手指点亮 Star（落在尾声的第 25 小节）；最后是地址、许可和致谢，随音乐淡出。
+// 上面是 Snug 的图标和 slogan 字标（和开场同一套），GitHub 仓库卡片升上来，一根手指点亮 Star（落在尾声的第 25 小节）；最后是地址、许可和致谢，随音乐淡出。
 
 export const OUTRO_FROM = sec(ACTS.outro);
 export const OUTRO_LEN = sec(ACTS.end) - OUTRO_FROM;
 const END = OUTRO_FROM + OUTRO_LEN;
 const STAR = sec(bar(25));
 
-const CARD = { x: 90, y: 650 };
+const CARD = { x: 90, y: 690 };
 /** Star 按钮的中心（卡片里的位置） */
 const STAR_AT = { x: CARD.x + 100, y: CARD.y + 175 };
 
@@ -35,8 +36,6 @@ const KEYS: readonly ShotKey[] = [
   [END, withCam(OUTRO, cam(540, 930, 1.03))],
 ];
 
-// slogan 固定断成两行：「Make UU Remote」「Native on iPhone」
-const LINES = [SLOGAN.split(" ").slice(0, 3), SLOGAN.split(" ").slice(3)];
 
 export const Outro: React.FC = () => (
   <Scene
@@ -59,23 +58,12 @@ export const Outro: React.FC = () => (
       const burst = prog(g, STAR, 22, outExpo);
       return (
         <>
-          <div style={{ position: "absolute", left: 0, right: 0, top: 150, textAlign: "center" }}>
-            <Img
-              src={staticFile(assets.snugIcon)}
-              style={{ width: 132, height: 132, borderRadius: 30, boxShadow: "0 20px 46px rgba(31,99,255,0.26)", opacity: k(56), transform: `translateY(${(1 - k(56)) * 30}px) scale(${0.85 + 0.15 * k(56)})` }}
-            />
-            <div style={{ marginTop: 30, fontFamily: DISPLAY, fontWeight: 800, fontSize: 88, lineHeight: 1.04, letterSpacing: "-0.035em", color: C.ink }}>
-              {LINES.map((line, li) => (
-                <div key={li}>
-                  {line.map((w, i) => (
-                    <span key={w} style={{ display: "inline-block", overflow: "hidden", verticalAlign: "top", paddingBottom: 6, marginRight: i < line.length - 1 ? "0.24em" : 0 }}>
-                      <span style={{ display: "inline-block", transform: `translateY(${(1 - k(64 + (li * 3 + i) * 4)) * 105}%)`, color: w === "Native" ? C.blue : C.ink }}>{w}</span>
-                    </span>
-                  ))}
-                </div>
-              ))}
-            </div>
-            <div style={{ marginTop: 20, fontFamily: SERIF, fontWeight: 700, fontSize: 48, letterSpacing: "0.06em", color: C.ink2, opacity: k(96), filter: `blur(${(1 - k(96)) * 6}px)` }}>{TAGLINE}</div>
+          <Img
+            src={staticFile(assets.snugIcon)}
+            style={{ position: "absolute", left: 540 - 48, top: 116, width: 96, height: 96, borderRadius: 22, boxShadow: "0 16px 36px rgba(31,99,255,0.24)", opacity: k(56), transform: `translateY(${(1 - k(56)) * 24}px) scale(${0.85 + 0.15 * k(56)})` }}
+          />
+          <div style={{ position: "absolute", left: 0, right: 0, top: 244, display: "flex", justifyContent: "center", transform: "scale(0.66)", transformOrigin: "50% 0" }}>
+            <SloganLockup frame={g} at={OUTRO_FROM + 60} />
           </div>
           <div style={{ position: "absolute", left: CARD.x, top: CARD.y, opacity: card, transform: `translateY(${(1 - card) * 90}px)` }}>
             <RepoCard starred={g >= STAR} burst={burst} />
@@ -89,7 +77,7 @@ export const Outro: React.FC = () => (
               </div>
             </div>
           ) : null}
-          <div style={{ position: "absolute", left: 0, right: 0, top: 950, textAlign: "center" }}>
+          <div style={{ position: "absolute", left: 0, right: 0, top: 1000, textAlign: "center" }}>
             <div style={{ fontFamily: MONO, fontWeight: 600, fontSize: 38, color: C.ink, opacity: k(STAR - OUTRO_FROM + 36) }}>{REPO_URL}</div>
             <div style={{ marginTop: 14, fontFamily: SERIF, fontWeight: 600, fontSize: 32, letterSpacing: "0.06em", color: C.ink2, opacity: k(STAR - OUTRO_FROM + 50) }}>MIT 开源 · 免费下载 · macOS 14+</div>
             <div style={{ marginTop: 12, fontFamily: SERIF, fontWeight: 500, fontSize: 24, color: C.ink2, opacity: k(STAR - OUTRO_FROM + 64) }}>{CREDIT}</div>

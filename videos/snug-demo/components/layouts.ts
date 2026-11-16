@@ -44,7 +44,7 @@ export const PHONE_MAX: Shot = {
   phone: { x: 540, y: 1210, w: 660 },
 };
 
-/** 读回复：手机偏右、侧过来一点；左边 60–330 空着（竖排的字） */
+/** 读回复：手机偏右、侧过来一点；顶上 150–470 空着 */
 export const READ: Shot = {
   mon: hide({ x: 300, y: -500, w: 470 }),
   mac: hide({ x: 790, y: -500, w: 400 }),
@@ -86,11 +86,11 @@ export const QUIT: Shot = {
   phone: { x: 290, y: 860, w: 400 },
 };
 
-/** 机型列表：手机偏左、侧过来；右边 760–1040 空着（竖排的字） */
+/** 机型列表：手机居中偏下、侧过来；顶上 150–600 空着 */
 export const MODEL: Shot = {
   mon: hide({ x: 300, y: -500, w: 470 }),
   mac: hide({ x: 790, y: -500, w: 400 }),
-  phone: { x: 430, y: 1180, w: 600, ry: 12, rx: 2 },
+  phone: { x: 540, y: 1240, w: 580, ry: 12, rx: 2 },
 };
 
 /** 落版：桌面缩小放在下半，上半留给 slogan 和 GitHub 卡片 */

@@ -1,5 +1,5 @@
 import { outExpo } from "../../../engine/motion";
-import { phonePt, screenPoint } from "../components/devices";
+import { screenPoint } from "../components/devices";
 import { cam, DUAL, MAC_HERO, PHONE_CENTER, TOP_ROW, tilt, withCam } from "../components/layouts";
 import { Flight, Spotlight } from "../components/marks";
 import { Scene } from "../components/scene";
@@ -11,6 +11,7 @@ import { ACTS, PAL, sec } from "../theme";
 
 // 上滑指示条回资源库，点 Safari —— 一个动作，两块 Mac 屏一起变：Claude 的窗口飞回外接屏、恢复全屏（正好踩在鼓回来的第 11 小节上），
 // Safari 离开内建屏、铺满手机（Safari 限定了最小宽度，Snug 把手机屏换到 580 宽）→ 在手机上看网页 → 回资源库点「还原」，Safari 回到内建屏原位。
+// 字讲的是背后的功能：窗口自动吸附到手机、换下来的自动回原位（不用手动拖）；手机屏宽度随窗口自适应；还原回到原位。
 
 export const SWAP_FROM = sec(ACTS.swap);
 export const SWAP_LEN = sec(ACTS.apps) - SWAP_FROM;
@@ -20,7 +21,6 @@ const swipe = at(TOUCH_SWIPES[0].from);
 const tapSafari = at(56.57);
 const claudeBack = at(EVENTS.extClaudeBack);
 const claudeFull = at(EVENTS.extClaudeFull);
-const ghosttyLog = at(59.41);
 const safariOut = at(EVENTS.macSafariOut);
 const safariIn = at(EVENTS.phoneSafari);
 const browse = at(61.5);
@@ -68,27 +68,21 @@ export const Swap: React.FC = () => (
       </>
     )}
     over={({ g, shot, screen }) => {
-      const bar = phonePt(TOUCH_SWIPES[0].x, 1856);
-      const barAt = screen(screenPoint("phone", shot.phone, bar.x / 440, bar.y / 774));
       const macWin = screen(screenPoint("mac", shot.mac, WINDOWS.safari.l / 100 + 0.04, (WINDOWS.safari.t + WINDOWS.safari.h) / 100 - 0.04));
       return (
         <>
-          <Label frame={g} at={swipe - 4} out={tapSafari - 4} anchor={barAt} to={{ x: barAt.x - 340, y: barAt.y - 90 }} title="上滑回资源库" />
           <Headline
             frame={g}
             at={claudeBack + 6}
             out={browse + 16}
-            lines={["轻点一下", "两屏同动"]}
-            x={76}
+            lines={["在手机上点开，窗口自动过来", "换下来的窗口，自动回原位"]}
+            x={70}
             y={1385}
-            size={100}
-            logs={[
-              { at: ghosttyLog, text: "Ghostty 已放回原位并恢复全屏" },
-              { at: safariIn, text: "Safari 放上手机屏（4.2s），已铺满" },
-            ]}
+            size={48}
+            sub="不用在 Mac 上手动拖窗口"
           />
-          <Headline frame={g} at={browse + 36} out={browse + 220} lines={["宽窗照样铺满"]} x={84} y={200} size={84} logs={[{ at: browse + 56, text: "540 宽铺不满，换到 580 宽" }]} />
-          <Label frame={g} at={back + 4} out={END + 2} anchor={macWin} to={{ x: macWin.x + 60, y: 1290 }} title="一键还原" sub="Safari 已放回原位" size={48} />
+          <Headline frame={g} at={browse + 36} out={browse + 230} lines={["手机屏宽度自适应"]} x={84} y={200} size={64} sub="Safari 这类有最小宽度的窗口，也能铺满" />
+          <Label frame={g} at={back + 4} out={END + 2} anchor={macWin} to={{ x: macWin.x + 60, y: 1290 }} title="点「还原」" sub="窗口回到 Mac 上原来的位置" size={48} />
         </>
       );
     }}

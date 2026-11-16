@@ -11,6 +11,7 @@ import { ACTS, PAL, sec } from "../theme";
 
 // 在 Ghostty 卡片上点「新建窗口」→ 外接屏上新窗口全屏出生、退出全屏缩小、滑走 → 手机上铺满、字号 +2 →
 // 启动 Claude Code、发出「总结一下今天的提交」→ 回复出来，单指往回翻、再往下读（这段落在歌里安静的第二轮主歌上）。
+// 字只讲功能：新窗口自动铺满、字号自动调大、iPhone 原生手势。
 
 export const CREATE_FROM = sec(ACTS.create);
 export const CREATE_LEN = sec(ACTS.swap) - CREATE_FROM;
@@ -44,7 +45,7 @@ const KEYS: readonly ShotKey[] = [
   [filled + 40, PHONE_MAX],
   [claude + 120, PHONE_MAX],
   [reading - 2, withCam(PHONE_MAX, cam(540, 1140, 1.14))],
-  // 读回复：手机让到右边、侧过来，左边竖排一行字；之后慢慢推近正文
+  // 读回复：手机让到右边、侧过来，标题在顶上；之后慢慢推近正文
   [reading + 52, READ],
   [END - 60, withCam(tilt(READ, -4, 2), cam(610, 1060, 1.14))],
   [END, withCam(tilt(READ, 0, 0), cam(600, 1010, 1.04))],
@@ -77,31 +78,11 @@ export const Create: React.FC = () => (
       const text = screen(screenPoint("phone", shot.phone, 0.32, 0.1));
       return (
         <>
-          <Label frame={g} at={tapNew + 2} out={tapNew + 56} anchor={tapAt} to={{ x: tapAt.x + 70, y: tapAt.y - 440 }} title="新建窗口" sub="按菜单项「New Window」" />
-          <Headline
-            frame={g}
-            at={extIn + 6}
-            out={filled + 34}
-            lines={["生于大屏", "归于掌心"]}
-            x={80}
-            y={1300}
-            size={104}
-            logs={[{ at: extIn + 24, text: "新建后 1.3s 出现，放上手机屏" }]}
-          />
-          <Label frame={g} at={fontUp + 2} out={claude - 6} anchor={text} to={{ x: text.x + 90, y: 330 }} title="字号自动放大" sub="字号比原来 +2 级" />
-          <Headline frame={g} at={claude + 10} out={prompt - 8} lines={["竖屏终端，照常开工"]} x={540} y={200} align="center" size={78} logs={[{ at: claude + 30, text: "$ claude-max" }]} />
-          <Echo frame={g} from={prompt + 2} to={prompt + 8} out={prompt + 150} text="总结一下今天的提交" x={540} y={230} size={80} note="手机键盘输入" />
-          <Headline
-            frame={g}
-            at={reading + 40}
-            out={reading + 300}
-            lines={["单指翻阅", "一如原生"]}
-            x={250}
-            y={500}
-            size={84}
-            vertical
-            logs={[{ at: reading + 76, text: "手势翻译已开启" }]}
-          />
+          <Label frame={g} at={tapNew + 2} out={tapNew + 56} anchor={tapAt} to={{ x: tapAt.x + 70, y: tapAt.y - 440 }} title="新建窗口" />
+          <Headline frame={g} at={extIn + 6} out={filled + 34} lines={["新窗口", "自动铺满手机屏"]} x={80} y={1500} size={64} />
+          <Label frame={g} at={fontUp + 2} out={claude - 6} anchor={text} to={{ x: text.x + 90, y: 330 }} title="字号自动调大" />
+          <Echo frame={g} from={prompt + 2} to={prompt + 8} out={prompt + 150} text="总结一下今天的提交" x={540} y={250} />
+          <Headline frame={g} at={reading + 40} out={reading + 330} lines={["iPhone 原生手势"]} x={84} y={200} size={64} sub="单指滑动就能滚动，和 iPhone App 一样" />
         </>
       );
     }}

@@ -15,8 +15,6 @@ export const APPS_FROM = sec(ACTS.apps);
 export const APPS_LEN = sec(ACTS.model) - APPS_FROM;
 const END = APPS_FROM + APPS_LEN;
 
-const chatFrom = at(EVENTS.typeChat);
-const chatTo = at(EVENTS.typeChatDone);
 const launch = at(EVENTS.macChatgptLaunch);
 const onPhone = at(92.62);
 const chat = at(92.9);
@@ -26,7 +24,6 @@ const reply = at(98.25);
 const quitPart = at(108);
 const confirm = at(110.1);
 const macBack = at(EVENTS.macChatgptBack);
-const quitLog = at(110.39);
 
 const KEYS: readonly ShotKey[] = [
   [APPS_FROM, PHONE_LEFT],
@@ -67,11 +64,10 @@ export const Apps: React.FC = () => (
       const menu = screen(screenPoint("mac", shot.mac, 0.035, 0.012));
       return (
         <>
-          <Headline frame={g} at={APPS_FROM + 20} out={launch - 22} lines={["未启动的", "搜索直开"]} x={1020} y={880} align="right" size={92} />
-          <Echo frame={g} from={chatFrom} to={chatTo} out={launch - 22} text="chat" x={1020} y={1180} size={110} align="right" note="搜索" />
-          <Label frame={g} at={launch + 22} out={chat + 24} anchor={menu} to={{ x: menu.x + 40, y: menu.y + 540 }} title="冷启动，直上手机" sub="ChatGPT 启动后 0.9s 出现，放上手机屏" />
-          <Echo frame={g} from={helloFrom} to={helloTo} out={reply + 30} text="你好呀，你是谁" x={540} y={250} size={84} note="手机键盘输入" />
-          <Headline frame={g} at={quitPart + 30} out={END - 8} lines={["连点两下", "干净退出"]} x={580} y={430} size={92} logs={[{ at: quitLog, text: "请 ChatGPT 退出" }]} />
+          <Headline frame={g} at={APPS_FROM + 20} out={launch - 22} lines={["没打开的 App", "搜索后直接打开"]} x={1020} y={900} align="right" size={56} />
+          <Label frame={g} at={launch + 22} out={chat + 24} anchor={menu} to={{ x: menu.x + 40, y: menu.y + 540 }} title="启动后直接到手机上" />
+          <Echo frame={g} from={helloFrom} to={helloTo} out={reply + 30} text="你好呀，你是谁" x={540} y={250} />
+          <Headline frame={g} at={quitPart + 30} out={END - 8} lines={["在手机上退出 App"]} x={580} y={440} size={58} sub="窗口先回到原位，再退出" />
         </>
       );
     }}

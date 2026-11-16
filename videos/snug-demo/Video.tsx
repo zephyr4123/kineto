@@ -6,7 +6,7 @@ import { Whip } from "./components/transition";
 import { Hud } from "./components/type";
 import { Apps, APPS_FROM, APPS_LEN } from "./scenes/Apps";
 import { Create, CREATE_FROM, CREATE_LEN } from "./scenes/Create";
-import { Intro, INTRO_FROM, INTRO_LEN } from "./scenes/Intro";
+import { Intro, INTRO_FROM, INTRO_LEN, LAND } from "./scenes/Intro";
 import { Model, MODEL_FROM, MODEL_LEN } from "./scenes/Model";
 import { Outro, OUTRO_FROM, OUTRO_LEN } from "./scenes/Outro";
 import { Swap, SWAP_FROM, SWAP_LEN } from "./scenes/Swap";
@@ -45,7 +45,7 @@ export const Video: React.FC = () => (
         <Scene />
       </Sequence>
     ))}
-    <Hud from={150} to={OUTRO_FROM} />
+    <Hud from={LAND} to={OUTRO_FROM} />
     <Whip at={SWAP_FROM} />
     <Whip at={APPS_FROM} dir={-1} />
     <Whip at={MODEL_FROM} />
