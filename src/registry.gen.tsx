@@ -3,6 +3,7 @@ import { Folder } from "remotion";
 import { Compositions as V_coffee_life } from "../videos/coffee-life/compositions";
 import { Compositions as V_corner_hit } from "../videos/corner-hit/compositions";
 import { Compositions as V_kineto_promo } from "../videos/kineto-promo/compositions";
+import { Compositions as V_snug_demo } from "../videos/snug-demo/compositions";
 import { Compositions as V_snug_promo } from "../videos/snug-promo/compositions";
 import { Compositions as V_speakmore_promo } from "../videos/speakmore-promo/compositions";
 import { Compositions as V_speakmore_promo_2 } from "../videos/speakmore-promo-2/compositions";
@@ -20,6 +21,9 @@ export const Registry: React.FC = () => {
       </Folder>
       <Folder name="kineto-promo">
         <V_kineto_promo />
+      </Folder>
+      <Folder name="snug-demo">
+        <V_snug_demo />
       </Folder>
       <Folder name="snug-promo">
         <V_snug_promo />

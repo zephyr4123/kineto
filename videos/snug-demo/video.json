@@ -1,0 +1,20 @@
+{
+  "id": "snug-demo",
+  "title": "Snug 三屏实录演示",
+  "description": "",
+  "status": "draft",
+  "tags": [],
+  "createdAt": "2026-11-16T09:40:17.668Z",
+  "updatedAt": "2026-11-16T10:08:39.878Z",
+  "assets": {
+    "phone": "sha256:c8f74d527cbe5c6a6fd56278b6431186b59fee514969a05a63d17042888cb3cb",
+    "external": "sha256:d1d9e6628485deccb47d4ba1554f298c4d3fd7396b0c2dbbbe7228c520ccdcd9",
+    "builtin": "sha256:9b72a29d1dbd146e6b5cb0e1f5a6779d7ced40bcb65b690f3ae540ef83f1ad23",
+    "music": "sha256:a908d4451f4b33bef50c080fc5766b8b0753cd1ffb34a7deff72a7f1c618d6f8",
+    "snugIcon": "sha256:650577ae9022a88483cc83994b1b27ce5a7c21ddb57e7cd5b20d7f196358fa5f",
+    "iconGhostty": "sha256:bacb9ca9b3b3a1e9b0f07e5156ad2f87fff2261ea5e5c6d859fb902ba9cc1f53",
+    "iconSafari": "sha256:3eb0bb4a5e8e9f4b2a5ed2f826c138de3a658d987b0c47c918de80bfd446ae0e",
+    "iconChatgpt": "sha256:d2e1f178d2101956c7cca717bc9dba6b17cfb312a4fa646be1be7bda6d8ea42d",
+    "iconClaude": "sha256:bc2f427a385cd3bc213d84dc7f25ca0fd598e27a56ac208d6e569c670388fb81"
+  }
+}
