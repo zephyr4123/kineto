@@ -4,7 +4,7 @@ import path from "node:path";
 import { isNodeError, KinetoError } from "../errors.ts";
 import { sha256File } from "../hash.ts";
 import { assertSafeKey } from "./keys.ts";
-import type { PutOptions, StorageBackend, StoredObject } from "./types.ts";
+import type { CacheCleanup, PutOptions, StorageBackend, StoredObject } from "./types.ts";
 
 // 本地目录当存储：零配置的默认后端，clone 下来不配任何东西也能跑通全链路。
 export class LocalStorage implements StorageBackend {
@@ -91,6 +91,11 @@ export class LocalStorage implements StorageBackend {
         cause: err,
       });
     }
+  }
+
+  // 本地目录就是存储本身，不是缓存，一个文件也不能删
+  async cleanCache(): Promise<CacheCleanup> {
+    return { removed: [], kept: [] };
   }
 
   describe() {

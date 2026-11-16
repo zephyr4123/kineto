@@ -14,6 +14,23 @@ export interface PutOptions {
   trustRecord?: { bytes: number };
 }
 
+export interface CachedCopy {
+  key: string;
+  bytes: number;
+}
+
+export interface CacheCleanup {
+  // 删掉的（dryRun 时是会删的）：远端有同一份内容的缓存，以及已退出进程留下的半截文件
+  removed: CachedCopy[];
+  // 留着的：远端没有（missing），或远端那份对不上、验不了（differs）——删了就没有完好副本了
+  kept: (CachedCopy & { reason: "missing" | "differs" })[];
+}
+
+export interface CleanCacheOptions {
+  dryRun?: boolean;
+  onProgress?: (done: number, total: number) => void;
+}
+
 export interface StorageBackend {
   readonly name: string;
   // key 是内容寻址的（含哈希），同 key 必同内容：已存在且完好就跳过，被改坏了就修复。
@@ -30,5 +47,7 @@ export interface StorageBackend {
   // 后端可用（远端凭据有效、桶存在；write 时本地目录还要能建能写），不可用时抛 STORAGE_UNAVAILABLE。
   // 只读探测不改任何文件：check 用它
   probe(options?: { write?: boolean }): Promise<void>;
+  // 腾本机磁盘：远端后端在本机的缓存里，删掉远端确有同一份内容的（要用时 fetch 再下载）；本地后端没有缓存，什么也不删
+  cleanCache(options?: CleanCacheOptions): Promise<CacheCleanup>;
   describe(): Record<string, unknown>;
 }

@@ -91,3 +91,13 @@ test("只读 probe：存储根是个普通文件时报 STORAGE_UNAVAILABLE", asy
     await assert.rejects(new LocalStorage(path.join(dir, "file-not-dir")).probe(), { code: "STORAGE_UNAVAILABLE" });
   });
 });
+
+test("本地后端没有缓存：cleanCache 什么也不删", async () => {
+  await withStore(async (store, dir) => {
+    const src = path.join(dir, "a.txt");
+    await writeFile(src, "hello");
+    await store.put(src, "assets/ab/abc.txt");
+    assert.deepEqual(await store.cleanCache(), { removed: [], kept: [] });
+    assert.equal(await readFile(await store.fetch("assets/ab/abc.txt"), "utf8"), "hello");
+  });
+});

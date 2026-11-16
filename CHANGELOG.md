@@ -8,6 +8,7 @@ as a GitHub release; tags with a hyphen (`v1.1.0-rc.1`) become prereleases.
 
 ### Added
 
+- `./kineto storage clean` frees disk space. It deletes cached copies that the shared backend holds intact (the remote sha256 must match the local file; they are downloaded again when needed), the Studio staging area and work dirs left by killed processes, and keeps every cached file the backend does not hold intact. `--dry-run` reports what would go and how much space it frees. The local backend's store is never touched.
 - `engine/`: `Counter` (an odometer-style rolling number), `camera.ts` (per-chapter camera keyframes joined into one path), `Glyph` (an SVG icon scaled by its long side), and in `motion.ts` the easings `outExpo`, `outQuint`, `inOutQuint` and the helpers `prog`, `punch`, `typed`, `mix`.
 - `engine/speakmore/`: pieces shared by the SpeakMore promo series (floating bar, seal, Mac and Windows desktops, brand logos, icons), and the videos `speakmore-promo`, `speakmore-promo-2` and `speakmore-promo-3`.
 - `npm run ship` lands a branch on main: it pushes the branch, waits for CI, then fast-forwards main to the same commit, so render records keep pointing at commits on main.

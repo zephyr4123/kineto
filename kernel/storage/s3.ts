@@ -9,9 +9,11 @@ import { GetObjectCommand, HeadBucketCommand, HeadObjectCommand, S3Client } from
 import { Upload } from "@aws-sdk/lib-storage";
 import type { S3Config } from "../config.ts";
 import { KinetoError } from "../errors.ts";
+import { listFiles, removeEmptyDirs } from "../files.ts";
 import { sha256File } from "../hash.ts";
+import { processGone } from "../process.ts";
 import { assertSafeKey, contentTypeFor } from "./keys.ts";
-import type { PutOptions, StorageBackend, StoredObject } from "./types.ts";
+import type { CacheCleanup, CleanCacheOptions, PutOptions, StorageBackend, StoredObject } from "./types.ts";
 
 export interface ObjectHead {
   size: number;
@@ -108,6 +110,37 @@ export class S3Storage implements StorageBackend {
   // 远端探测本身就是只读的（HeadBucket），不分模式
   async probe(_options?: { write?: boolean }): Promise<void> {
     await this.#transport.probe();
+  }
+
+  // 只删远端确有同一份内容的缓存：远端元数据里的 sha256 和本机这份逐字节一致才算。
+  // 远端没有、对不上、或没有 sha256 元数据（验不了远端是否完好）的都留着，删了就可能没有完好副本了
+  async cleanCache({ dryRun = false, onProgress = () => {} }: CleanCacheOptions = {}): Promise<CacheCleanup> {
+    const files = await listFiles(this.#cacheRoot);
+    const out: CacheCleanup = { removed: [], kept: [] };
+    for (const [i, file] of files.entries()) {
+      onProgress(i, files.length);
+      const key = path.relative(this.#cacheRoot, file).split(path.sep).join("/");
+      const { size: bytes } = await stat(file);
+      const writer = /\.partial-(\d+)$/.exec(key);
+      if (writer) {
+        // 下载、上传到一半的临时文件：写它的进程还在就是正在写，不动；进程没了就是中断留下的
+        if (!processGone(Number(writer[1]))) continue;
+      } else {
+        const head = await this.#transport.head(this.#objectKey(key));
+        if (!head) {
+          out.kept.push({ key, bytes, reason: "missing" });
+          continue;
+        }
+        if (head.sha256 === undefined || head.size !== bytes || head.sha256 !== (await sha256File(file))) {
+          out.kept.push({ key, bytes, reason: "differs" });
+          continue;
+        }
+      }
+      if (!dryRun) await rm(file, { force: true });
+      out.removed.push({ key, bytes });
+    }
+    if (!dryRun) await removeEmptyDirs(this.#cacheRoot);
+    return out;
   }
 
   describe() {

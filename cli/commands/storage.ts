@@ -1,4 +1,5 @@
 import path from "node:path";
+import { cleanLocalCopies } from "../../kernel/clean/clean.ts";
 import { KinetoError } from "../../kernel/errors.ts";
 import { pushObjects } from "../../kernel/push/push.ts";
 import { LocalStorage } from "../../kernel/storage/local.ts";
@@ -49,6 +50,35 @@ export const storagePushCommand = defineCommand({
       ...d.missingAssets.map((k) => `error: asset ${k} is neither on this machine nor in the shared storage`),
       ...d.corrupt.map((k) => `error: ${k} on this machine does not match its recorded sha256; not uploaded (re-add the original file)`),
       d.missingRenders.length > 0 && `${d.missingRenders.length} older render(s) are no longer stored anywhere (history only).`,
+    ]
+      .filter(Boolean)
+      .join("\n"),
+});
+
+const size = (bytes: number) => (bytes >= 1e9 ? `${(bytes / 1e9).toFixed(1)} GB` : `${(bytes / 1e6).toFixed(1)} MB`);
+
+export const storageCleanCommand = defineCommand({
+  name: "storage clean",
+  summary: "Free disk space: delete local copies the storage backend can give back (cache, Studio staging, leftover work dirs)",
+  options: {
+    "dry-run": { type: "boolean", description: "Only report what would be deleted and how much space it would free" },
+  },
+  // 要删暂存区：和 sync / render 的暂存串行
+  mutates: true,
+  async run(ctx, { flags }) {
+    const storage = await ctx.storage();
+    const dryRun = flags["dry-run"] === true;
+    const report = await cleanLocalCopies(ctx.paths, storage, { dryRun, onProgress: (i, n) => ctx.progress(`check ${i + 1}/${n}`) });
+    return { dryRun, storage: storage.describe(), ...report };
+  },
+  human: (d) =>
+    [
+      `${d.dryRun ? "Would free" : "Freed"} about ${size(d.freedBytes)}:`,
+      `  cache: ${d.cache.removed.length} file(s) the ${String(d.storage.backend)} backend holds intact (${size(d.cache.removed.reduce((s, o) => s + o.bytes, 0))})`,
+      `  Studio staging: ${d.staging.files} file(s)${d.dryRun || d.staging.files === 0 ? "" : " (restart a running Studio, or run ./kineto sync)"}`,
+      `  work dirs left by exited processes: ${d.workDirs.removed.length}`,
+      d.cache.kept.length > 0 && `Kept ${d.cache.kept.length} cached file(s) the backend does not hold intact; they stay on this machine:`,
+      ...d.cache.kept.map((o) => `  ${o.key} (${o.reason === "missing" ? "not in the backend" : "differs from the backend"}, ${size(o.bytes)})`),
     ]
       .filter(Boolean)
       .join("\n"),

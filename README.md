@@ -121,6 +121,7 @@ Assets and renders stay out of git. They go to the backend set in `kineto.config
 - With `publicUrl` set to a CDN domain, render records carry a shareable link. The promo above is served this way.
 - Secrets appear only as `${ENV}` references. `envFile` can point to a `chmod 600` file outside the repository.
 - After switching to a shared backend, `./kineto storage push` uploads what this machine already has.
+- `./kineto storage clean` frees disk space: it deletes cached copies the shared backend holds intact (checked by sha256, downloaded again when needed), the Studio staging area and work dirs left by killed processes. `--dry-run` only reports.
 
 ## 🧰 Tools
 
@@ -161,6 +162,7 @@ Tools are plugins in [`tools/`](tools/README.md) that produce media outside Remo
 | `render <id>` | Render, store and record a video, a scene, a GIF or a `<Still>` |
 | `sync` / `check [--deep]` | Regenerate derived files / validate the whole library |
 | `storage push` | Upload this machine's assets and renders to the shared backend |
+| `storage clean [--dry-run]` | Free disk space by deleting local copies the backend can give back |
 
 - Output is JSON whenever stdout is not a terminal.
 - Exit codes: `0` success, `1` error, `2` usage error.

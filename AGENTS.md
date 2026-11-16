@@ -137,7 +137,8 @@ run `node scripts/conventions.ts` to check locally before you push.
 
 Assets and renders live in the storage backend set in `kineto.config.yaml`: `local` by default, or any S3-compatible
 service (Tencent COS, AWS S3, Cloudflare R2, MinIO). After switching to a shared backend, `./kineto storage push`
-uploads what this machine has. `STORAGE_*` errors carry a hint; follow it rather than touching `.kineto/` by hand.
+uploads what this machine has. To free disk space, `./kineto storage clean` deletes the local copies the backend can give back
+(`--dry-run` first shows how much). `STORAGE_*` errors carry a hint; follow it rather than touching `.kineto/` by hand.
 
 <!-- skills-scaffolding:redlines sha=c89954b9ae77 由 skills-scaffolding 写入；可直接修改，改过后脚手架更新会跳过本段 -->
 # 协作红线与工作习惯

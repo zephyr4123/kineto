@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import { createHash } from "node:crypto";
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { FakeTransport } from "../testing/fake-s3.ts";
@@ -208,5 +208,80 @@ test("远端对象没有 sha256 元数据（别处上传的）：大小相同也
     assert.equal((await store.put(src, "assets/2c/x.wav", { sha256: HELLO_SHA })).written, true);
     assert.equal(fake.objects.get("team/assets/2c/x.wav")?.sha256, HELLO_SHA);
     assert.equal(fake.objects.get("team/assets/2c/x.wav")?.body.toString(), "hello");
+  });
+});
+
+// ---- cleanCache：只删远端确有同一份内容的本机缓存 ----
+
+const cacheOf = (dir: string) => path.join(dir, "cache", SETTINGS.bucket);
+
+async function writeCached(dir: string, key: string, body: string) {
+  const file = path.join(cacheOf(dir), ...key.split("/"));
+  await mkdir(path.dirname(file), { recursive: true });
+  await writeFile(file, body);
+  return file;
+}
+
+test("cleanCache 删掉远端有同一份内容的缓存；远端没有的、内容对不上的留着，并删掉清空的目录", async () => {
+  await withS3(async (store, fake, dir) => {
+    const src = path.join(dir, "a.mp4");
+    await writeFile(src, "hello");
+    await store.put(src, "renders/demo/demo-abc.mp4");
+    const onlyHere = await writeCached(dir, "renders/other/other-123.mp4", "local only");
+    // 远端那份和本机缓存不一样（远端元数据的 sha256 不是本机这份的）
+    fake.objects.set("team/assets/2c/x.wav", { body: Buffer.from("remote"), contentType: "audio/wav", sha256: HELLO_SHA });
+    const differs = await writeCached(dir, "assets/2c/x.wav", "cached");
+
+    const report = await store.cleanCache();
+
+    assert.deepEqual(report.removed, [{ key: "renders/demo/demo-abc.mp4", bytes: 5 }]);
+    assert.deepEqual(report.kept, [
+      { key: "assets/2c/x.wav", bytes: 6, reason: "differs" },
+      { key: "renders/other/other-123.mp4", bytes: 10, reason: "missing" },
+    ]);
+    await assert.rejects(stat(path.join(cacheOf(dir), "renders", "demo")), { code: "ENOENT" });
+    assert.equal(await readFile(onlyHere, "utf8"), "local only");
+    assert.equal(await readFile(differs, "utf8"), "cached");
+    // 删掉的随时能从远端再取回来
+    assert.equal(await readFile(await store.fetch("renders/demo/demo-abc.mp4"), "utf8"), "hello");
+  });
+});
+
+test("cleanCache 不删远端没有 sha256 元数据的对象对应的缓存：验不了远端是否完好", async () => {
+  await withS3(async (store, fake, dir) => {
+    fake.objects.set("team/assets/2c/y.wav", { body: Buffer.from("hello"), contentType: "audio/wav", sha256: undefined });
+    await writeCached(dir, "assets/2c/y.wav", "hello");
+    const report = await store.cleanCache();
+    assert.deepEqual(report.removed, []);
+    assert.deepEqual(report.kept, [{ key: "assets/2c/y.wav", bytes: 5, reason: "differs" }]);
+  });
+});
+
+test("cleanCache dryRun 只报告、一个文件也不删", async () => {
+  await withS3(async (store, _fake, dir) => {
+    const src = path.join(dir, "a.mp4");
+    await writeFile(src, "hello");
+    await store.put(src, "renders/demo/demo-abc.mp4");
+    const report = await store.cleanCache({ dryRun: true });
+    assert.deepEqual(report.removed, [{ key: "renders/demo/demo-abc.mp4", bytes: 5 }]);
+    assert.equal(await readFile(path.join(cacheOf(dir), "renders", "demo", "demo-abc.mp4"), "utf8"), "hello");
+  });
+});
+
+test("cleanCache 删掉已退出进程留下的半截文件，正在写的留着", async () => {
+  await withS3(async (store, _fake, dir) => {
+    const dead = await writeCached(dir, "renders/demo/demo-abc.mp4.partial-999999999", "half");
+    const live = await writeCached(dir, `renders/demo/demo-def.mp4.partial-${process.pid}`, "writing");
+    const report = await store.cleanCache();
+    assert.deepEqual(report.removed, [{ key: "renders/demo/demo-abc.mp4.partial-999999999", bytes: 4 }]);
+    assert.deepEqual(report.kept, []);
+    await assert.rejects(stat(dead), { code: "ENOENT" });
+    assert.equal(await readFile(live, "utf8"), "writing");
+  });
+});
+
+test("还没有缓存目录时 cleanCache 什么也不做", async () => {
+  await withS3(async (store) => {
+    assert.deepEqual(await store.cleanCache(), { removed: [], kept: [] });
   });
 });
