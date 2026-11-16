@@ -14,3 +14,4 @@
 - [投稿文案标题三要素](publish-copy-titles.md) — 标题和正文第一句要有项目名、开源、一句话主旨
 - [UU远程 界面事实](uu-remote-ui-facts.md) — 竖屏黑边、横屏右侧工具栏、键盘弹出整体上推、电脑键盘排布，及各自出处
 - [Snug 三屏实录演示](snug-demo-direction.md) — 实录不演绎、先打码；居中字标点题、标明三块屏，不分章；手指可视化、鼠标指针抹干净；字讲究不套模板；配乐不剪歌；收尾点 Star
+- [交付放 out/<id>/](deliverables-in-out.md) — 成片、封面、投稿页都复制到 out/<id>/ 再汇报，不只报 .kineto/cache 路径
