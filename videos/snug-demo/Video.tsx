@@ -13,7 +13,7 @@ import { Swap, SWAP_FROM, SWAP_LEN } from "./scenes/Swap";
 import { ACTS, MUSIC_FROM, PAL, sec } from "./theme";
 
 // 成片时间线：只排场景、转场、录制角标和配乐。不分章：开场到第一个动作、机型到落版是镜头连着推过去的，
-// 中间三次换段各盖一下不带字的深色快切。配乐一刀不剪，从歌的饱满段起一直放到片尾的小节头，最后 2.7 秒随画面淡出。
+// 中间三次换段各盖一下不带字的深色快切。配乐一刀不剪，从歌的饱满段前一小节起一直放到片尾的小节头，最后 2.7 秒随画面淡出。
 
 export const VIDEO_FRAMES = sec(ACTS.end);
 

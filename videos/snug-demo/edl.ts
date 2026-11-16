@@ -6,9 +6,12 @@ import { ACTS, FPS } from "./theme";
 
 type Part = readonly [srcFrom: number, srcTo: number, seconds: number | null];
 
+/** 开场头 2 秒只有字标、三台设备还在画外，素材从这一秒起放 */
+export const ROLL = ACTS.hook + 2;
+
 const PLAN: readonly { from: number; to: number; parts: readonly Part[] }[] = [
-  // 点题：手机连上 UU，Snug 手机屏出现、资源库读出来
-  { from: ACTS.hook, to: ACTS.create, parts: [[0.5, 7.5, null]] },
+  // 点题：手机连上 UU，Snug 手机屏出现、资源库读出来（7.1 秒素材占 7.09 秒，等于原速）
+  { from: ROLL, to: ACTS.create, parts: [[0.4, 7.5, null]] },
   // 在 Ghostty 卡片上点「新建窗口」（原速：外接屏上新窗口出生、缩小、飞走，手机上铺满、字号 +2）→
   // 启动 Claude Code、发出「总结一下今天的提交」、跑 git log → 回复出来、单指往回翻、再翻回来（落在安静的主歌上，放慢一点）
   {
@@ -80,8 +83,9 @@ const build = (): Segment[] => {
 
 export const SEGMENTS = build();
 
-/** 片子第 frame 帧放的是素材第几秒 */
+/** 片子第 frame 帧放的是素材第几秒（素材开放之前算第一段的开头） */
 export const srcAt = (frame: number) => {
+  if (frame < SEGMENTS[0].from) return SEGMENTS[0].src[0];
   const s = SEGMENTS.find((g) => frame >= g.from && frame < g.to) ?? SEGMENTS[SEGMENTS.length - 1];
   return s.src[0] + ((frame - s.from) * s.rate) / FPS;
 };

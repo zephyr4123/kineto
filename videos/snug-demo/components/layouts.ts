@@ -9,16 +9,19 @@ const off = (p: Pose, dx: number, dy: number): Pose => ({ ...p, x: p.x + dx, y: 
 const hide = (p: Pose): Pose => ({ ...p, op: 0 });
 export const cam = (x: number, y: number, z: number): Cam => ({ x, y, z });
 
-/** 开场的桌面：显示器在上，MacBook 左下，手机右下；顶上 130–440 留给 slogan */
+/**
+ * 开场的桌面：显示器在上，MacBook 左下，手机右下。顶上 100–300 是缩小的字标（之后换成「屏幕数量不限」），
+ * 每台设备旁边留一块写它是哪块屏：显示器上方 360–440、MacBook 下方 1520–1600、手机左下 1630–1720
+ */
 export const DESK: Shot = {
-  mon: { x: 540, y: 770, w: 880 },
-  mac: { x: 300, y: 1400, w: 480 },
-  phone: { x: 800, y: 1430, w: 300 },
+  mon: { x: 540, y: 700, w: 860 },
+  mac: { x: 300, y: 1290, w: 460 },
+  phone: { x: 815, y: 1310, w: 270 },
 };
 
-/** 开场之前三台设备都在画外：显示器在上，MacBook 在左，手机在下 */
+/** 开场之前三台设备都在画外：显示器在右，MacBook 在左，手机在下（顶上是字标，显示器不从那里穿过） */
 export const DESK_OUT: Shot = {
-  mon: off(DESK.mon, 0, -1250),
+  mon: off(DESK.mon, 1150, 0),
   mac: off(DESK.mac, -900, 0),
   phone: off(DESK.phone, 0, 1300),
 };

@@ -1,23 +1,22 @@
-import { Img, interpolate, staticFile } from "remotion";
+import { interpolate } from "remotion";
 import { clamp, inOutQuint, outExpo, prog } from "../../../engine/motion";
 import { RepoCard } from "../../../engine/snug/repo";
-import { assets } from "../assets.gen";
 import { Freeze } from "../components/devices";
 import { cam, MODEL, OUTRO, withCam } from "../components/layouts";
 import { Scene } from "../components/scene";
 import type { ShotKey } from "../components/stage";
 import { Contact, Finger, Ripple } from "../components/touch";
-import { SloganLockup } from "../components/type";
+import { Lockup } from "../components/type";
 import { FREEZE_AT } from "../edl";
 import { ACTS, bar, C, CREDIT, MONO, PAL, REPO_URL, SERIF, sec } from "../theme";
 
 // 落版：机型段最后一帧定格，手机从特写退下去，三台设备收成画面下方的一张小桌面；
-// 上面是 Snug 的图标和 slogan 字标（和开场同一套），GitHub 仓库卡片升上来，一根手指点亮 Star（落在尾声的第 25 小节）；最后是地址、许可和致谢，随音乐淡出。
+// 上面是 Snug 的字标（图标 + Snug + slogan，和开场同一套），GitHub 仓库卡片升上来，一根手指点亮 Star（落在尾声的第 26 小节）；最后是地址、许可和致谢，随音乐淡出。
 
 export const OUTRO_FROM = sec(ACTS.outro);
 export const OUTRO_LEN = sec(ACTS.end) - OUTRO_FROM;
 const END = OUTRO_FROM + OUTRO_LEN;
-const STAR = sec(bar(25));
+const STAR = sec(bar(26));
 
 const CARD = { x: 90, y: 690 };
 /** Star 按钮的中心（卡片里的位置） */
@@ -58,12 +57,8 @@ export const Outro: React.FC = () => (
       const burst = prog(g, STAR, 22, outExpo);
       return (
         <>
-          <Img
-            src={staticFile(assets.snugIcon)}
-            style={{ position: "absolute", left: 540 - 48, top: 116, width: 96, height: 96, borderRadius: 22, boxShadow: "0 16px 36px rgba(31,99,255,0.24)", opacity: k(56), transform: `translateY(${(1 - k(56)) * 24}px) scale(${0.85 + 0.15 * k(56)})` }}
-          />
-          <div style={{ position: "absolute", left: 0, right: 0, top: 244, display: "flex", justifyContent: "center", transform: "scale(0.66)", transformOrigin: "50% 0" }}>
-            <SloganLockup frame={g} at={OUTRO_FROM + 60} />
+          <div style={{ position: "absolute", left: 0, right: 0, top: 170, display: "flex", justifyContent: "center", transform: "scale(0.72)", transformOrigin: "50% 0" }}>
+            <Lockup frame={g} at={OUTRO_FROM + 56} />
           </div>
           <div style={{ position: "absolute", left: CARD.x, top: CARD.y, opacity: card, transform: `translateY(${(1 - card) * 90}px)` }}>
             <RepoCard starred={g >= STAR} burst={burst} />

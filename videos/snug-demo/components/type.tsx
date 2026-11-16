@@ -1,5 +1,6 @@
-import { interpolate, useCurrentFrame } from "remotion";
-import { clamp, outExpo, outQuint, prog } from "../../../engine/motion";
+import { Img, interpolate, staticFile, useCurrentFrame } from "remotion";
+import { backOut, clamp, outExpo, outQuint, prog } from "../../../engine/motion";
+import { assets } from "../assets.gen";
 import { clockAt, speedAt } from "../edl";
 import { C, DISPLAY, MONO, SANS, SERIF, SLOGAN, TAGLINE } from "../theme";
 
@@ -160,37 +161,47 @@ export const Label: React.FC<{ frame: number; at: number; out: number; anchor: {
 };
 
 /**
- * slogan 字标：「Make / UU Remote / Native / on iPhone」分主次排 —— 虚词 Make、on iPhone 小，产品名 UU Remote 中，
- * 关键词 Native 最大、用品牌蓝；左对齐，on iPhone 右对齐到 Native 的右缘。下面一道细线、中文 tagline，可再加一行灰字。
- * 宽度随最宽的一行（Native，约 600 像素）走；head 放在 Make 上面（图标）。at 是开始入场的帧。
+ * Snug 字标：图标和大号「Snug」并排居中，下面一行 slogan 当副标题（Native 用品牌蓝），再下面是中文 tagline，可再加一行灰字。
+ * 整块居中排；detail 是 slogan 以下各行的透明度（开场缩到顶上时只留图标、Snug 和 slogan）。at 是开始入场的帧。
  */
-export const SloganLockup: React.FC<{ frame: number; at: number; note?: string; head?: React.ReactNode }> = ({ frame, at, note, head }) => {
+export const Lockup: React.FC<{ frame: number; at: number; note?: string; detail?: number }> = ({ frame, at, note, detail = 1 }) => {
+  const icon = prog(frame, at, 34, backOut);
+  const iconIn = prog(frame, at, 14, outQuint);
   const words = SLOGAN.split(" ");
-  const line = (text: string, d: number, style: React.CSSProperties) => {
-    const k = prog(frame, at + d, 30, outExpo);
-    return (
-      <div style={{ overflow: "hidden", paddingBottom: "0.06em", ...style }}>
-        <div style={{ transform: `translateY(${(1 - k) * 110}%)` }}>{text}</div>
-      </div>
-    );
-  };
-  const nk = prog(frame, at + 12, 44, outExpo);
-  const rule = prog(frame, at + 30, 30, outExpo);
-  const zh = prog(frame, at + 36, 26, outExpo);
-  const small = prog(frame, at + 48, 26, outExpo);
+  const zh = prog(frame, at + 58, 26, outExpo) * detail;
+  const small = prog(frame, at + 70, 26, outExpo) * detail;
   return (
-    <div style={{ display: "inline-flex", flexDirection: "column", fontFamily: DISPLAY, color: C.ink }}>
-      {head}
-      {line(words[0], 0, { fontSize: 60, fontWeight: 400, lineHeight: 1, letterSpacing: "-0.01em", color: C.ink2 })}
-      {line(`${words[1]} ${words[2]}`, 5, { fontSize: 134, fontWeight: 800, lineHeight: 0.98, letterSpacing: "-0.045em", marginTop: 6 })}
-      <div style={{ overflow: "hidden", fontSize: 252, fontWeight: 800, lineHeight: 0.84, letterSpacing: `${-0.06 + (1 - nk) * 0.04}em`, color: C.blue, paddingBottom: "0.04em", marginLeft: -8 }}>
-        <div style={{ transform: `translateY(${(1 - nk) * 100}%) scale(${1.04 - 0.04 * nk})`, transformOrigin: "0 100%" }}>{words[3]}</div>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", fontFamily: DISPLAY, color: C.ink, whiteSpace: "nowrap" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 40 }}>
+        <Img
+          src={staticFile(assets.snugIcon)}
+          style={{ width: 176, height: 176, borderRadius: 40, boxShadow: "0 22px 48px rgba(31,99,255,0.24)", opacity: iconIn, transform: `scale(${0.6 + 0.4 * icon})` }}
+        />
+        <div style={{ display: "flex", overflow: "hidden", fontSize: 236, fontWeight: 800, lineHeight: 0.92, letterSpacing: "-0.05em", padding: "0 0.04em 0.12em 0", marginBottom: "-0.06em" }}>
+          {[..."Snug"].map((ch, i) => {
+            const k = prog(frame, at + 8 + i * 4, 34, outExpo);
+            return (
+              <span key={i} style={{ display: "inline-block", transform: `translateY(${(1 - k) * 110}%)` }}>
+                {ch}
+              </span>
+            );
+          })}
+        </div>
       </div>
-      {line(`${words[4]} ${words[5]}`, 20, { fontSize: 74, fontWeight: 600, lineHeight: 1, letterSpacing: "-0.02em", textAlign: "right", marginTop: -6 })}
-      <div style={{ marginTop: 34, width: 120 * rule, height: 3, background: C.ink, opacity: 0.8 }} />
-      <div style={{ marginTop: 24, fontFamily: SERIF, fontWeight: 700, fontSize: 48, letterSpacing: "0.04em", color: C.ink, whiteSpace: "nowrap", opacity: zh, transform: `translateY(${(1 - zh) * 14}px)` }}>{TAGLINE}</div>
+      <div style={{ marginTop: 30, fontSize: 54, fontWeight: 600, letterSpacing: "-0.015em", display: "flex", gap: "0.26em" }}>
+        {words.map((w, i) => {
+          const k = prog(frame, at + 30 + i * 4, 26, outExpo);
+          const key = w === "Native";
+          return (
+            <span key={i} style={{ display: "inline-block", opacity: k, transform: `translateY(${(1 - k) * 0.5}em)`, filter: `blur(${(1 - k) * 6}px)`, color: key ? C.blue : C.ink, fontWeight: key ? 800 : 600 }}>
+              {w}
+            </span>
+          );
+        })}
+      </div>
+      <div style={{ marginTop: 42, fontFamily: SERIF, fontWeight: 700, fontSize: 46, letterSpacing: "0.04em", opacity: zh, transform: `translateY(${(1 - zh) * 14}px)` }}>{TAGLINE}</div>
       {note ? (
-        <div style={{ marginTop: 14, fontFamily: SANS, fontWeight: 500, fontSize: 30, color: C.ink2, whiteSpace: "nowrap", opacity: small, transform: `translateY(${(1 - small) * 10}px)` }}>{note}</div>
+        <div style={{ marginTop: 16, fontFamily: SANS, fontWeight: 500, fontSize: 30, color: C.ink2, opacity: small, transform: `translateY(${(1 - small) * 10}px)` }}>{note}</div>
       ) : null}
     </div>
   );
